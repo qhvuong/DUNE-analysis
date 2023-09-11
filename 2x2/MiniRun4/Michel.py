@@ -40,7 +40,7 @@ Mc_E, Mc_p = [], []
 ep_E = []
 
 run = "MiniRun4"
-Nfiles = 1 
+Nfiles = 2 
 
 for n in range(Nfiles):
   #fname = f"/pnfs/dune/tape_backed/users/mkramer/prod/MiniRun4/MiniRun4_1E19_RHC/MiniRun4_1E19_RHC.larnd/LARNDSIM/MiniRun4_1E19_RHC.larnd.{n:05d}.LARNDSIM.h5"
@@ -58,22 +58,28 @@ for n in range(Nfiles):
 
   print(trajs.dtype.names)
 
-  mu_trajIDs = trajs[trajs['pdg_id']==mup]['traj_id']
+  mu_trajIDs = trajs[abs(trajs['pdg_id'])==mup]['traj_id']
   print(len(mu_trajIDs))
 
   for t in mu_trajIDs:
     pids = trajs[trajs['parent_id']==t]['pdg_id']
     #print(pids)
     if ep not in pids: continue
-    if abs(trajs[trajs['traj_id']==t]['E_end']-M_mu)>1E-3: continue
+    #if abs(trajs[trajs['traj_id']==t]['E_end']-M_mu)>1E-3: continue
 
     mup_xyz = np.array(trajs[(trajs['traj_id']==t)]['xyz_end'][0])
     #print(trajs[(trajs['traj_id']==t) & (trajs['pdg_id']==mup)]['xyz_end'][0])
     if isIn(mup_xyz)==False: continue
 
-    #Mc_tIDs = trajs[(trajs['parent_id']==t) & (trajs['pdg_id']==ep) & (trajs['start_process']!=2)]['traj_id']
-    Mc_trajIDs = trajs[(trajs['parent_id']==t) & (trajs['pdg_id']==ep) & (trajs['E_start']>10)]['traj_id']
-    print(trajs[trajs['traj_id']==Mc_trajIDs])
+    Mc_trajIDs = trajs[(trajs['parent_id']==t) & (abs(trajs['pdg_id'])==ep) & (trajs['start_process']==6)]['traj_id']
+    #Mc_trajIDs = trajs[(trajs['parent_id']==t) & (abs(trajs['pdg_id'])==ep) & (trajs['E_start']>10)]['traj_id']
+    for Mc_t in Mc_trajIDs:
+      print("Michel e", trajs[trajs['traj_id']==Mc_t], "\n")
+      print("ionization e", trajs[(trajs['parent_id']==Mc_t) & (abs(trajs['pdg_id'])==ep) & (trajs['start_process']==2) & (trajs['start_subprocess']==2)], "\n")
+      print("others", trajs[(trajs['parent_id']==Mc_t) & (abs(trajs['pdg_id'])==ep) & (trajs['start_process']==2) & (trajs['start_subprocess']!=2)], "\n")
+
+      #print(trajs[trajs['traj_id']==Mc_t]['E_start'])
+      #print(trajs[(trajs['parent_id']==Mc_t) & (abs(trajs['pdg_id'])==ep) & (trajs['start_process']==2)]['E_start'])
 
 """
     for Mc_t in Mc_trajIDs:
