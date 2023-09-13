@@ -33,7 +33,7 @@ void test()
 
 
   for( int x = 0; x < nb; ++x ) {
-    CC_m_nom->SetBinContent(x+1, x+10);
+    CC_m_nom->SetBinContent(x+1, N*N*N);
     CC_e_nom->SetBinContent(x+1, x+1);
     nue_nom->SetBinContent(x+1, x+2);
 
@@ -60,7 +60,7 @@ void test()
     }
   }
 
-  printf("covmx\n")
+  printf("\ncovmx\n");
   for( int i = 0; i < 3*nb; ++i ) {
     for( int j = 0; j < 3*nb; ++j ) {
       std::cout << covmx[i][j] << "\t";
@@ -77,7 +77,7 @@ void test()
   }
   const TMatrixD chol = decomp.GetU();
 
-  printf("covmx chol\n")
+  printf("\ncovmx chol\n");
   for( int i = 0; i < 3*nb; ++i ) {
     for( int j = 0; j < 3*nb; ++j ) {
       std::cout << chol[i][j] << "\t";
@@ -109,10 +109,10 @@ void test()
   }
 
 
-  printf("scales\n");
+  printf("\nscales\n");
   for( int i = 0; i < N; ++i ) {
     for( int j = 0; j < 3*nb; ++j ) {
-      if(abs(scales[i][j])>1)
+      //if(abs(scales[i][j])>1)
       std::cout << scales[i][j] << "\t";
     }
       std::cout << "\n";
@@ -131,7 +131,7 @@ void test()
     }
   }
 
-  printf("scaleCovars\n");
+  printf("\nscaleCovars\n");
   for( int i = 0; i < 3*nb; ++i ) {
     for( int j = 0; j < 3*nb; ++j ) {
       std::cout << scaleCovars[i][j] << "\t";
@@ -147,10 +147,10 @@ void test()
 
   scales *= chol;
 
-  printf("scales_final\n");
+  printf("\nscales_final\n");
   for( int i = 0; i < N; ++i ) {
     for( int j = 0; j < 3*nb; ++j ) {
-      if(abs(scales[i][j])>1)
+      //if(abs(scales[i][j])>1)
       std::cout << scales[i][j] << "\t";
     }
       std::cout << "\n";
