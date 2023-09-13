@@ -1,11 +1,10 @@
 static const int N = 10; // number of universes
 static const int nb = 2;
-static const int nbins = nb*3;
 
 
-TMatrixD covmx( nbins, nbins );
-TMatrixD scaleCovars( nbins, nbins ); // pairwise covariance of columns of random numbers
-TMatrixD scales( N, nbins );
+TMatrixD covmx( 3*nb, 3*nb );
+TMatrixD scaleCovars( 3*nb, 3*nb ); // pairwise covariance of columns of random numbers
+TMatrixD scales( N, 3*nb );
 
 TMatrixD E_m(N, nb);
 TMatrixD E_e(N, nb);
@@ -23,8 +22,7 @@ TMatrixD ECovars_enue( nb, nb );
 TMatrixD ECovars_nuem( nb, nb );
 TMatrixD ECovars_nuee( nb, nb );
 
-TMatrixD ECovars( nbins, nbins );
-
+TMatrixD ECovars( 3*nb, 3*nb );
 
 void test()
 {
@@ -45,7 +43,6 @@ void test()
         covmx[x][y]           = CC_m_nom->GetBinContent( x+1 );
         covmx[x+nb][y+nb]     = CC_e_nom->GetBinContent( x+1 );
         covmx[x+2*nb][y+2*nb] = nue_nom->GetBinContent( x+1 );
-        //std::cout << covmx[x][y] << "\t" << covmx[x+nbins][y+nbins] << "\t" << covmx[x+2*nbins][y+2*nbins] << "\n";
       }
 
       else{
@@ -55,18 +52,17 @@ void test()
     }
   }
   
-  //TCanvas *c = new TCanvas("c","",800,800);
-  //CC_m_nom->Draw();
-
-  TH2D *hcovmx = new TH2D("hcovmx","",nbins,0,nbins,nbins,0,nbins);
-  TH2D *hchol = new TH2D("hchol","",nbins,0,nbins,nbins,0,nbins);
-  for( int i = 0; i < nbins; ++i ) {
-    for( int j = 0; j < nbins; ++j ) {
+  TH2D *hcovmx = new TH2D("hcovmx","",3*nb,0,3*nb,3*nb,0,3*nb);
+  TH2D *hchol = new TH2D("hchol","",3*nb,0,3*nb,3*nb,0,3*nb);
+  for( int i = 0; i < 3*nb; ++i ) {
+    for( int j = 0; j < 3*nb; ++j ) {
       hcovmx->SetBinContent(i+1, j+1, covmx[i][j]);
     }
   }
-  for( int i = 0; i < nbins; ++i ) {
-    for( int j = 0; j < nbins; ++j ) {
+
+  printf("covmx\n")
+  for( int i = 0; i < 3*nb; ++i ) {
+    for( int j = 0; j < 3*nb; ++j ) {
       std::cout << covmx[i][j] << "\t";
     }
       std::cout << "\n";
@@ -80,8 +76,10 @@ void test()
     return;
   }
   const TMatrixD chol = decomp.GetU();
-  for( int i = 0; i < nbins; ++i ) {
-    for( int j = 0; j < nbins; ++j ) {
+
+  printf("covmx chol\n")
+  for( int i = 0; i < 3*nb; ++i ) {
+    for( int j = 0; j < 3*nb; ++j ) {
       std::cout << chol[i][j] << "\t";
     }
       std::cout << "\n";
@@ -90,29 +88,30 @@ void test()
   
 
   TRandom3 * rand = new TRandom3(12345);
-  TH2D *hscales = new TH2D("hscales", "", nbins,0,nbins, nbins,0,nbins);
+  TH2D *hscales = new TH2D("hscales", "", 3*nb,0,3*nb, 3*nb,0,3*nb);
 
   // make random number matrix
   for( int i = 0; i < N; ++i ) {
     double mean = 0.;
-    for( int j = 0; j < nbins; ++j ) {
+    for( int j = 0; j < 3*nb; ++j ) {
       double val = rand->Gaus( 0., 1. );
       scales[i][j] = val;
       mean += val;
     }
-/*
+
     mean /= N;
-    for( int j = 0; j < nbins; ++j ) {
+    // force each column mean to be exactly 0, this just eliminates tiny statistical fluctuations in the mean weight
+    for( int j = 0; j < 3*nb; ++j ) {
       double old = scales[i][j];
       scales[i][j] = old - mean;
     }
-*/
+
   }
 
 
   printf("scales\n");
   for( int i = 0; i < N; ++i ) {
-    for( int j = 0; j < nbins; ++j ) {
+    for( int j = 0; j < 3*nb; ++j ) {
       if(abs(scales[i][j])>1)
       std::cout << scales[i][j] << "\t";
     }
@@ -120,8 +119,8 @@ void test()
   }
   
 
-  for( int i = 0; i < nbins; ++i ) { // columns
-    for( int j = 0; j < nbins; ++j ) { // columns
+  for( int i = 0; i < 3*nb; ++i ) { // columns
+    for( int j = 0; j < 3*nb; ++j ) { // columns
 
       // compute column covariance
       double covar = 0.;
@@ -133,8 +132,8 @@ void test()
   }
 
   printf("scaleCovars\n");
-  for( int i = 0; i < nbins; ++i ) {
-    for( int j = 0; j < nbins; ++j ) {
+  for( int i = 0; i < 3*nb; ++i ) {
+    for( int j = 0; j < 3*nb; ++j ) {
       std::cout << scaleCovars[i][j] << "\t";
     }
       std::cout << "\n";
@@ -150,14 +149,14 @@ void test()
 
   printf("scales_final\n");
   for( int i = 0; i < N; ++i ) {
-    for( int j = 0; j < nbins; ++j ) {
+    for( int j = 0; j < 3*nb; ++j ) {
       if(abs(scales[i][j])>1)
       std::cout << scales[i][j] << "\t";
     }
       std::cout << "\n";
   }
 
-
+/*
   TH1D *m     = new TH1D("m","",nb,0,nb);
   TH1D *e     = new TH1D("e","",nb,0,nb);
   TH1D *nue   = new TH1D("nue","",nb,0,nb);
@@ -266,9 +265,9 @@ void test()
 
 
 
-  TH2D *hcv = new TH2D("hcv","",nbins,0,nbins,nbins,0,nbins);
-  for(int i=0; i<nbins; i++) {
-    for(int j=0; j<nbins; j++) {
+  TH2D *hcv = new TH2D("hcv","",3*nb,0,3*nb,3*nb,0,3*nb);
+  for(int i=0; i<3*nb; i++) {
+    for(int j=0; j<3*nb; j++) {
       hcv->SetBinContent(i+1, j+1, ECovars[i][j]);
     }
   }
@@ -282,10 +281,8 @@ void test()
   hcv->Draw("colz");
   //ccv->SaveAs(Form("Cov%d%d_%d.png",cutNu,cutEv,N));
 
-/*
   TFile *out = new TFile(Form("/dune/app/users/qvuong/lownu/cov_matrix/%s_covmtr%d%d_%d.root",name,cutNu,cutEv,N),"RECREATE");
   hcv->Write();
-  hcr->Write();
   out->Close();
   }
   //}
