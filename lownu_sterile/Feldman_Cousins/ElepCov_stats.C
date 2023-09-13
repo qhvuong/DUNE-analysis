@@ -1,4 +1,4 @@
-static const int N = 1000; // number of universes
+static const int N = 500; // number of universes
 static const int nbins = 100;
 
 
@@ -23,29 +23,51 @@ TMatrixD ECovars_nuee( nbins, nbins );
 
 TMatrixD ECovars( 3*nbins, 3*nbins );
 
-void ElepCov()
+void ElepCov_stats()
 {
-  //std::list <const char *> namelist = {"wgt_MaCCQE", "wgt_BeRPA_A", "wgt_Mnv2p2hGaussEnhancement"};
-  //const char *name[] = {"wgt_MaCCQE", "wgt_BeRPA_A", "wgt_Mnv2p2hGaussEnhancement"};
-  std::list <const char *> namelist = {"wgt_MaCCQE"};
-  const char *name[] = {"wgt_MaCCQE"};
+  int cutNu, cutEv;
+  const char name[20] = "wgt_MaCCQE";
 
-  int N_wgt = namelist.size();
-  std::cout << N_wgt << "\n";
+  //for(para = 1; para <3; para++) {
+  TFile *f     = new TFile("/dune/app/users/qvuong/data/lownu/CC_output.root");
+  TFile *f_nue = new TFile("/dune/app/users/qvuong/data/lownu/nue_output.root");
+  //for(cutNu = 0; cutNu < 4; cutNu++) {
+  //if(cutNu != 0 && cutNu != 3 ) continue;
+  cutNu = 3;		// cut nu<0.3GeV
+  //std::cout << cutNu << "\n";
+  //for(cutEv = 0; cutEv < 3; cutEv++) {
+  cutEv = 2;		// cut Etheta<0.5MeV
 
-  // covariance matrix
-  for(int iw=0; iw<N_wgt; iw++){
-  //TFile * covfile = new TFile(Form("/dune/app/users/qvuong/lownu/sigma_mtr/new_mtr/%s_Covmtr32.root",name[iw]), "OLD" );
-  TFile * covfile = new TFile("/dune/app/users/qvuong/lownu/sigma_mtr/tot3.root", "OLD" );
-  TH2D * hcovmx = (TH2D*) covfile->Get( "cv" );
+  TH1D *CC_m_nom = (TH1D*)f->Get(Form("%s_m_hElep%d_sigma3",name,cutNu));
+  TH1D *CC_e_nom = (TH1D*)f->Get(Form("%s_e_hElep%d_sigma3",name,cutNu));
+  TH1D *nue_nom  = (TH1D*)f_nue->Get(Form("hElep%d",cutEv));
+
 
   // only need the ND FHC part, which is the first 52 bins probably
-  for( int x = 0; x < 3*nbins; ++x ) {
-    for( int y = 0; y < 3*nbins; ++y ) {
-      covmx[x][y] = hcovmx->GetBinContent( x+1, y+1 );
+  for( int x = 0; x < nbins; ++x ) {
+    for( int y = 0; y < nbins; ++y ) {
+      if(x==y){
+        covmx[x][y]                 = CC_m_nom->GetBinContent( x+1, y+1 );
+        covmx[x+nbins][y+nbins]     = CC_e_nom->GetBinContent( x+1, y+1 );
+        covmx[x+2*nbins][y+2*nbins] = nue_nom->GetBinContent( x+1, y+1 );
+        std::cout << covmx[x][y] << "\t" << covmx[x+nbins][y+nbins] << "\t" << covmx[x+2*nbins][y+2*nbins] << "\n";
+      }
+
+      else{
+        covmx[x][y]                     = 0.;
+        covmx[x+nbins][y+nbins]         = 0.;
+        covmx[x+2*nbins][y+2*nbins]     = 0.;}
     }
   }
 
+  TH2D *hcovmx = new TH2D("hcovmx","",300,0,300,300,0,300);
+  for( int i = 0; i < nbins; ++i ) {
+    for( int j = 0; j < nbins; ++j ) {
+      hcovmx->SetBinContent(i+1, j+1, covmx[i][j]);
+  }
+  } 
+
+/*
   int originalErrorWarning = gErrorIgnoreLevel;
   gErrorIgnoreLevel = kFatal;
 
@@ -73,7 +95,7 @@ void ElepCov()
   }
 
   std::cout << "Had to shift diagonal " << iAttempt << " time(s) to allow the covariance matrix to be decomposed" << std::endl;
-
+*/
   // cholesky decomposition
   TDecompChol decomp( covmx );
   if( !decomp.Decompose() ) {
@@ -100,10 +122,8 @@ void ElepCov()
       double old = scales[i][j];
       scales[i][j] = old - mean;
     }
-
-    //if(i%100==0) std::cout << i << "\n";
-
   }
+  std::cout << scales[1][1] << "\n";
 
 
   for( int i = 0; i < 3*nbins; ++i ) { // columns
@@ -127,24 +147,9 @@ void ElepCov()
   scales *= inverse;
 
   scales *= chol;
+  std::cout << scales[1][1] << "\n";
 
-  int cutNu, cutEv;
-
-
-  //for(para = 1; para <3; para++) {
-  TFile *f     = new TFile("/dune/app/users/qvuong/data/lownu/CC_output.root");
-  TFile *f_nue = new TFile("/dune/app/users/qvuong/data/lownu/nue_output.root");
-  //for(cutNu = 0; cutNu < 4; cutNu++) {
-  //if(cutNu != 0 && cutNu != 3 ) continue;
-  cutNu = 3;		// cut nu<0.3GeV
-  //std::cout << cutNu << "\n";
-  //for(cutEv = 0; cutEv < 3; cutEv++) {
-  cutEv = 2;		// cut Etheta<0.5MeV
-
-  TH1D *CC_m_nom = (TH1D*)f->Get(Form("%s_m_hElep%d_sigma3",name[iw],cutNu));
-  TH1D *CC_e_nom = (TH1D*)f->Get(Form("%s_e_hElep%d_sigma3",name[iw],cutNu));
-  TH1D *nue_nom  = (TH1D*)f_nue->Get(Form("hElep%d",cutEv));
-
+/*
   TH1D *m     = new TH1D("m","",100,0,16);
   TH1D *e     = new TH1D("e","",100,0,16);
   TH1D *nue   = new TH1D("nue","",100,0,16);
@@ -271,17 +276,23 @@ void ElepCov()
   //hcr->SetStats(0);
   //hcr->SetTitle(Form("%s Correlation (nu<%.1fGeV && Etheta2<%.1fMeV)",name,nu,Ev));
 
+  TCanvas *c0 = new TCanvas("c0","",900,800);
+  hcovmx->Draw("colz");
+  c0->SaveAs("hcovmx.png");
+
   TCanvas *ccv = new TCanvas("ccv","",900,800);
   hcv->Draw("colz");
-  ccv->SaveAs(Form("FC_tot3_%d.png",N));
+  ccv->SaveAs(Form("FC_stats_%d.png",N));
 
   gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
+*/
 
+
+/*
   TFile *out = new TFile(Form("/dune/app/users/qvuong/lownu/Feldman_Cousins/FC_tot3_%d.root",N),"RECREATE");
   hcv->Write();
-  //hcr->Write();
   out->Close();
-
-  }
+*/
+  
 }
 

@@ -34,13 +34,14 @@ def isIn(vertex):
 
 ep = 11
 mup = 13
+gamma = 22
 M_mu = 105.6583745
 
 Mc_E, Mc_p = [], []
-ep_E = []
+Ion_E, brem_E, others_E = [], [], []
 
 run = "MiniRun4"
-Nfiles = 2 
+Nfiles = 1025
 
 for n in range(Nfiles):
   #fname = f"/pnfs/dune/tape_backed/users/mkramer/prod/MiniRun4/MiniRun4_1E19_RHC/MiniRun4_1E19_RHC.larnd/LARNDSIM/MiniRun4_1E19_RHC.larnd.{n:05d}.LARNDSIM.h5"
@@ -68,55 +69,61 @@ for n in range(Nfiles):
     #if abs(trajs[trajs['traj_id']==t]['E_end']-M_mu)>1E-3: continue
 
     mup_xyz = np.array(trajs[(trajs['traj_id']==t)]['xyz_end'][0])
-    #print(trajs[(trajs['traj_id']==t) & (trajs['pdg_id']==mup)]['xyz_end'][0])
     if isIn(mup_xyz)==False: continue
 
-    Mc_trajIDs = trajs[(trajs['parent_id']==t) & (abs(trajs['pdg_id'])==ep) & (trajs['start_process']==6)]['traj_id']
+    Mc_trajIDs = trajs[(trajs['parent_id']==t) & (abs(trajs['pdg_id'])==ep) & (trajs['start_process']==6)  & (trajs['start_subprocess']==201)]['traj_id']
     #Mc_trajIDs = trajs[(trajs['parent_id']==t) & (abs(trajs['pdg_id'])==ep) & (trajs['E_start']>10)]['traj_id']
     for Mc_t in Mc_trajIDs:
       print("Michel e", trajs[trajs['traj_id']==Mc_t], "\n")
+      print("brem", trajs[(trajs['parent_id']==Mc_t) & (abs(trajs['pdg_id'])==gamma) & (trajs['start_process']==2) & (trajs['start_subprocess']==3)], "\n")
       print("ionization e", trajs[(trajs['parent_id']==Mc_t) & (abs(trajs['pdg_id'])==ep) & (trajs['start_process']==2) & (trajs['start_subprocess']==2)], "\n")
-      print("others", trajs[(trajs['parent_id']==Mc_t) & (abs(trajs['pdg_id'])==ep) & (trajs['start_process']==2) & (trajs['start_subprocess']!=2)], "\n")
-
+      print("others", trajs[(trajs['parent_id']==Mc_t) & (abs(trajs['pdg_id'])==ep)], "\n")
+      Mc_E.extend(trajs[trajs['traj_id']==Mc_t]['E_start'])
+      Ion_E.append(sum(trajs[(trajs['parent_id']==Mc_t) & (abs(trajs['pdg_id'])==ep) & (trajs['start_process']==2) & (trajs['start_subprocess']==2)]['E_start']))
+      brem_E.append(sum(trajs[(trajs['parent_id']==Mc_t) & (abs(trajs['pdg_id'])==gamma) & (trajs['start_process']==2) & (trajs['start_subprocess']==3)]['E_start']))
+      others_E.append(sum(trajs[(trajs['parent_id']==Mc_t) & (abs(trajs['pdg_id'])==ep) & (trajs['start_process']==2) & (trajs['start_subprocess']!=2)]['E_start']))
+      #print(Mc_E, Ion_E)
       #print(trajs[trajs['traj_id']==Mc_t]['E_start'])
       #print(trajs[(trajs['parent_id']==Mc_t) & (abs(trajs['pdg_id'])==ep) & (trajs['start_process']==2)]['E_start'])
 
-"""
-    for Mc_t in Mc_trajIDs:
-      ep_xyz = np.array(trajs[(trajs['traj_id']==Mc_t)]['xyz_start'][0])
-  
-      if not np.array_equal(ep_xyz, mup_xyz): continue
-      print(trajs[trajs['traj_id']==t])
-      print(trajs[trajs['traj_id']==Mc_t])
-      Mc_E.extend(trajs[(trajs['traj_id']==Mc_t)]['E_start'])
+print(Mc_E, len(Mc_E))
+print(Ion_E, len(Ion_E))
+print(others_E, len(others_E))
 
-      Mc_pxyz = trajs[(trajs['traj_id']==Mc_t)]['pxyz_start'][0]
-      Mc_p.append(np.sqrt(Mc_pxyz[0]**2 + Mc_pxyz[1]**2 + Mc_pxyz[2]**2))
-
-      ep_trajIDs = trajs[(trajs['parent_id']==Mc_t) & (trajs['pdg_id']==ep)]['traj_id'] 
-      print(len(ep_trajIDs)) 
-      print(trajs[trajs['traj_id']==ep_trajIDs])
-
-  print(len(Mc_E), len(Mc_p))
-"""
-
-"""
 plt.figure(1)
-label_EMichel = [f"entries: {len(Mc_E)}"]
-plt.hist(Mc_E, bins=50, label=label_EMichel, range=(0,50))
+plt.hist2d(Mc_E, Ion_E, bins=(30,30), cmap='viridis_r', range=([0,60],[0,60]))
+plt.title("Michel Energy vs Ionization Energy")
+plt.xlabel("Michel electron Energy (MeV)")
+plt.ylabel("Ionization Energy (MeV)")
 plt.grid()
-plt.title("Michel Electron Energy")
-plt.xlabel("MeV")
-plt.ylabel("entries")
-plt.savefig("Mc_E_noG4ID.png")
+plt.colorbar()
+plt.savefig("McVsIon_E.png")
+
+
+plt.figure(4)
+plt.hist2d(Mc_E, brem_E, bins=(30,30), cmap='viridis_r', range=([0,60],[0,60]))
+plt.title("Michel Energy vs Bremsstrahlung Energy")
+plt.xlabel("Michel electron Energy (MeV)")
+plt.ylabel("Bremsstrahlung Energy (MeV)")
+plt.grid()
+plt.colorbar()
+plt.savefig("McVsBrem_E.png")
 
 
 plt.figure(2)
-label_pMichel = [f"entries: {len(Mc_p)}"]
-plt.hist(Mc_p, bins=50, label=label_pMichel, range=(0,50))
+plt.hist2d(Mc_E, others_E, bins=(30,30), cmap='viridis_r', range=([0,60],[0,60]))
+plt.title("Michel Energy vs Others (MeV)")
+plt.xlabel("Michel electron Energy (MeV)")
+plt.ylabel("Others")
 plt.grid()
-plt.title("Michel Electron Momentum")
-plt.xlabel("MeV")
-plt.ylabel("entries")
-plt.savefig("Mc_p_noG4ID.png")
-"""
+plt.colorbar()
+plt.savefig("McVsOthers_E.png")
+
+
+plt.figure(3)
+plt.hist(Mc_E, bins=50)
+plt.title("Michel Energy")
+plt.xlabel("Michel electron Energy (MeV)")
+plt.ylabel("counts")
+plt.grid()
+plt.savefig("Mc_E.png")
