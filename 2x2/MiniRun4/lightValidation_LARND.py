@@ -33,7 +33,7 @@ def isIn(vertex):
     return False
 
 run = "MiniRun4"
-Nfiles = 10
+Nfiles = 1
 
 for n in range(Nfiles):
   fname = f"/pnfs/dune/tape_backed/users/mkramer/prod/MiniRun4/MiniRun4_1E19_RHC/MiniRun4_1E19_RHC.larnd/LARNDSIM/MiniRun4_1E19_RHC.larnd.{n:05d}.LARNDSIM.h5"
@@ -44,14 +44,14 @@ for n in range(Nfiles):
   
   file = h5py.File(fname, 'r')
 
-   
+  """   
   print(file.keys())
   for key in file.keys():
     if key=='_header': 
       print(key, file[key].attrs.items(), "\n")
     else:
       print(key, file[key].dtype.names, "\n")
-  
+  """ 
 
   #Ints = file["mc_truth/interactions/data"]
   #stack = file["mc_truth/stack/data"]
@@ -74,11 +74,13 @@ for n in range(Nfiles):
 
   f = h5flow.data.H5FlowDataManager(fname, 'r')
 
-  print(mc_hdr['event_id'].shape)
+  """
+  print(max(mc_hdr['event_id']), min(mc_hdr['event_id']))
+  #print(trajectories['event_id'])
   print(light_trig['ts_s'].shape)
   print(light_wvfm.shape)
+  """
 
-"""
   ## DEFINE COMMON VALUES
   SPILL_PERIOD = 1.2e7
   SAMPLES = len(light_wvfm[0][0])
@@ -393,4 +395,4 @@ for n in range(Nfiles):
   #data_readout(7,5,SPILL)
   #data_readout(8,6,SPILL)
 
-"""
+
