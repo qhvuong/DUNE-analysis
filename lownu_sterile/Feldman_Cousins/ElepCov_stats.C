@@ -1,8 +1,10 @@
-static const int N = 500; // number of universes
+static const int N = 5000; // number of universes
 static const int nbins = 100;
 
 
 TMatrixD covmx( 3*nbins, 3*nbins );
+TMatrixD sysmx( 3*nbins, 3*nbins );
+TMatrixD statmx( 3*nbins, 3*nbins );
 TMatrixD scaleCovars( 3*nbins, 3*nbins ); // pairwise covariance of columns of random numbers
 TMatrixD scales( N, 3*nbins );
 
@@ -31,6 +33,9 @@ void ElepCov_stats()
   //for(para = 1; para <3; para++) {
   TFile *f     = new TFile("/dune/app/users/qvuong/data/lownu/CC_output.root");
   TFile *f_nue = new TFile("/dune/app/users/qvuong/data/lownu/nue_output.root");
+  TFile *f_sys = new TFile("/dune/app/users/qvuong/lownu/sigma_mtr/tot3.root", "OLD" );
+  TH2D *hsys   = (TH2D*)f_sys->Get( "cv" );
+  
   //for(cutNu = 0; cutNu < 4; cutNu++) {
   //if(cutNu != 0 && cutNu != 3 ) continue;
   cutNu = 3;		// cut nu<0.3GeV
@@ -47,27 +52,30 @@ void ElepCov_stats()
   for( int x = 0; x < nbins; ++x ) {
     for( int y = 0; y < nbins; ++y ) {
       if(x==y){
-        covmx[x][y]                 = CC_m_nom->GetBinContent( x+1, y+1 );
-        covmx[x+nbins][y+nbins]     = CC_e_nom->GetBinContent( x+1, y+1 );
-        covmx[x+2*nbins][y+2*nbins] = nue_nom->GetBinContent( x+1, y+1 );
-        std::cout << covmx[x][y] << "\t" << covmx[x+nbins][y+nbins] << "\t" << covmx[x+2*nbins][y+2*nbins] << "\n";
+        statmx[x][y]                 = CC_m_nom->GetBinContent( x+1, y+1 );
+        statmx[x+nbins][y+nbins]     = CC_e_nom->GetBinContent( x+1, y+1 );
+        statmx[x+2*nbins][y+2*nbins] = nue_nom->GetBinContent( x+1, y+1 );
+        //std::cout << covmx[x][y] << "\t" << covmx[x+nbins][y+nbins] << "\t" << covmx[x+2*nbins][y+2*nbins] << "\n";
       }
 
       else{
-        covmx[x][y]                     = 0.;
-        covmx[x+nbins][y+nbins]         = 0.;
-        covmx[x+2*nbins][y+2*nbins]     = 0.;}
+        statmx[x][y]                     = 0.;
+        statmx[x+nbins][y+nbins]         = 0.;
+        statmx[x+2*nbins][y+2*nbins]     = 0.;}
     }
   }
 
-  TH2D *hcovmx = new TH2D("hcovmx","",300,0,300,300,0,300);
-  for( int i = 0; i < nbins; ++i ) {
-    for( int j = 0; j < nbins; ++j ) {
+  TH2D *hcovmx = new TH2D("hcovmx","",3*nbins,0,3*nbins,3*nbins,0,3*nbins);
+  for( int i = 0; i < 3*nbins; ++i ) {
+    for( int j = 0; j < 3*nbins; ++j ) {
+      sysmx[i][j] = hsys->GetBinContent(i+1, j+1);
+      //sysmx[i][j] = 0.;
+      covmx[i][j] = statmx[i][j] + sysmx[i][j];
       hcovmx->SetBinContent(i+1, j+1, covmx[i][j]);
   }
   } 
 
-/*
+
   int originalErrorWarning = gErrorIgnoreLevel;
   gErrorIgnoreLevel = kFatal;
 
@@ -95,7 +103,7 @@ void ElepCov_stats()
   }
 
   std::cout << "Had to shift diagonal " << iAttempt << " time(s) to allow the covariance matrix to be decomposed" << std::endl;
-*/
+
   // cholesky decomposition
   TDecompChol decomp( covmx );
   if( !decomp.Decompose() ) {
@@ -123,7 +131,7 @@ void ElepCov_stats()
       scales[i][j] = old - mean;
     }
   }
-  std::cout << scales[1][1] << "\n";
+  //std::cout << scales[1][1] << "\n";
 
 
   for( int i = 0; i < 3*nbins; ++i ) { // columns
@@ -147,12 +155,12 @@ void ElepCov_stats()
   scales *= inverse;
 
   scales *= chol;
-  std::cout << scales[1][1] << "\n";
+  //std::cout << scales[1][1] << "\n";
 
-/*
-  TH1D *m     = new TH1D("m","",100,0,16);
-  TH1D *e     = new TH1D("e","",100,0,16);
-  TH1D *nue   = new TH1D("nue","",100,0,16);
+
+  TH1D *m     = new TH1D("m","",nbins,0,16);
+  TH1D *e     = new TH1D("e","",nbins,0,16);
+  TH1D *nue   = new TH1D("nue","",nbins,0,16);
 
   
   for( int u = 0; u < N; ++u ) {
@@ -162,23 +170,26 @@ void ElepCov_stats()
     e->Reset();
     nue->Reset();
 
-    for(int CCmb=0; CCmb<nbins; CCmb++) {
-      int fluxbin = CCmb+1;
+    for(int b=0; b<nbins; b++) {
+      int fluxbin = b;
       double evtwgt = scales[u][fluxbin];
+      double bincontent = CC_m_nom->GetBinContent(b+1);
 
-      m->Fill(CC_m_nom->GetBinContent(CCmb+1),1.+evtwgt);
+      m->SetBinContent(b+1, bincontent*(1.+evtwgt));
     }
-    for(int CCeb=0; CCeb<nbins; CCeb++) {
-      int fluxbin = CCeb+101;
+    for(int b=0; b<nbins; b++) {
+      int fluxbin = b+nbins;
       double evtwgt = scales[u][fluxbin];
+      double bincontent = CC_e_nom->GetBinContent(b+1);
 
-      e->Fill(CC_e_nom->GetBinContent(CCeb+1),1.+evtwgt);
+      e->SetBinContent(b+1, bincontent*(1.+evtwgt));
     }
-    for(int nueb=0; nueb<nbins; nueb++) {
-      int fluxbin = nueb+201;
+    for(int b=0; b<nbins; b++) {
+      int fluxbin = b+2*nbins;
       double evtwgt = scales[u][fluxbin];
+      double bincontent = nue_nom->GetBinContent(b+1);
 
-      nue->Fill(nue_nom->GetBinContent(nueb+1),1.+evtwgt);
+      nue->SetBinContent(b+1, bincontent*(1.+evtwgt));
     }
 
 
@@ -254,9 +265,9 @@ void ElepCov_stats()
     }
   }
 
-  TH2D *hcv = new TH2D("hcv","",300,0,300,300,0,300);
-  for(int i=0; i<300; i++) {
-    for(int j=0; j<300; j++) {
+  TH2D *hcv = new TH2D("hcv","",3*nbins,0,3*nbins,3*nbins,0,3*nbins);
+  for(int i=0; i<3*nbins; i++) {
+    for(int j=0; j<3*nbins; j++) {
       hcv->SetBinContent(i+1, j+1, ECovars[i][j]);
     }
   }
@@ -273,10 +284,8 @@ void ElepCov_stats()
   hcv->SetStats(0);
   hcv->SetTitle(Form(" Covariance (nu<%.1fGeV && Etheta2<%.1fMeV)",nu,Ev));
 
-  //hcr->SetStats(0);
-  //hcr->SetTitle(Form("%s Correlation (nu<%.1fGeV && Etheta2<%.1fMeV)",name,nu,Ev));
-
   TCanvas *c0 = new TCanvas("c0","",900,800);
+  hcovmx->SetStats(0);
   hcovmx->Draw("colz");
   c0->SaveAs("hcovmx.png");
 
@@ -284,15 +293,13 @@ void ElepCov_stats()
   hcv->Draw("colz");
   ccv->SaveAs(Form("FC_stats_%d.png",N));
 
-  gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
-*/
+  //gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
 
 
-/*
-  TFile *out = new TFile(Form("/dune/app/users/qvuong/lownu/Feldman_Cousins/FC_tot3_%d.root",N),"RECREATE");
+  TFile *out = new TFile(Form("FC_3sys_%d.root",N),"RECREATE");
   hcv->Write();
   out->Close();
-*/
+
   
 }
 

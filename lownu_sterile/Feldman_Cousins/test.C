@@ -33,9 +33,9 @@ void test()
 
 
   for( int x = 0; x < nb; ++x ) {
-    CC_m_nom->SetBinContent(x+1, N*N*N);
-    CC_e_nom->SetBinContent(x+1, x+1);
-    nue_nom->SetBinContent(x+1, x+2);
+    CC_m_nom->SetBinContent(x+1, 10);
+    CC_e_nom->SetBinContent(x+1, 2);
+    nue_nom->SetBinContent(x+1, 1);
 
 
     for( int y = 0; y < nb; ++y ) {
@@ -156,7 +156,7 @@ void test()
       std::cout << "\n";
   }
 
-/*
+
   TH1D *m     = new TH1D("m","",nb,0,nb);
   TH1D *e     = new TH1D("e","",nb,0,nb);
   TH1D *nue   = new TH1D("nue","",nb,0,nb);
@@ -277,10 +277,12 @@ void test()
   hcv->SetStats(0);
 
   TCanvas *ccv = new TCanvas("ccv","",900,800);
-  hcv->SetMaximum(1.0);
+  //hcv->SetMaximum(1.0);
   hcv->Draw("colz");
   //ccv->SaveAs(Form("Cov%d%d_%d.png",cutNu,cutEv,N));
 
+
+/*
   TFile *out = new TFile(Form("/dune/app/users/qvuong/lownu/cov_matrix/%s_covmtr%d%d_%d.root",name,cutNu,cutEv,N),"RECREATE");
   hcv->Write();
   out->Close();
