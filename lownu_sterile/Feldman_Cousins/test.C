@@ -10,20 +10,19 @@ TMatrixD statmx( nbins, nbins );
 TMatrixD scaleCovars( nbins, nbins ); // pairwise covariance of columns of random numbers
 TMatrixD scales( N, nbins );
   
-//TH2D *hcv = new TH2D("hcv","",N,0,N,nbins,0,nbins);
 
 void test()
 {
 
   int cutNu = 3;
-	
   const char name[20] = "wgt_MaCCQE";
 
-  //for(para = 1; para <3; para++) {
+  // Get data files
   TFile *f     = new TFile("/dune/app/users/qvuong/data/lownu/CC_output.root", "READ");
   TFile *f_nue = new TFile("/dune/app/users/qvuong/data/lownu/nue_output.root", "READ");
+
+  // Get systematic uncertainties
   TFile *f_sys = new TFile(Form("../xS_covmtr/total_sigmtr%d_5sig.root",cutNu), "READ");
-  //TFile *f_sys = new TFile(Form("../xS_covmtr/%s_sigmtr%d.root",name,cutNu), "READ");
   TFile *f_fl  = new TFile(Form("../flux_covmtr/flux_covmtr%d_10000.root",cutNu),"READ");
 
   TH2D *hsys   = (TH2D*)f_sys->Get( "hcv" );
@@ -37,8 +36,7 @@ void test()
   // only need the ND FHC part, which is the first 52 bins probably
   for( int x = 0; x < nbins; ++x ) {
     for( int y = 0; y < nbins; ++y ) {
-      sysmx[x][y]  = hfl->GetBinContent(x+1, y+1) + hsys->GetBinContent(x+1, y+1);
-      //sysmx[x][y]  = hfl->GetBinContent(x+1, y+1);
+      sysmx[x][y]  = hfl->GetBinContent(x+1, y+1) + hsys->GetBinContent(x+1, y+1);		//total sys = flux unc + cross section unc
       statmx[x][y] = 0.;
 
       if(x==y){
@@ -51,6 +49,8 @@ void test()
   }
   
 
+
+  // MAKE FRACTIONAL COVARIANCE MATRIX
   for( int i = 0; i < nbins; ++i ) {
     for( int j = 0; j < nbins; ++j ) {
       double sum = statmx[i][j] + sysmx[i][j];
@@ -126,80 +126,10 @@ void test()
   scales = scales*inverse;
   scales *= chol;
 
-/*
-  for(int u=0; u<N; u++){
-    for(int i=0; i<nbins; i++){
-      hcv->SetBinContent(u+1, i+1, scales[u][i]);
-    }
-  }
-*/
 
   TFile *out = new TFile(Form("FC%d_%d.root",cutNu,N),"RECREATE");
   scales.Write("scales");
-  //hcv->Write();
   out->Close();
-
-/*
-  TH1D *m     = new TH1D("m","",nbins_CC,0,16);
-  TH1D *e     = new TH1D("e","",nbins_CC,0,16);
-  TH1D *nue   = new TH1D("nue","",nbins_nue,0,16);
-
-
-  for( int u = 0; u < 1; ++u ) {
-    //if(u%100==0) std::cout << u << "\n";
-
-    m->Reset();
-    e->Reset();
-    nue->Reset();
-
-    for(int b=0; b<nbins_CC; b++) {
-      int fluxbin = b;
-      double evtwgt = scales[u][fluxbin];
-      double bincontent = CCm_nom->GetBinContent(b+1);
-
-      m->SetBinContent(b+1, bincontent*(1.+evtwgt));
-    }
-    for(int b=0; b<nbins_CC; b++) {
-      int fluxbin = b+nbins_CC;
-      double evtwgt = scales[u][fluxbin];
-      double bincontent = CCe_nom->GetBinContent(b+1);
-
-      e->SetBinContent(b+1, bincontent*(1.+evtwgt));
-    }
-    for(int b=0; b<nbins_nue; b++) {
-      int fluxbin = b+2*nbins_CC;
-      double evtwgt = scales[u][fluxbin];
-      double bincontent = nue_nom->GetBinContent(b+1);
-
-      nue->SetBinContent(b+1, bincontent*(1.+evtwgt));
-    }
-
-
-    for(int i=0; i<nbins_CC; i++){
-      E_m[u][i]     = m->GetBinContent(i+1);
-      E_e[u][i]     = e->GetBinContent(i+1);
-    }
-    for(int i=0; i<nbins_nue; i++){
-      E_nue[u][i]   = nue->GetBinContent(i+1);
-    }
-
-    TCanvas *c = new TCanvas("c", "", 1500,800);
-    c->Divide(3,2);
-    c->cd(1);
-    CCm_nom->Draw();
-    c->cd(2);
-    CCe_nom->Draw();
-    c->cd(3);
-    nue_nom->Draw();
-    c->cd(4);
-    m->Draw();
-    c->cd(5);
-    e->Draw();
-    c->cd(6);
-    nue->Draw();
-    c->SaveAs("test.png");
-  }
-*/
 
 
 

@@ -32,23 +32,17 @@ TMatrixD ECovars( nbins, nbins );
 
 void ElepCov_stats()
 {
-  //for(int cutNu=0; cutNu<4; cutNu+=3){	
   int cutNu = 3;
-  //if(cutNu!=3) continue;
 	
   const char name[20] = "wgt_MaCCQE";
 
-  //for(para = 1; para <3; para++) {
   TFile *f     = new TFile("/dune/app/users/qvuong/data/lownu/CC_output.root", "READ");
   TFile *f_nue = new TFile("/dune/app/users/qvuong/data/lownu/nue_output.root", "READ");
-  //TFile *f_sys = new TFile(Form("../xS_covmtr/total_sigmtr%d_3sig.root",cutNu), "READ");
   TFile *f_sys = new TFile(Form("../xS_covmtr/%s_sigmtr%d.root",name,cutNu), "READ");
   TFile *f_fl  = new TFile(Form("../flux_covmtr/flux_covmtr%d_10000.root",cutNu),"READ");
 
   TH2D *hsys   = (TH2D*)f_sys->Get( "hcv" );
   TH2D *hfl    = (TH2D*)f_fl->Get("hcv");
-  std::cout << hfl->GetNbinsX() << "\t" << hfl->GetNbinsY() << "\n"; 
-  std::cout << hsys->GetNbinsX() << "\t" << hsys->GetNbinsY() << "\n"; 
 
   TH1D *CC_m_nom = (TH1D*)f->Get(Form("%s_m_hElep%d_sigma3",name,cutNu));
   TH1D *CC_e_nom = (TH1D*)f->Get(Form("%s_e_hElep%d_sigma3",name,cutNu));
