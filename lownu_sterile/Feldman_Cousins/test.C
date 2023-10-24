@@ -1,74 +1,78 @@
-static const int N = 10; // number of universes
-static const int nb = 2;
+static const int N = 1000000; 
+static const int nbins_CC = 100;
+static const int nbins_nue = 50;
+static const int nbins = 2*nbins_CC + nbins_nue;
 
 
-TMatrixD covmx( 3*nb, 3*nb );
-TMatrixD scaleCovars( 3*nb, 3*nb ); // pairwise covariance of columns of random numbers
-TMatrixD scales( N, 3*nb );
-
-TMatrixD E_m(N, nb);
-TMatrixD E_e(N, nb);
-TMatrixD E_nue(N, nb);
-
- 
-TMatrixD ECovars_m    ( nb, nb );
-TMatrixD ECovars_e    ( nb, nb );
-TMatrixD ECovars_nue  ( nb, nb );
-
-TMatrixD ECovars_me  ( nb, nb );
-TMatrixD ECovars_mnue( nb, nb );
-TMatrixD ECovars_em  ( nb, nb );
-TMatrixD ECovars_enue( nb, nb );
-TMatrixD ECovars_nuem( nb, nb );
-TMatrixD ECovars_nuee( nb, nb );
-
-TMatrixD ECovars( 3*nb, 3*nb );
+TMatrixD covmx( nbins, nbins );
+TMatrixD sysmx( nbins, nbins );
+TMatrixD statmx( nbins, nbins );
+TMatrixD scaleCovars( nbins, nbins ); // pairwise covariance of columns of random numbers
+TMatrixD scales( N, nbins );
+  
+//TH2D *hcv = new TH2D("hcv","",N,0,N,nbins,0,nbins);
 
 void test()
 {
 
-  TH1D *CC_m_nom = new TH1D("CC_m_nom", "", nb,0,nb);
-  TH1D *CC_e_nom = new TH1D("CC_e_nom", "", nb,0,nb);;
-  TH1D *nue_nom  = new TH1D("nue_nom", "", nb,0,nb);;
+  int cutNu = 3;
+	
+  const char name[20] = "wgt_MaCCQE";
 
+  //for(para = 1; para <3; para++) {
+  TFile *f     = new TFile("/dune/app/users/qvuong/data/lownu/CC_output.root", "READ");
+  TFile *f_nue = new TFile("/dune/app/users/qvuong/data/lownu/nue_output.root", "READ");
+  TFile *f_sys = new TFile(Form("../xS_covmtr/total_sigmtr%d_5sig.root",cutNu), "READ");
+  //TFile *f_sys = new TFile(Form("../xS_covmtr/%s_sigmtr%d.root",name,cutNu), "READ");
+  TFile *f_fl  = new TFile(Form("../flux_covmtr/flux_covmtr%d_10000.root",cutNu),"READ");
 
-  for( int x = 0; x < nb; ++x ) {
-    CC_m_nom->SetBinContent(x+1, 10);
-    CC_e_nom->SetBinContent(x+1, 2);
-    nue_nom->SetBinContent(x+1, 1);
+  TH2D *hsys   = (TH2D*)f_sys->Get( "hcv" );
+  TH2D *hfl    = (TH2D*)f_fl->Get("hcv");
 
+  TH1D *CCm_nom = (TH1D*)f->Get(Form("%s_m_hElep%d_sigma3",name,cutNu));
+  TH1D *CCe_nom = (TH1D*)f->Get(Form("%s_e_hElep%d_sigma3",name,cutNu));
+  TH1D *nue_nom  = (TH1D*)f_nue->Get("hElep0");
+  
 
-    for( int y = 0; y < nb; ++y ) {
+  // only need the ND FHC part, which is the first 52 bins probably
+  for( int x = 0; x < nbins; ++x ) {
+    for( int y = 0; y < nbins; ++y ) {
+      sysmx[x][y]  = hfl->GetBinContent(x+1, y+1) + hsys->GetBinContent(x+1, y+1);
+      //sysmx[x][y]  = hfl->GetBinContent(x+1, y+1);
+      statmx[x][y] = 0.;
+
       if(x==y){
-        covmx[x][y]           = CC_m_nom->GetBinContent( x+1 );
-        covmx[x+nb][y+nb]     = CC_e_nom->GetBinContent( x+1 );
-        covmx[x+2*nb][y+2*nb] = nue_nom->GetBinContent( x+1 );
+        if(x<nbins_CC)                  statmx[x][y] = CCm_nom->GetBinContent( x+1 );
+        if(x>=nbins_CC && x<2*nbins_CC) statmx[x][y] = CCe_nom->GetBinContent( x-nbins_CC+1 );
+        if(x>=2*nbins_CC)               statmx[x][y] = nue_nom->GetBinContent( x-2*nbins_CC+1 );
       }
 
-      else{
-        covmx[x][y]               = 0.;
-        covmx[x+nb][y+nb]         = 0.;
-        covmx[x+2*nb][y+2*nb]     = 0.;}
     }
   }
   
-  TH2D *hcovmx = new TH2D("hcovmx","",3*nb,0,3*nb,3*nb,0,3*nb);
-  TH2D *hchol = new TH2D("hchol","",3*nb,0,3*nb,3*nb,0,3*nb);
-  for( int i = 0; i < 3*nb; ++i ) {
-    for( int j = 0; j < 3*nb; ++j ) {
-      hcovmx->SetBinContent(i+1, j+1, covmx[i][j]);
-    }
+
+  for( int i = 0; i < nbins; ++i ) {
+    for( int j = 0; j < nbins; ++j ) {
+      double sum = statmx[i][j] + sysmx[i][j];
+        if(i<nbins_CC){
+          if(j<nbins_CC)                  covmx[i][j] = sum/(CCm_nom->GetBinContent(i+1) * CCm_nom->GetBinContent(j+1));
+          if(j>=nbins_CC && j<2*nbins_CC) covmx[i][j] = sum/(CCm_nom->GetBinContent(i+1) * CCe_nom->GetBinContent(j-nbins_CC+1));
+          if(j>=2*nbins_CC)               covmx[i][j] = sum/(CCm_nom->GetBinContent(i+1) * nue_nom->GetBinContent(j-2*nbins_CC+1));}
+      
+
+        if(i>=nbins_CC && i<2*nbins_CC){ 
+          if(j<nbins_CC)                  covmx[i][j] = sum/(CCe_nom->GetBinContent(i-nbins_CC+1) * CCm_nom->GetBinContent(j+1));
+          if(j>=nbins_CC && j<2*nbins_CC) covmx[i][j] = sum/(CCe_nom->GetBinContent(i-nbins_CC+1) * CCe_nom->GetBinContent(j-nbins_CC+1));
+          if(j>=2*nbins_CC)               covmx[i][j] = sum/(CCe_nom->GetBinContent(i-nbins_CC+1) * nue_nom->GetBinContent(j-2*nbins_CC+1));}
+
+
+        if(i>=2*nbins_CC){
+          if(j<nbins_CC)                  covmx[i][j] = sum/(nue_nom->GetBinContent(i-2*nbins_CC+1) * CCm_nom->GetBinContent(j+1));
+          if(j>=nbins_CC && j<2*nbins_CC) covmx[i][j] = sum/(nue_nom->GetBinContent(i-2*nbins_CC+1) * CCe_nom->GetBinContent(j-nbins_CC+1));
+          if(j>=2*nbins_CC)               covmx[i][j] = sum/(nue_nom->GetBinContent(i-2*nbins_CC+1) * nue_nom->GetBinContent(j-2*nbins_CC+1));}
+  }
   }
 
-  printf("\ncovmx\n");
-  for( int i = 0; i < 3*nb; ++i ) {
-    for( int j = 0; j < 3*nb; ++j ) {
-      std::cout << covmx[i][j] << "\t";
-    }
-      std::cout << "\n";
-  }
-
-    
   // cholesky decomposition
   TDecompChol decomp( covmx );
   if( !decomp.Decompose() ) {
@@ -77,53 +81,37 @@ void test()
   }
   const TMatrixD chol = decomp.GetU();
 
-  printf("\ncovmx chol\n");
-  for( int i = 0; i < 3*nb; ++i ) {
-    for( int j = 0; j < 3*nb; ++j ) {
-      std::cout << chol[i][j] << "\t";
-    }
-      std::cout << "\n";
-  }
-  
-  
+
 
   TRandom3 * rand = new TRandom3(12345);
-  TH2D *hscales = new TH2D("hscales", "", 3*nb,0,3*nb, 3*nb,0,3*nb);
 
   // make random number matrix
+  
+  
+  double mean;
+  double val, old;
   for( int i = 0; i < N; ++i ) {
-    double mean = 0.;
-    for( int j = 0; j < 3*nb; ++j ) {
-      double val = rand->Gaus( 0., 1. );
+    mean = 0.;
+    for( int j = 0; j < nbins; ++j ) {
+      val = rand->Gaus( 0., 1. );
       scales[i][j] = val;
       mean += val;
     }
 
     mean /= N;
     // force each column mean to be exactly 0, this just eliminates tiny statistical fluctuations in the mean weight
-    for( int j = 0; j < 3*nb; ++j ) {
-      double old = scales[i][j];
+    for( int j = 0; j < nbins; ++j ) {
+      old = scales[i][j];
       scales[i][j] = old - mean;
     }
-
   }
 
 
-  printf("\nscales\n");
-  for( int i = 0; i < N; ++i ) {
-    for( int j = 0; j < 3*nb; ++j ) {
-      //if(abs(scales[i][j])>1)
-      std::cout << scales[i][j] << "\t";
-    }
-      std::cout << "\n";
-  }
-  
-
-  for( int i = 0; i < 3*nb; ++i ) { // columns
-    for( int j = 0; j < 3*nb; ++j ) { // columns
-
+  double covar;
+  for( int i = 0; i < nbins; ++i ) { // columns
+    for( int j = 0; j < nbins; ++j ) { // columns
       // compute column covariance
-      double covar = 0.;
+      covar = 0.;
       for( int k = 0; k < N; ++k ) { // rows
         covar += (scales[k][i] * scales[k][j]); // means are 0 already by construction
       }
@@ -131,164 +119,92 @@ void test()
     }
   }
 
-  printf("\nscaleCovars\n");
-  for( int i = 0; i < 3*nb; ++i ) {
-    for( int j = 0; j < 3*nb; ++j ) {
-      std::cout << scaleCovars[i][j] << "\t";
-    }
-      std::cout << "\n";
-  }
-
   TDecompChol scaleDecomp( scaleCovars );
   if( !scaleDecomp.Decompose() ) printf( "Scale matrix didn't decompolse\n" );
   TMatrixD toInvert = scaleDecomp.GetU();
   TMatrixD inverse = toInvert.Invert();
-  scales *= inverse;
-
+  scales = scales*inverse;
   scales *= chol;
 
-  printf("\nscales_final\n");
-  for( int i = 0; i < N; ++i ) {
-    for( int j = 0; j < 3*nb; ++j ) {
-      //if(abs(scales[i][j])>1)
-      std::cout << scales[i][j] << "\t";
+/*
+  for(int u=0; u<N; u++){
+    for(int i=0; i<nbins; i++){
+      hcv->SetBinContent(u+1, i+1, scales[u][i]);
     }
-      std::cout << "\n";
   }
+*/
+
+  TFile *out = new TFile(Form("FC%d_%d.root",cutNu,N),"RECREATE");
+  scales.Write("scales");
+  //hcv->Write();
+  out->Close();
+
+/*
+  TH1D *m     = new TH1D("m","",nbins_CC,0,16);
+  TH1D *e     = new TH1D("e","",nbins_CC,0,16);
+  TH1D *nue   = new TH1D("nue","",nbins_nue,0,16);
 
 
-  TH1D *m     = new TH1D("m","",nb,0,nb);
-  TH1D *e     = new TH1D("e","",nb,0,nb);
-  TH1D *nue   = new TH1D("nue","",nb,0,nb);
+  for( int u = 0; u < 1; ++u ) {
+    //if(u%100==0) std::cout << u << "\n";
 
-  
-  for( int u = 0; u < N; ++u ) {
     m->Reset();
     e->Reset();
     nue->Reset();
-    
-    for(int b=0; b<nb; b++) {
-      int bin = b;
-      double evtwgt = scales[u][bin];
-      double bincontent = CC_m_nom->GetBinContent(b+1);
+
+    for(int b=0; b<nbins_CC; b++) {
+      int fluxbin = b;
+      double evtwgt = scales[u][fluxbin];
+      double bincontent = CCm_nom->GetBinContent(b+1);
+
       m->SetBinContent(b+1, bincontent*(1.+evtwgt));
-      //std::cout << bincontent << "\t" << evtwgt << "\t" << m->GetBinContent(b+1) << "\n";
     }
-    for(int b=0; b<nb; b++) {
-      int bin = b+nb;
-      double evtwgt = scales[u][bin];
-      double bincontent = CC_e_nom->GetBinContent(b+1);
+    for(int b=0; b<nbins_CC; b++) {
+      int fluxbin = b+nbins_CC;
+      double evtwgt = scales[u][fluxbin];
+      double bincontent = CCe_nom->GetBinContent(b+1);
+
       e->SetBinContent(b+1, bincontent*(1.+evtwgt));
     }
-    for(int b=0; b<nb; b++) {
-      int bin = b+2*nb;
-      double evtwgt = scales[u][bin];
+    for(int b=0; b<nbins_nue; b++) {
+      int fluxbin = b+2*nbins_CC;
+      double evtwgt = scales[u][fluxbin];
       double bincontent = nue_nom->GetBinContent(b+1);
+
       nue->SetBinContent(b+1, bincontent*(1.+evtwgt));
     }
 
-    
-    for(int i=0; i<nb; i++){
+
+    for(int i=0; i<nbins_CC; i++){
       E_m[u][i]     = m->GetBinContent(i+1);
       E_e[u][i]     = e->GetBinContent(i+1);
+    }
+    for(int i=0; i<nbins_nue; i++){
       E_nue[u][i]   = nue->GetBinContent(i+1);
     }
 
-   }
-
-
-  for( int i = 0; i < nb; ++i ) { // columns
-    for( int j = 0; j < nb; ++j ) { // columns
-      // compute column covariance
-      double covar_m = 0.;
-      double covar_e = 0.;
-      double covar_nue = 0.;
-      double covar_me = 0.;
-      double covar_mnue = 0.;
-      double covar_em = 0.;
-      double covar_enue = 0.;
-      double covar_nuem = 0.;
-      double covar_nuee = 0.;
-
-      double var_m_i = 0.;
-      double var_m_j = 0.;
-      double var_e_i = 0.;
-      double var_e_j = 0.;
-      double var_nue_i = 0.;
-      double var_nue_j = 0.;
-
-      for( int k = 0; k < N; ++k ) { // rows
-        covar_m     += (E_m[k][i]     - CC_m_nom->GetBinContent(i+1))  * (E_m[k][j]     - CC_m_nom->GetBinContent(j+1));
-        covar_e     += (E_e[k][i]     - CC_e_nom->GetBinContent(i+1))  * (E_e[k][j]     - CC_e_nom->GetBinContent(j+1)); 
-        covar_nue   += (E_nue[k][i]   - nue_nom->GetBinContent(i+1))   * (E_nue[k][j]   - nue_nom->GetBinContent(j+1)); 
-
-        covar_me   += (E_m[k][i]   - CC_m_nom->GetBinContent(i+1)) * (E_e[k][j]   - CC_e_nom->GetBinContent(j+1));
-        covar_mnue += (E_m[k][i]   - CC_m_nom->GetBinContent(i+1)) * (E_nue[k][j] - nue_nom->GetBinContent(j+1));
-        covar_em   += (E_e[k][i]   - CC_e_nom->GetBinContent(i+1)) * (E_m[k][j]   - CC_m_nom->GetBinContent(j+1)); 
-        covar_enue += (E_e[k][i]   - CC_e_nom->GetBinContent(i+1)) * (E_nue[k][j] - nue_nom->GetBinContent(j+1)); 
-        covar_nuem += (E_nue[k][i] - nue_nom->GetBinContent(i+1))  * (E_m[k][j]   - CC_m_nom->GetBinContent(j+1)); 
-        covar_nuee += (E_nue[k][i] - nue_nom->GetBinContent(i+1))  * (E_e[k][j]   - CC_e_nom->GetBinContent(j+1)); 
-
-      }
-
-      ECovars_m[i][j]     = covar_m    /(N * CC_m_nom->GetBinContent(i+1)  * CC_m_nom->GetBinContent(j+1));
-      ECovars_e[i][j]     = covar_e    /(N * CC_e_nom->GetBinContent(i+1)  * CC_e_nom->GetBinContent(j+1));
-      ECovars_nue[i][j]   = covar_nue  /(N * nue_nom->GetBinContent(i+1)   * nue_nom->GetBinContent(j+1));
-
-      ECovars_me[i][j]   = covar_me  /(N * CC_m_nom->GetBinContent(i+1) * CC_e_nom->GetBinContent(j+1));
-      ECovars_mnue[i][j] = covar_mnue/(N * CC_m_nom->GetBinContent(i+1) * nue_nom->GetBinContent(j+1));
-      ECovars_em[i][j]   = covar_em  /(N * CC_e_nom->GetBinContent(i+1) * CC_m_nom->GetBinContent(j+1));
-      ECovars_enue[i][j] = covar_enue/(N * CC_e_nom->GetBinContent(i+1) * nue_nom->GetBinContent(j+1));
-      ECovars_nuem[i][j] = covar_nuem/(N * nue_nom->GetBinContent(i+1)  * CC_m_nom->GetBinContent(j+1));
-      ECovars_nuee[i][j] = covar_nuee/(N * nue_nom->GetBinContent(i+1)  * CC_e_nom->GetBinContent(j+1));
-
-    }
+    TCanvas *c = new TCanvas("c", "", 1500,800);
+    c->Divide(3,2);
+    c->cd(1);
+    CCm_nom->Draw();
+    c->cd(2);
+    CCe_nom->Draw();
+    c->cd(3);
+    nue_nom->Draw();
+    c->cd(4);
+    m->Draw();
+    c->cd(5);
+    e->Draw();
+    c->cd(6);
+    nue->Draw();
+    c->SaveAs("test.png");
   }
-
-
-
-  for(int i = 0; i < nb; i++) {
-    for(int j = 0; j < nb; j++) {
-      ECovars[i][j]         = ECovars_m[i][j];
-      ECovars[i][j+nb]   = ECovars_me[i][j];
-      ECovars[i][j+2*nb] = ECovars_mnue[i][j];
-
-      ECovars[i+nb][j]         = ECovars_em[i][j];
-      ECovars[i+nb][j+nb]   = ECovars_e[i][j];
-      ECovars[i+nb][j+2*nb] = ECovars_enue[i][j];
-
-      ECovars[i+2*nb][j]         = ECovars_nuem[i][j];
-      ECovars[i+2*nb][j+nb]   = ECovars_nuee[i][j];
-      ECovars[i+2*nb][j+2*nb] = ECovars_nue[i][j];
-    }
-  }
-
-
-
-  TH2D *hcv = new TH2D("hcv","",3*nb,0,3*nb,3*nb,0,3*nb);
-  for(int i=0; i<3*nb; i++) {
-    for(int j=0; j<3*nb; j++) {
-      hcv->SetBinContent(i+1, j+1, ECovars[i][j]);
-    }
-  }
- 
-  gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
-
-  hcv->SetStats(0);
-
-  TCanvas *ccv = new TCanvas("ccv","",900,800);
-  //hcv->SetMaximum(1.0);
-  hcv->Draw("colz");
-  //ccv->SaveAs(Form("Cov%d%d_%d.png",cutNu,cutEv,N));
-
-
-/*
-  TFile *out = new TFile(Form("/dune/app/users/qvuong/lownu/cov_matrix/%s_covmtr%d%d_%d.root",name,cutNu,cutEv,N),"RECREATE");
-  hcv->Write();
-  out->Close();
-  }
-  //}
-  //}
 */
+
+
+
+
+ 
+
 }
 
