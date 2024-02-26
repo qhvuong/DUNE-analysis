@@ -1,6 +1,6 @@
-static const int nbins = 250;
 static const int nbins_CC = 100;
-static const int nbins_nue = 50;
+static const int nbins_nue = 20;
+static const int nbins = 2*nbins_CC + nbins_nue;
 
 void total()
 {
@@ -30,7 +30,7 @@ void total()
   for(int iw=0; iw<N_wgt; iw++){
     if(iw%10==0) std::cout << iw*100.0/N_wgt << "\n";
 
-    TFile *f = new TFile(Form("%s_sigmtr%d.root",name[iw],cutNu),"READ");
+    TFile *f = new TFile(Form("%s_sigmtr%d_100binsCC.root",name[iw],cutNu),"READ");
 
     TH2D *cv2 = (TH2D*)f->Get("hcv2");    
     TH2D *cv  = (TH2D*)f->Get("hcv");    
@@ -50,6 +50,7 @@ void total()
 
   hcv->SetStats(0);
   frhcv->SetStats(0);
+
 
   gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
 
@@ -71,7 +72,7 @@ void total()
   c1->SaveAs(Form("sigma%d_5sig_logz.png",cutNu));
 
 
-  TFile *out = new TFile(Form("total_sigmtr%d_5sig.root",cutNu),"RECREATE");
+  TFile *out = new TFile(Form("total_sigmtr%d_5sig_100binsCC.root",cutNu),"RECREATE");
   hcv->Write();
   frhcv->Write();
   out->Close();

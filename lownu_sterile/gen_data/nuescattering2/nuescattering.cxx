@@ -22,7 +22,7 @@ int main()
   TChain * tree = new TChain( "tree", "tree" );
   TChain * meta = new TChain( "meta", "meta" );
 
-  for(int i = 40; i<50; i++){
+  for(int i = 50; i<60; i++){
   //if(i==39) continue;
   tree->Add( Form("root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/marshalc/nue_study/FHC/nueFHC_%03d.root",i) );
   meta->Add( Form("root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/marshalc/nue_study/FHC/nueFHC_%03d.root",i) );
@@ -59,17 +59,17 @@ int main()
     else                     xEdges[i+1] = xEdges[i] + 4.0;
   }
    
-  TH2D *m_hElepRecoVsEv0   = new TH2D("m_hElepRecoVsEv0","",nbinsX,xEdges,50,0,16);
-  TH2D *m_hElepRecoVsEv0_w = new TH2D("m_hElepRecoVsEv0_w","",nbinsX,xEdges,50,0,16);
-  TH2D *e_hElepRecoVsEv0   = new TH2D("e_hElepRecoVsEv0","",nbinsX,xEdges,50,0,16);
-  TH2D *e_hElepRecoVsEv0_w = new TH2D("e_hElepRecoVsEv0_w","",nbinsX,xEdges,50,0,16);
+  TH2D *m_hElepRecoVsEv0   = new TH2D("m_hElepRecoVsEv0","",nbinsX,xEdges,20,0,16);
+  TH2D *m_hElepRecoVsEv0_w = new TH2D("m_hElepRecoVsEv0_w","",nbinsX,xEdges,20,0,16);
+  TH2D *e_hElepRecoVsEv0   = new TH2D("e_hElepRecoVsEv0","",nbinsX,xEdges,20,0,16);
+  TH2D *e_hElepRecoVsEv0_w = new TH2D("e_hElepRecoVsEv0_w","",nbinsX,xEdges,20,0,16);
 
-  TH2D *m_hElepRecoVsEv0_cov = new TH2D("m_hElepRecoVsEv0_cov","",19,mubins,50,0,16);
-  TH2D *e_hElepRecoVsEv0_cov = new TH2D("e_hElepRecoVsEv0_cov","",7,ebins,50,0,16);
+  TH2D *m_hElepRecoVsEv0_cov = new TH2D("m_hElepRecoVsEv0_cov","",19,mubins,20,0,16);
+  TH2D *e_hElepRecoVsEv0_cov = new TH2D("e_hElepRecoVsEv0_cov","",7,ebins,20,0,16);
 
-  TH1D *m_hElep0 = new TH1D("m_hElep0","",50,0,16);
-  TH1D *e_hElep0 = new TH1D("e_hElep0","",50,0,16);
-  TH1D *hElep0 = new TH1D("hElep0","",50,0,16);
+  TH1D *m_hElep0 = new TH1D("m_hElep0","",20,0,16);
+  TH1D *e_hElep0 = new TH1D("e_hElep0","",20,0,16);
+  TH1D *hElep0 = new TH1D("hElep0","",20,0,16);
 
 
   // information about the true neutrino interaction
@@ -284,7 +284,7 @@ int main()
 */
 
 
-  TFile *out = new TFile("/dune/app/users/qvuong/data/lownu/nue_output_4.root","RECREATE");
+  TFile *out = new TFile("/dune/app/users/qvuong/data/lownu/nue_output_5_test.root","RECREATE");
   m_hElepRecoVsEv0->Write();
   m_hElepRecoVsEv0_w->Write();
   e_hElepRecoVsEv0->Write();

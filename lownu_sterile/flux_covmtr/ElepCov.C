@@ -1,4 +1,4 @@
-static const int N = 500; // number of universes
+static const int N = 1000; // number of universes
 static const int nbins = 52;
 static const int nbins_CC = 100;
 static const int nbins_nue = 50;
@@ -125,8 +125,8 @@ void ElepCov()
   cutNu = 3;
   TH2D *CC_m  = (TH2D*)f->Get(Form("m_h%sVsEv%d_cov",name,cutNu));
   TH2D *CC_e  = (TH2D*)f->Get(Form("e_h%sVsEv%d_cov",name,cutNu));
-  TH2D *nue_m = (TH2D*)f_nue->Get(Form("m_h%sVsEv2_cov",name));
-  TH2D *nue_e = (TH2D*)f_nue->Get(Form("e_h%sVsEv2_cov",name));
+  TH2D *nue_m = (TH2D*)f_nue->Get(Form("m_h%sVsEv0_cov",name));
+  TH2D *nue_e = (TH2D*)f_nue->Get(Form("e_h%sVsEv0_cov",name));
 
   TH1D *tp_m[n_mu];
   TH1D *tp_e[n_e];

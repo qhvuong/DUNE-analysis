@@ -1,6 +1,7 @@
 static const int N = 1; // number of universes
-static const int nbins = 250;
-static const int nbins_CC = 100;
+static const int nbins_CC = 50;
+static const int nbins_nue = 20;
+static const int nbins = 2*nbins_CC + nbins_nue;
 
 
 TMatrixD E_m(N, nbins_CC);
@@ -91,10 +92,10 @@ void test()
 
   int cutNu=3;
 
-  TFile *f     = new TFile("/dune/app/users/qvuong/data/lownu/CC_output.root");
-  TFile *f_nue = new TFile("/dune/app/users/qvuong/data/lownu/nue_output.root");
+  TFile *f     = new TFile("/dune/app/users/qvuong/data/lownu/CC_output_test.root");
+  TFile *f_nue = new TFile("/dune/app/users/qvuong/data/lownu/nue_output_test.root");
 
-  //std::list <const char *> namelist = {"wgt_MaCCQE", "wgt_VecFFCCQEshape", "wgt_MaNCEL", "wgt_EtaNCEL", "wgt_MaCCRES", "wgt_MvCCRES", "wgt_MaNCRES", "wgt_MvNCRES", "wgt_RDecBR1gamma", "wgt_RDecBR1eta", "wgt_Theta_Delta2Npi", "wgt_AhtBY", "wgt_BhtBY", "wgt_CV1uBY", "wgt_CV2uBY", "wgt_FormZone", "wgt_MFP_pi", "wgt_FrCEx_pi", "wgt_FrElas_pi", "wgt_FrInel_pi", "wgt_FrAbs_pi", "wgt_FrPiProd_pi", "wgt_MFP_N", "wgt_FrCEx_N", "wgt_FrElas_N", "wgt_FrInel_N", "wgt_FrAbs_N", "wgt_FrPiProd_N", "wgt_CCQEPauliSupViaKF", "wgt_Mnv2p2hGaussEnhancement", "wgt_MKSPP_ReWeight", "wgt_E2p2h_A_nu", "wgt_E2p2h_B_nu", "wgt_E2p2h_A_nubar", "wgt_E2p2h_B_nubar", "wgt_NR_nu_n_CC_2Pi", "wgt_NR_nu_n_CC_3Pi", "wgt_NR_nu_p_CC_2Pi", "wgt_NR_nu_p_CC_3Pi", "wgt_NR_nu_np_CC_1Pi", "wgt_NR_nu_n_NC_1Pi", "wgt_NR_nu_n_NC_2Pi", "wgt_NR_nu_n_NC_3Pi", "wgt_NR_nu_p_NC_1Pi", "wgt_NR_nu_p_NC_2Pi", "wgt_NR_nu_p_NC_3Pi", "wgt_NR_nubar_n_CC_1Pi", "wgt_NR_nubar_n_CC_2Pi", "wgt_NR_nubar_n_CC_3Pi", "wgt_NR_nubar_p_CC_1Pi", "wgt_NR_nubar_p_CC_2Pi", "wgt_NR_nubar_p_CC_3Pi", "wgt_NR_nubar_n_NC_1Pi", "wgt_NR_nubar_n_NC_2Pi", "wgt_NR_nubar_n_NC_3Pi", "wgt_NR_nubar_p_NC_1Pi", "wgt_NR_nubar_p_NC_2Pi", "wgt_NR_nubar_p_NC_3Pi", "wgt_BeRPA_A", "wgt_BeRPA_B", "wgt_BeRPA_D", "wgt_BeRPA_E", "wgt_C12ToAr40_2p2hScaling_nu", "wgt_C12ToAr40_2p2hScaling_nubar", "wgt_nuenuebar_xsec_ratio", "wgt_nuenumu_xsec_ratio", "wgt_SPPLowQ2Suppression", "wgt_FSILikeEAvailSmearing"};
+  std::list <const char *> namelist1 = {"wgt_MaCCQE", "wgt_VecFFCCQEshape", "wgt_MaNCEL", "wgt_EtaNCEL", "wgt_MaCCRES", "wgt_MvCCRES", "wgt_MaNCRES", "wgt_MvNCRES", "wgt_RDecBR1gamma", "wgt_RDecBR1eta", "wgt_Theta_Delta2Npi", "wgt_AhtBY", "wgt_BhtBY", "wgt_CV1uBY", "wgt_CV2uBY", "wgt_FormZone", "wgt_MFP_pi", "wgt_FrCEx_pi", "wgt_FrElas_pi", "wgt_FrInel_pi", "wgt_FrAbs_pi", "wgt_FrPiProd_pi", "wgt_MFP_N", "wgt_FrCEx_N", "wgt_FrElas_N", "wgt_FrInel_N", "wgt_FrAbs_N", "wgt_FrPiProd_N", "wgt_CCQEPauliSupViaKF", "wgt_Mnv2p2hGaussEnhancement", "wgt_MKSPP_ReWeight", "wgt_E2p2h_A_nu", "wgt_E2p2h_B_nu", "wgt_E2p2h_A_nubar", "wgt_E2p2h_B_nubar", "wgt_NR_nu_n_CC_2Pi", "wgt_NR_nu_n_CC_3Pi", "wgt_NR_nu_p_CC_2Pi", "wgt_NR_nu_p_CC_3Pi", "wgt_NR_nu_np_CC_1Pi", "wgt_NR_nu_n_NC_1Pi", "wgt_NR_nu_n_NC_2Pi", "wgt_NR_nu_n_NC_3Pi", "wgt_NR_nu_p_NC_1Pi", "wgt_NR_nu_p_NC_2Pi", "wgt_NR_nu_p_NC_3Pi", "wgt_NR_nubar_n_CC_1Pi", "wgt_NR_nubar_n_CC_2Pi", "wgt_NR_nubar_n_CC_3Pi", "wgt_NR_nubar_p_CC_1Pi", "wgt_NR_nubar_p_CC_2Pi", "wgt_NR_nubar_p_CC_3Pi", "wgt_NR_nubar_n_NC_1Pi", "wgt_NR_nubar_n_NC_2Pi", "wgt_NR_nubar_n_NC_3Pi", "wgt_NR_nubar_p_NC_1Pi", "wgt_NR_nubar_p_NC_2Pi", "wgt_NR_nubar_p_NC_3Pi", "wgt_BeRPA_A", "wgt_BeRPA_B", "wgt_BeRPA_D", "wgt_BeRPA_E", "wgt_C12ToAr40_2p2hScaling_nu", "wgt_C12ToAr40_2p2hScaling_nubar", "wgt_nuenuebar_xsec_ratio", "wgt_nuenumu_xsec_ratio", "wgt_SPPLowQ2Suppression", "wgt_FSILikeEAvailSmearing"};
 
   //const char *name[] = {"wgt_MaCCQE", "wgt_VecFFCCQEshape", "wgt_MaNCEL", "wgt_EtaNCEL", "wgt_MaCCRES", "wgt_MvCCRES", "wgt_MaNCRES", "wgt_MvNCRES", "wgt_RDecBR1gamma", "wgt_RDecBR1eta", "wgt_Theta_Delta2Npi", "wgt_AhtBY", "wgt_BhtBY", "wgt_CV1uBY", "wgt_CV2uBY", "wgt_FormZone", "wgt_MFP_pi", "wgt_FrCEx_pi", "wgt_FrElas_pi", "wgt_FrInel_pi", "wgt_FrAbs_pi", "wgt_FrPiProd_pi", "wgt_MFP_N", "wgt_FrCEx_N", "wgt_FrElas_N", "wgt_FrInel_N", "wgt_FrAbs_N", "wgt_FrPiProd_N", "wgt_CCQEPauliSupViaKF", "wgt_Mnv2p2hGaussEnhancement", "wgt_MKSPP_ReWeight", "wgt_E2p2h_A_nu", "wgt_E2p2h_B_nu", "wgt_E2p2h_A_nubar", "wgt_E2p2h_B_nubar", "wgt_NR_nu_n_CC_2Pi", "wgt_NR_nu_n_CC_3Pi", "wgt_NR_nu_p_CC_2Pi", "wgt_NR_nu_p_CC_3Pi", "wgt_NR_nu_np_CC_1Pi", "wgt_NR_nu_n_NC_1Pi", "wgt_NR_nu_n_NC_2Pi", "wgt_NR_nu_n_NC_3Pi", "wgt_NR_nu_p_NC_1Pi", "wgt_NR_nu_p_NC_2Pi", "wgt_NR_nu_p_NC_3Pi", "wgt_NR_nubar_n_CC_1Pi", "wgt_NR_nubar_n_CC_2Pi", "wgt_NR_nubar_n_CC_3Pi", "wgt_NR_nubar_p_CC_1Pi", "wgt_NR_nubar_p_CC_2Pi", "wgt_NR_nubar_p_CC_3Pi", "wgt_NR_nubar_n_NC_1Pi", "wgt_NR_nubar_n_NC_2Pi", "wgt_NR_nubar_n_NC_3Pi", "wgt_NR_nubar_p_NC_1Pi", "wgt_NR_nubar_p_NC_2Pi", "wgt_NR_nubar_p_NC_3Pi", "wgt_BeRPA_A", "wgt_BeRPA_B", "wgt_BeRPA_D", "wgt_BeRPA_E", "wgt_C12ToAr40_2p2hScaling_nu", "wgt_C12ToAr40_2p2hScaling_nubar", "wgt_nuenuebar_xsec_ratio", "wgt_nuenumu_xsec_ratio", "wgt_SPPLowQ2Suppression", "wgt_FSILikeEAvailSmearing"}; 
 
@@ -104,8 +105,26 @@ void test()
   //const char *name[] = {"wgt_BeRPA_B", "wgt_BeRPA_D"}; 
 
   int N_wgt = namelist.size();
+  //int N_wgt = 1;
 
+  std::cout << namelist1.size() << "\n";
   std::cout << N_wgt << "\n";
+  gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
+
+  TCanvas *c = new TCanvas("c","",900,1100);
+  TPad *pad1 = new TPad("pad1","pad1", 0, 0.4, 1, 1.0);
+  TPad *pad2 = new TPad("pad2","pad2", 0, 0.05, 1, 0.4);
+  pad1->SetBottomMargin(0); // Upper and lower plot are joined
+  pad1->SetGridx();         // Vertical grid
+  pad1->SetGridy();         // Vertical grid
+  pad1->Draw();
+  pad2->SetTopMargin(0);
+  pad2->SetBottomMargin(0.2);
+  pad2->SetGridx(); // vertical grid
+  pad2->SetGridy();         // Vertical grid
+  pad2->Draw();
+
+  TLegend *lg = new TLegend(0.55,0.70,0.9,0.9);
 
   for(int iw=0; iw<N_wgt; iw++){
 
@@ -121,6 +140,125 @@ void test()
   TH1D *e5   	 = (TH1D*)f->Get(Form("%s_e_hElep%d_sigma5",name[iw],cutNu));
   TH1D *nue 	 = (TH1D*)f_nue->Get("hElep2");
   TH1D *nue_nom  = (TH1D*)f_nue->Get("hElep2");
+
+  TH1D *h1 = (TH1D*)m1->Clone();
+  TH1D *h2 = (TH1D*)m2->Clone();
+  TH1D *h4 = (TH1D*)m4->Clone();
+  TH1D *h5 = (TH1D*)m5->Clone();
+/*
+  TH1D *ratio = (TH1D*)h1->Clone("ratio");
+  ratio->SetTitle(Form("CC_m Elep"));
+  ratio->Divide(CC_m_nom);
+  ratio->SetLineColor(iw+1);
+  ratio->SetMaximum(1.4);
+  ratio->SetMinimum(0.7);
+  ratio->SetStats(0); 
+  ratio->GetYaxis()->SetTitle("ratio Elep/Elep_nom");
+  ratio->GetXaxis()->SetTitle("Elep (GeV)");
+  ratio->Draw("same");
+*/
+
+
+  c->cd();
+  pad1->cd();
+  CC_m_nom->SetStats(0);
+  //CC_m_nom->SetTitle(Form("CC_m"));
+  CC_m_nom->SetLineColor(kBlack);
+  //CC_m_nom->SetMarkerStyle(8);
+  //CC_m_nom->SetMarkerSize(0.8);
+  CC_m_nom->SetMaximum(2e6);
+  CC_m_nom->Draw("same");
+/*
+  e1->SetMarkerColor(kBlue);
+  e1->SetMarkerStyle(21);
+  e1->SetMarkerSize(0.5);
+  e1->Draw("same");
+  e2->SetMarkerColor(kBlue);
+  e2->SetMarkerStyle(21);
+  e2->SetMarkerSize(0.5);
+  e2->Draw("same");
+  e4->SetMarkerColor(kRed);
+  e4->SetMarkerStyle(21);
+  e4->SetMarkerSize(0.5);
+  e4->Draw("same");
+  e5->SetMarkerColor(kRed);
+  e5->SetMarkerStyle(21);
+  e5->SetMarkerSize(0.5);
+  e5->Draw("same");
+*/
+  
+  m2->SetLineColor(iw+2);
+  m2->SetLineWidth(2);
+  m2->GetYaxis()->SetTitle("Entries/1yr POT");
+  //m2->SetMarkerSize(0.5);
+  m4->SetLineColor(iw+2);
+  m4->SetLineWidth(2);
+  m4->GetYaxis()->SetTitle("Entries/1yr POT");
+  //m4->SetMarkerSize(0.5);
+  if(iw == 4) {
+    m2->Draw("same");
+    lg->AddEntry(m2,Form("%s", name[iw]));}
+  else {
+    m4->Draw("same");
+    lg->AddEntry(m4,Form("%s", name[iw]));}
+  //lg->AddEntry(h11,"seeds = (0.01, 0.01, 1.0)");
+  //lg->AddEntry(h12,"seeds = (0.01, 0.01, 10.0)");
+  //lg->AddEntry(h13,"seeds = (0.01, 0.01, 100.0)");
+  lg->Draw();
+
+
+  c->cd();
+  pad2->cd();
+/*
+  TH1D *ratio1 = (TH1D*)h1->Clone("ratio1");
+  ratio1->Divide(CC_e_nom);
+  ratio1->SetLineColor(kBlue);
+  ratio1->SetMaximum(1.4);
+  ratio1->SetMinimum(0.7);
+  ratio1->SetStats(0); 
+  ratio1->GetYaxis()->SetTitle("ratio Elep/Elep_nom");
+  ratio1->GetXaxis()->SetTitle("Elep (GeV)");
+  ratio1->Draw("same");
+*/
+  
+  TH1D *ratio2 = (TH1D*)h2->Clone("ratio2");
+  ratio2->Divide(CC_m_nom);
+  ratio2->SetLineColor(iw+2);
+  ratio2->SetStats(0); 
+  ratio2->GetYaxis()->SetTitle("ratio to nom");
+  ratio2->GetYaxis()->SetTitleSize(10.);
+  ratio2->GetXaxis()->SetTitle("Elep (GeV)");
+  ratio2->GetXaxis()->SetTitleSize(10.);
+  TH1D *ratio4 = (TH1D*)h4->Clone("ratio4");
+  ratio4->Divide(CC_m_nom);
+  ratio4->SetLineColor(iw+2);
+  ratio4->SetStats(0); 
+  ratio4->GetYaxis()->SetTitle("ratio to nom");
+  //ratio4->GetYaxis()->SetTitleSize(1.);
+  ratio4->GetXaxis()->SetTitle("Elep (GeV)");
+  //ratio4->GetXaxis()->SetTitleSize(1.);
+
+
+  ratio2->SetMaximum(1.3);
+  ratio2->SetMinimum(0.9);
+  ratio4->SetMaximum(1.3);
+  ratio4->SetMinimum(0.9);
+  if(iw == 4) ratio2->Draw("same");
+  else ratio4->Draw("same");
+
+/*
+  TH1D *ratio5 = (TH1D*)h5->Clone("ratio5");
+  ratio5->Divide(CC_e_nom);
+  ratio5->SetLineColor(kRed);
+  ratio5->SetStats(0); 
+  ratio5->Draw("same");
+*/
+
+  }
+
+  c->SaveAs(Form("numu_sigma.png"));
+}
+/*
 
 
   for( int i = 0; i < nbins_CC; ++i ) { // columns
@@ -341,31 +479,20 @@ void test()
   }
 
 
-  gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
   hcv2->SetStats(0);
   hcv->SetStats(0);
   hcv4->SetStats(0);
   frhcv2->SetStats(0);
   frhcv->SetStats(0);
   frhcv4->SetStats(0);
-  TCanvas *c = new TCanvas("c","",1200,600);
-  c->Divide(3,2);
-  c->cd(1);
-  hcv2->Draw("colz");
-  c->cd(2);
-  hcv->Draw("colz");
-  c->cd(3);
-  hcv4->Draw("colz");
-  c->cd(4);
-  frhcv2->Draw("colz");
-  c->cd(5);
-  frhcv->Draw("colz");
-  c->cd(6);
-  frhcv4->Draw("colz");
-  c->SaveAs(Form("%s_sigmtr%d.png",name[iw],cutNu));
+
+  hcv2->SetMaximum(1e12);
+  hcv->SetMaximum(1e12);
+  hcv4->SetMaximum(1e12);
+
   
-  TCanvas *c1 = new TCanvas("c1","",1200,600);
-  c1->Divide(3,2);
+  TCanvas *c1 = new TCanvas("c1","",1800,500);
+  c1->Divide(3,1);
   c1->cd(1);
   gPad->SetLogz();
   hcv2->Draw("colz");
@@ -383,8 +510,7 @@ void test()
   frhcv4->Draw("colz");
   c1->SaveAs(Form("%s_sigmtr%d_logz.png",name[iw],cutNu));
 
-
-  TFile *out = new TFile(Form("%s_sigmtr%d.root",name[iw],cutNu), "RECREATE");
+  TFile *out = new TFile(Form("%s_sigmtr%d_100binsCC.root",name[iw],cutNu), "RECREATE");
   hcv2->Write();
   hcv->Write();
   hcv4->Write();
@@ -392,9 +518,10 @@ void test()
   frhcv->Write();
   frhcv4->Write();
   out->Close();
+  //gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
 
-  gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
+*/
+  //}
 
-  }
-}
+//}
 

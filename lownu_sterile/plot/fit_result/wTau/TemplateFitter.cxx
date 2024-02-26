@@ -38,24 +38,21 @@ void TemplateFitter::setEnergyBins( double bins[nbins_Ev+1] )
   for( int i = 0; i < nbins_Ev+1; ++ i ) {m_energy_bins[i] = bins[i];}
 }
 
-double b0,b1,b2;
-double s0,s1,s2;
+double s0,s1,s2,s3;
 double L_tg, L_tp;
-void TemplateFitter::setPara( char var[20], double oscpar[3], int par, int nuCut, double seed[3], double fitPara_m[29][7], double fitPara_e[29][7] )
+void TemplateFitter::setPara( char var[20], double oscpar[4], int par, int nuCut, double seed[4], double fitPara_m[29][7], double fitPara_e[29][7] )
 {
   name  = var;
   para = par;
   cutNu = nuCut;
-  for(int i = 0; i < 3; i++){
+  for(int i = 0; i < 4; i++){
     ospar[i] = oscpar[i];
   }
-  b0 = oscpar[0];
-  b1 = oscpar[1];
-  b2 = oscpar[2];
 
   s0 = seed[0];
   s1 = seed[1];
   s2 = seed[2];
+  s3 = seed[3];
 
   for(int i=1;i<29;i++){
     fitP_m[i][0] = fitPara_m[i][0];
@@ -140,7 +137,7 @@ double TemplateFitter::getAvgPmue( double energy, double Uee2, double Umm2, doub
   return prob;
 }
 
-double TemplateFitter::getAvgPee( double energy, double Uee2, double Umm2, double dm2, double ft[7] )
+double TemplateFitter::getAvgPee( double energy, double Uee2, double Umm2, double Utt2, double dm2, double ft[7] )
 {
   double k = 1.27*dm2/energy;
   double L0=0.34, L1=0.35, L2=0.55, L3=0.6, L;
@@ -182,12 +179,55 @@ double TemplateFitter::getAvgPee( double energy, double Uee2, double Umm2, doubl
   return prob;
 }
 
-double TemplateFitter::getAvgPmm( double energy, double Uee2, double Umm2, double dm2, double ft[7] )
+double TemplateFitter::getAvgPmm( double energy, double Uee2, double Umm2, double Utt2, double dm2, double ft[7] )
 {
   double k = 1.27*dm2/energy;
   double L0=0.34, L1=0.35, L2=0.55, L3=0.6, L;
   double a=ft[0], b=ft[1], c=ft[2], d=ft[3], avg1=ft[4], avg2=ft[5], norm=ft[6];
   double A = 4 * Umm2 * (1.-Umm2);
+
+  L=L1;
+  double prob_u = avg1 * ( A*sin(2*k*L) - 2*(A-2)*k*L ) / (4*k);
+  L=L0;
+  double prob_l = avg1 * ( A*sin(2*k*L) - 2*(A-2)*k*L ) / (4*k);
+
+  double prob1 = prob_u - prob_l;
+
+
+  L=L2;
+  double term1_u = -2*(A-2)*pow(k,4)*L * ( 12*a + 6*b*L + 4*c*L*L + 3*d*L*L*L );
+  double term2_u = 6*A*k*sin(2*k*L) * ( 2*a*k*k + 2*b*k*k*L + 2*c*k*k*L*L - c + 2*d*k*k*L*L*L - 3*d*L );
+  double term3_u = 3*A*cos(2*k*L) * ( 2*k*k*(b+2*c*L) + d*(6*k*k*L*L-3) );
+  L=L1;
+  double term1_l = -2*(A-2)*pow(k,4)*L * ( 12*a + 6*b*L + 4*c*L*L + 3*d*L*L*L );
+  double term2_l = 6*A*k*sin(2*k*L) * ( 2*a*k*k + 2*b*k*k*L + 2*c*k*k*L*L - c + 2*d*k*k*L*L*L - 3*d*L );
+  double term3_l = 3*A*cos(2*k*L) * ( 2*k*k*(b+2*c*L) + d*(6*k*k*L*L-3) );
+
+  prob_u = 1/(48*pow(k,4)) * (term1_u + term2_u + term3_u);
+  prob_l = 1/(48*pow(k,4)) * (term1_l + term2_l + term3_l);
+
+  double prob2 = prob_u - prob_l;
+
+
+  L=L3;
+  prob_u = avg2 * ( A*sin(2*k*L) - 2*(A-2)*k*L ) / (4*k);
+  L=L2;
+  prob_l = avg2 * ( A*sin(2*k*L) - 2*(A-2)*k*L ) / (4*k);
+
+  double prob3 = prob_u - prob_l;
+
+  double prob = norm*(prob1 + prob2 + prob3);
+
+  return prob;
+}
+
+
+double TemplateFitter::getAvgPtt( double energy, double Uee2, double Umm2, double Utt2, double dm2, double ft[7] )
+{
+  double k = 1.27*dm2/energy;
+  double L0=0.34, L1=0.35, L2=0.55, L3=0.6, L;
+  double a=ft[0], b=ft[1], c=ft[2], d=ft[3], avg1=ft[4], avg2=ft[5], norm=ft[6];
+  double A = 4 * Utt2 * (1.-Utt2);
 
   L=L1;
   double prob_u = avg1 * ( A*sin(2*k*L) - 2*(A-2)*k*L ) / (4*k);
@@ -237,14 +277,6 @@ void TemplateFitter::setCovmtr( double bincontent[nbins+1][nbins+1] )
 }
 
 
-const int N = 40;
-TH2D *h0  = new TH2D("h0","",N,0,0.1, N,0,12.0);
-TH2D *h1  = new TH2D("h1","",N,0,12.0,N,0,0.1);
-TH2D *h2  = new TH2D("h2","",N,0,0.1, N,0,0.1);
-TH2D *h0z = new TH2D("h0z","",N,0.0*b1,2.0*b1,N,0.5*b2,1.5*b2);
-TH2D *h1z = new TH2D("h1z","",N,0.5*b2,1.5*b2,N,0.0*b0,2.0*b0);
-TH2D *h2z = new TH2D("h2z","",N,0.0*b0,2.0*b0,N,0.0*b1,2.0*b1);
-
 
 void TemplateFitter::getTarget( double *oscpar )
 {
@@ -278,6 +310,7 @@ void TemplateFitter::getTarget( double *oscpar )
     double emu = 0;
     double ee = 0;
     double mm = 0;
+    double mt = 0;
     double L = 0.5;
 
     if(i<240)                iL = (int)i/10;
@@ -496,13 +529,10 @@ double TemplateFitter::getChi2( const double * par )
   cov = covmtr + unc;
 
   TMatrixD diff = temp - target;
-  TMatrixD diffT(TMatrixD::kTransposed, diff);
+  TMatrixD diff_T(TMatrixD::kTransposed, diff);
   TDecompSVD svd(cov);
   TMatrixD inv = svd.Invert();
 
-  TMatrixD mul = diffT*inv*diff;
-  chi2 = mul[0][0];
-/*
   TMatrixD diff_cov(1, nbins);
   for( int bx = 0; bx < nbins; bx++ ) {
     for( int by = 0; by < nbins; by++ ) {
@@ -510,7 +540,7 @@ double TemplateFitter::getChi2( const double * par )
     }
     chi2 += diff_T[0][bx] * diff[bx][0];
   }
-*/
+
   std::cout << par[0] << "\t" << par[1] << "\t" << par[2] << "\t" << chi2 << "\n";
   return chi2;
 
@@ -524,18 +554,16 @@ bool TemplateFitter::doFit( double &Uee2, double &Umm2, double &dm2 )
   ROOT::Math::Minimizer* fitter = ROOT::Math::Factory::CreateMinimizer("Minuit2"); 
   fitter->SetMaxFunctionCalls(1000000); // maximum number of times to try to find the minimum before failing
   fitter->SetMaxIterations(1000000);
-  fitter->SetTolerance(0.001); // You might have to play with this -- how close to the correct value do you need to be?
+  fitter->SetTolerance(0.1); // You might have to play with this -- how close to the correct value do you need to be?
 
   // The variables will be normalizations of the templates, we will start the with seed values of 1.0
   // fourth argument is step size, i.e. how much to change the normalization by at each step
   fitter->SetVariable( 0, "Uee2", s0, 0.00001 );
   fitter->SetVariable( 1, "Umm2", s1, 0.00001 );
-  fitter->SetVariable( 2, "dm2",  s2, 0.001 );
-  //fitter->SetVariableLowerLimit(0, 0.0);
-  //fitter->SetVariableLowerLimit(1, 0.0);
-  fitter->SetVariableLimits(0, 0., 0.5);
-  fitter->SetVariableLimits(1, 0., 0.5);
-  fitter->SetVariableLowerLimit(2, 0.);
+  fitter->SetVariable( 2, "dm2",  s2, 0.01 );
+  fitter->SetVariableLowerLimit(0, 0.0);
+  fitter->SetVariableLowerLimit(1, 0.0);
+  fitter->SetVariableLowerLimit(2, 0.0);
 
   // 3 free parameters = theta, dm2
   ROOT::Math::Functor lf( this, &TemplateFitter::getChi2, 3 );
@@ -545,19 +573,23 @@ bool TemplateFitter::doFit( double &Uee2, double &Umm2, double &dm2 )
   // Go!
   fitter->Minimize();
 
-
+/*
   if( fitter->Status() != 0 ) {
     std::cout << "Something bad happened" << std::endl;
     return false;
   }
-
+*/
 
   const double *bestfit = fitter->X();
   Uee2 = bestfit[0];
   Umm2 = bestfit[1];
   dm2 = bestfit[2];
+  bf0[0] = bestfit[0];
+  bf1[0] = bestfit[1];
+  bf2[0] = bestfit[2];
   
-  //double chi2 = fitter->MinValue();
+  double chi2 = fitter->MinValue();
+  //h->Fill(Uee2, Umm2, dm2);
   return true;
 
 }
@@ -645,27 +677,6 @@ double TemplateFitter::bfChi2( double *par )
   nue_tp_unos->Add(nue_tp_ee);  nue_tp_unos->Add(nue_tp_mm);
   nue_tp->Add(nue_tp_os);       nue_tp->Add(nue_tp_unos);
 
-  TCanvas *c = new TCanvas("c","",1500,500);
-  c->Divide(3,1);
-  c->cd(1);
-  THStack *hm = new THStack("hm","");
-  CCm_tgt->SetMarkerStyle(kStar);
-  CCm_tgt->SetMarkerSize(1);
-  CCm_tgt->SetMarkerColor(8);
-  CC_tp_em->SetFillColor(kRed);
-  CC_tp_mm->SetFillColor(kBlue);
-  hm->Add(CC_tp_em);
-  hm->Add(CC_tp_mm);
-  //TCanvas *cm = new TCanvas("cm","",800,600);
-  hm->Draw("hist");
-  CCm_tgt->Draw("same");
-  TLegend *legend_m = new TLegend(0.55,0.70,0.9,0.9);
-  legend_m->AddEntry(CCm_tgt,"CCm data");
-  legend_m->AddEntry(CC_tp_me,"oscillated #nu_{e}#rightarrow#nu_{#mu}");
-  legend_m->AddEntry(CC_tp_mm,"unoscillated #nu_{#mu}->#nu_{#mu}");
-  legend_m->Draw();
-  //cm->SaveAs(Form("fit_stat_fl_CCm_%d%d.png",para,cutNu));
-  c->cd(2);
   THStack *he = new THStack("he","");
   CCe_tgt->SetMarkerStyle(kStar);
   CCe_tgt->SetMarkerSize(1);
@@ -674,7 +685,7 @@ double TemplateFitter::bfChi2( double *par )
   CC_tp_ee->SetFillColor(kBlue);
   he->Add(CC_tp_me);
   he->Add(CC_tp_ee);
-  //TCanvas *ce = new TCanvas("ce","",800,600);
+  TCanvas *ce = new TCanvas("ce","",800,600);
   he->Draw("hist");
   CCe_tgt->Draw("same");
   TLegend *legend_e = new TLegend(0.55,0.70,0.9,0.9);
@@ -682,8 +693,26 @@ double TemplateFitter::bfChi2( double *par )
   legend_e->AddEntry(CC_tp_me,"oscillated #nu_{#mu}#rightarrow#nu_{e}");
   legend_e->AddEntry(CC_tp_ee,"unoscillated #nu_{e}#rightarrow#nu_{e}");
   legend_e->Draw();
-  ///ce->SaveAs(Form("fit_stat_fl_CCe_%d%d.png",para,cutNu));
-  c->cd(3);
+  ce->SaveAs(Form("fit_stat_sys_CCe_%d%d.png",para,cutNu));
+
+  THStack *hm = new THStack("hm","");
+  CCm_tgt->SetMarkerStyle(kStar);
+  CCm_tgt->SetMarkerSize(1);
+  CCm_tgt->SetMarkerColor(8);
+  CC_tp_em->SetFillColor(kRed);
+  CC_tp_mm->SetFillColor(kBlue);
+  hm->Add(CC_tp_em);
+  hm->Add(CC_tp_mm);
+  TCanvas *cm = new TCanvas("cm","",800,600);
+  hm->Draw("hist");
+  CCm_tgt->Draw("same");
+  TLegend *legend_m = new TLegend(0.55,0.70,0.9,0.9);
+  legend_m->AddEntry(CCm_tgt,"CCm data");
+  legend_m->AddEntry(CC_tp_me,"oscillated #nu_{e}#rightarrow#nu_{#mu}");
+  legend_m->AddEntry(CC_tp_mm,"unoscillated #nu_{#mu}->#nu_{#mu}");
+  legend_m->Draw();
+  cm->SaveAs(Form("fit_stat_sys_CCm_%d%d.png",para,cutNu));
+
   THStack *hnue = new THStack("hnue","");
   nue_tgt->SetMarkerStyle(kStar);
   nue_tgt->SetMarkerSize(1);
@@ -692,7 +721,7 @@ double TemplateFitter::bfChi2( double *par )
   nue_tp_unos->SetFillColor(kBlue);
   hnue->Add(nue_tp_os);
   hnue->Add(nue_tp_unos);
-  //TCanvas *cnue = new TCanvas("cnue","",800,600);
+  TCanvas *cnue = new TCanvas("cnue","",800,600);
   gPad->SetLogy();
   hnue->Draw("hist");
   nue_tgt->Draw("same");
@@ -701,9 +730,7 @@ double TemplateFitter::bfChi2( double *par )
   legend_nue->AddEntry(nue_tp_os,"oscillated #nu_{#mu}#rightarrow#nu_{e} & #nu_{e}#rightarrow#nu_{#mu}");
   legend_nue->AddEntry(nue_tp_unos,"unoscillated #nu_{e}#rightarrow#nu_{e} & #nu_{#mu}->#nu_{#mu}");
   legend_nue->Draw();
-  //cnue->SaveAs(Form("fit_stat_fl_nue_%d%d.png",para,cutNu));
-  c->SaveAs("fit_fl_12.png");
-
+  cnue->SaveAs(Form("fit_stat_sys_nue_%d%d.png",para,cutNu));
 
   // calculate the chi2 with the "data" target
   double chi2 = 0.0;
@@ -736,14 +763,10 @@ double TemplateFitter::bfChi2( double *par )
   cov = covmtr + unc;
 
   TMatrixD diff = temp - target;
-  TMatrixD diffT(TMatrixD::kTransposed, diff);
+  TMatrixD diff_T(TMatrixD::kTransposed, diff);
   TDecompSVD svd(cov);
   TMatrixD inv = svd.Invert();
-  
-  TMatrixD mul = diffT*inv*diff;
-  chi2 = mul[0][0];
 
-/*
   TMatrixD diff_cov(1, nbins);
   for( int bx = 0; bx < nbins; bx++ ) {
     for( int by = 0; by < nbins; by++ ) {
@@ -751,8 +774,6 @@ double TemplateFitter::bfChi2( double *par )
     }
     chi2 += diff_cov[0][bx] * diff[bx][0];
   }
-*/
-
   return chi2;
 }
 

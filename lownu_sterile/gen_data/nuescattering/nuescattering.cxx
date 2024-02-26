@@ -47,9 +47,10 @@ int main()
   const double mubins[20] = {0.,0.5,1.,1.5,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,7.,8.,12.,16.,20.,40.,100.};
   const double ebins[8] = {0.,2.,4.,6.,8.,10.,20.,100.};
 
-  const Int_t nbinsX = 430;
-  Double_t xEdges[nbinsX+1];
-  xEdges[0]=0;
+  
+  const Int_t nbinsX = 430; const Int_t nbinsY = 58;
+  Double_t xEdges[nbinsX+1], yEdges[nbinsY+1];
+  xEdges[0]=yEdges[0]=0;
   for(int i=0; i<nbinsX+1; i++)
   {
     if(i<200)                xEdges[i+1] = xEdges[i] + 0.02;
@@ -58,18 +59,28 @@ int main()
     else if(i>=400 && i<420) xEdges[i+1] = xEdges[i] + 1.0;
     else                     xEdges[i+1] = xEdges[i] + 4.0;
   }
-   
-  TH2D *m_hElepRecoVsEv0   = new TH2D("m_hElepRecoVsEv0","",nbinsX,xEdges,50,0,16);
-  TH2D *m_hElepRecoVsEv0_w = new TH2D("m_hElepRecoVsEv0_w","",nbinsX,xEdges,50,0,16);
-  TH2D *e_hElepRecoVsEv0   = new TH2D("e_hElepRecoVsEv0","",nbinsX,xEdges,50,0,16);
-  TH2D *e_hElepRecoVsEv0_w = new TH2D("e_hElepRecoVsEv0_w","",nbinsX,xEdges,50,0,16);
+  for(int i=0; i<nbinsY+1; i++)
+  { 
+    if(i<40)               yEdges[i+1] = yEdges[i] + 0.1;
+    else if(i>=40 && i<45) yEdges[i+1] = yEdges[i] + 0.2;
+    else if(i>=45 && i<50) yEdges[i+1] = yEdges[i] + 0.4;
+    else if(i>=50 && i<55) yEdges[i+1] = yEdges[i] + 0.8;
+    else if(i>=55 && i<57) yEdges[i+1] = yEdges[i] + 1.5;
+    else                   yEdges[i+1] = yEdges[i] + 2.0;
+  }
 
-  TH2D *m_hElepRecoVsEv0_cov = new TH2D("m_hElepRecoVsEv0_cov","",19,mubins,50,0,16);
-  TH2D *e_hElepRecoVsEv0_cov = new TH2D("e_hElepRecoVsEv0_cov","",7,ebins,50,0,16);
+ 
+  TH2D *m_hElepRecoVsEv0   = new TH2D("m_hElepRecoVsEv0","",nbinsX,xEdges,nbinsY,yEdges);
+  TH2D *m_hElepRecoVsEv0_w = new TH2D("m_hElepRecoVsEv0_w","",nbinsX,xEdges,nbinsY,yEdges);
+  TH2D *e_hElepRecoVsEv0   = new TH2D("e_hElepRecoVsEv0","",nbinsX,xEdges,nbinsY,yEdges);
+  TH2D *e_hElepRecoVsEv0_w = new TH2D("e_hElepRecoVsEv0_w","",nbinsX,xEdges,nbinsY,yEdges);
 
-  TH1D *m_hElep0 = new TH1D("m_hElep0","",50,0,16);
-  TH1D *e_hElep0 = new TH1D("e_hElep0","",50,0,16);
-  TH1D *hElep0 = new TH1D("hElep0","",50,0,16);
+  TH2D *m_hElepRecoVsEv0_cov = new TH2D("m_hElepRecoVsEv0_cov","",19,mubins,nbinsY,yEdges);
+  TH2D *e_hElepRecoVsEv0_cov = new TH2D("e_hElepRecoVsEv0_cov","",7,ebins,nbinsY,yEdges);
+
+  TH1D *m_hElep0 = new TH1D("m_hElep0","",nbinsY,yEdges);
+  TH1D *e_hElep0 = new TH1D("e_hElep0","",nbinsY,yEdges);
+  TH1D *hElep0 = new TH1D("hElep0","",nbinsY,yEdges);
 
 
   // information about the true neutrino interaction
@@ -284,7 +295,7 @@ int main()
 */
 
 
-  TFile *out = new TFile("/dune/app/users/qvuong/data/lownu/nue_output_test.root","RECREATE");
+  TFile *out = new TFile("/exp/dune/app/users/qvuong/data/lownu/nue_output_58.root","RECREATE");
   m_hElepRecoVsEv0->Write();
   m_hElepRecoVsEv0_w->Write();
   e_hElepRecoVsEv0->Write();

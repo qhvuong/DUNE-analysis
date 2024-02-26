@@ -5,7 +5,6 @@
 #include "TStyle.h"
 #include <TRandom.h>
 #include <list>
-#include <TMath.h>
 
 int main()
 {
@@ -75,7 +74,7 @@ int main()
   char var[20] = "ElepReco";
   int para, nuCut;
   para = 2;
-  nuCut = 3;
+  nuCut = 0;
 
   TFile *CC_f  = new TFile("/dune/app/users/qvuong/data/lownu/CC_output.root","READ");
   TFile *nue_f = new TFile("/dune/app/users/qvuong/data/lownu/nue_output.root","READ");
@@ -118,18 +117,21 @@ int main()
   TH2D *fl_cov = (TH2D*)f_fl->Get("hcv");
   TFile *f_sys = new TFile(Form("../../../xS_covmtr/total_sigmtr%d_5sig.root",nuCut), "READ");
   TH2D *sys_cov = (TH2D*)f_sys->Get("hcv");
-
+/*
+  TCanvas *c = new TCanvas("c","",800,600);
+  fl_cov->Draw("colz");
+  c->SaveAs("fl.png");
+  sys_cov->Draw("colz");
+  c->SaveAs("sys.png");
+*/
   double cov_bins[nbins+1][nbins+1], sys_bins[nbins+1][nbins+1], fl_bins[nbins+1][nbins+1];
   for(int i=0; i<nbins; i++) {
     for(int j=0; j<nbins; j++) {
       fl_bins[i][j]  = fl_cov->GetBinContent(i+1, j+1);
-      //sys_bins[i][j] = sys_cov->GetBinContent(i+1, j+1);
-      //cov_bins[i][j] = fl_bins[i][j] + sys_bins[i][j];
-      cov_bins[i][j] = fl_bins[i][j];
+      sys_bins[i][j] = sys_cov->GetBinContent(i+1, j+1);
+      cov_bins[i][j] = fl_bins[i][j] + sys_bins[i][j];
     }
   }
-
-  std::cout << cov_bins[1][1] << "\n";
 
   tf.setEnergyBins( energy_bins );
   tf.setCovmtr( cov_bins );
@@ -145,21 +147,8 @@ int main()
   oscpar[1] = 0.01;
   oscpar[2] = 6.0;
   }
-/*
   for(int ii = 0; ii < 3; ii++) {
     seed[ii] = oscpar[ii]; }
-*/
-  seed[0] = 0.1;
-  seed[1] = 0.1;
-  seed[2] = 9.0;
-  int run = 1;
-  double chi2[run];
-  double bfc2=1e9;
-
-  for(int r=0;r<run;r++){
-  //seed[2] = s2 + r*TMath::Pi()/0.762;
-
-  std::cout << seed[2] << "\n";
 
   tf.setPara( var, oscpar, para, nuCut, seed, fitPara_m, fitPara_e );
 
@@ -171,20 +160,9 @@ int main()
   par[0] = bf_Uee2;
   par[1] = bf_Umm2;
   par[2] = bf_dm2;
-  chi2[r] = tf.bfChi2(par);
+  double bfc2 = tf.bfChi2 ( par );
 
-  //if(bfc2>chi2[r]) bfc2=chi2[r];
-
-  std::cout << "bfchi2: " << par[0] << "\t" << par[1] << "\t" << par[2] << "\t" << chi2[r] << "\n";
-  }
-
-  //tf.Draw( par );
-
-
-
-
-
-
+  std::cout << "bfchi2: " << par[0] << "\t" << par[1] << "\t" << par[2] << "\t" << bfc2 << "\n";
 
 /*
   double oscpar[3], oscpar_max[3], oscpar_min[3], stepsize[3], seed[3];

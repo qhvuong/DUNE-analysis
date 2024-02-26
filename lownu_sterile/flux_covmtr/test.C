@@ -1,7 +1,7 @@
 static const int N = 10000; // number of universes
 static const int nbins = 52;
 static const int nbins_CC = 100;
-static const int nbins_nue = 50;
+static const int nbins_nue = 20;
 static const int nbins_tot = 2*nbins_CC + nbins_nue;
 
 const int n_mu = 19; // number of muon bins in covariance
@@ -119,7 +119,7 @@ void test()
 
   //for(para = 1; para <3; para++) {
   TFile *f     = new TFile("/dune/app/users/qvuong/data/lownu/CC_output.root");
-  TFile *f_nue = new TFile("/dune/app/users/qvuong/data/lownu/nue_output.root");
+  TFile *f_nue = new TFile("/dune/app/users/qvuong/data/lownu/nue_output_test.root");
   TH2D *CC_m  = (TH2D*)f->Get(Form("m_h%sVsEv%d_cov",name,cutNu));
   TH2D *CC_e  = (TH2D*)f->Get(Form("e_h%sVsEv%d_cov",name,cutNu));
   TH2D *nue_m = (TH2D*)f_nue->Get(Form("m_h%sVsEv0_cov",name));
@@ -138,6 +138,16 @@ void test()
     tp_e[eb]     = (TH1D*)CC_e->ProjectionY(Form("e_bin%d",eb+1),eb+1,eb+1);
     tp_e_nue[eb] = (TH1D*)nue_e->ProjectionY(Form("e_bin_nue%d",eb+1),eb+1,eb+1);
   }
+
+/*
+  Double_t ElepEdges[nbins_CC+1];
+  ElepEdges[0] = 0.;
+  for(int i=0; i<nbins_CC+1; i++)
+  {
+    if(i<50) ElepEdges[i+1] = ElepEdges[i] + 0.1;
+    else     ElepEdges[i+1] = ElepEdges[i] + 11.0;
+  }
+*/
 
   TH1D *m     = new TH1D("m","",nbins_CC,0,16);
   TH1D *e     = new TH1D("e","",nbins_CC,0,16);
@@ -242,7 +252,7 @@ void test()
         if(j>=2*nbins_CC)               var_nue_j += (E_nue[k][j-2*nbins_CC] - nue_nom->GetBinContent(j-2*nbins_CC+1)) * (E_nue[k][j-2*nbins_CC] - nue_nom->GetBinContent(j-2*nbins_CC+1));
       }
 
-/*
+
       if(i<nbins_CC){
         if(j<nbins_CC)                  ECovars_mm[i][j]              = covar_mm  /N;
         if(j>=nbins_CC && j<2*nbins_CC) ECovars_me[i][j-nbins_CC]     = covar_me  /N;
@@ -257,10 +267,10 @@ void test()
         if(j<nbins_CC)                  ECovars_nuem[i-2*nbins_CC][j]              = covar_nuem  /N;
         if(j>=nbins_CC && j<2*nbins_CC) ECovars_nuee[i-2*nbins_CC][j-nbins_CC]     = covar_nuee  /N;
         if(j>=2*nbins_CC)               ECovars_nuenue[i-2*nbins_CC][j-2*nbins_CC] = covar_nuenue/N;}
-*/
+
 
 //This is fractional covariance matrix
-
+/*
       if(i<nbins_CC){
         if(j<nbins_CC)                  ECovars_mm[i][j]              = covar_mm  /(N * CC_m_nom->GetBinContent(i+1)  * CC_m_nom->GetBinContent(j+1));
         if(j>=nbins_CC && j<2*nbins_CC) ECovars_me[i][j-nbins_CC]     = covar_me  /(N * CC_m_nom->GetBinContent(i+1)  * CC_e_nom->GetBinContent(j-nbins_CC+1));
@@ -275,7 +285,7 @@ void test()
         if(j<nbins_CC)                  ECovars_nuem[i-2*nbins_CC][j]              = covar_nuem  /(N * nue_nom->GetBinContent(i-2*nbins_CC+1)  * CC_m_nom->GetBinContent(j+1));
         if(j>=nbins_CC && j<2*nbins_CC) ECovars_nuee[i-2*nbins_CC][j-nbins_CC]     = covar_nuee  /(N * nue_nom->GetBinContent(i-2*nbins_CC+1)  * CC_e_nom->GetBinContent(j-nbins_CC+1));
         if(j>=2*nbins_CC)               ECovars_nuenue[i-2*nbins_CC][j-2*nbins_CC] = covar_nuenue/(N * nue_nom->GetBinContent(i-2*nbins_CC+1)  * nue_nom->GetBinContent(j-2*nbins_CC+1));}
-
+*/
 
       if(i<nbins_CC){
         if(j<nbins_CC)                  ECorrel_mm[i][j]              = covar_mm  /sqrt(var_m_i * var_m_j);
@@ -369,7 +379,7 @@ void test()
 
   //gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
 
-  TFile *out = new TFile(Form("flux_frCovmtr%d_%d.root",cutNu,N),"RECREATE");
+  TFile *out = new TFile(Form("flux_covmtr%d_100binsCC.root",cutNu),"RECREATE");
   hcv->Write();
   hcr->Write();
   out->Close();

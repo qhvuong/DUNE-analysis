@@ -38,22 +38,23 @@ void TemplateFitter::setEnergyBins( double bins[nbins_Ev+1] )
   for( int i = 0; i < nbins_Ev+1; ++ i ) {m_energy_bins[i] = bins[i];}
 }
 
-void TemplateFitter::setPara( char var[20], int par, double oscpar[3], int nuCut, double seed[3], double fitPara_m[29][7], double fitPara_e[29][7] )
+void TemplateFitter::setPara( char var[20], int par, double oscpar[4], int nuCut, double seed[4], double fitPara_m[29][7], double fitPara_e[29][7] )
 {
   name  = var;
   para  = par;
   cutNu = nuCut;
-  for(int i = 0; i < 3; i++){
+  for(int i = 0; i < 4; i++){
     ospar[i] = oscpar[i];
-    std::cout << ospar[i];
   }
   b0 = oscpar[0];
   b1 = oscpar[1];
   b2 = oscpar[2];
+  b3 = oscpar[3];
 
   s0 = seed[0];
   s1 = seed[1];
   s2 = seed[2];
+  s3 = seed[3];
 
   for(int i=1;i<29;i++){
     fitP_m[i][0] = fitPara_m[i][0];
@@ -74,7 +75,7 @@ void TemplateFitter::setPara( char var[20], int par, double oscpar[3], int nuCut
   }
 }
 
-double TemplateFitter::getPmue( double energy, double Uee2, double Umm2, double dm2, double L )
+double TemplateFitter::getPme( double energy, double Uee2, double Umm2, double dm2, double L )
 {
   //double L = 0.5;
   double del = 1.27*L*dm2/energy;
@@ -99,7 +100,7 @@ double TemplateFitter::getPmm( double energy, double Uee2, double Umm2, double d
   return prob;
 }
 
-double TemplateFitter::getAvgPmue( double energy, double Uee2, double Umm2, double dm2, double ft[7] )
+double TemplateFitter::getAvgPme( double energy, double Uee2, double Umm2, double dm2, double ft[7] )
 {
   double k = 1.27*dm2/energy;
   double L0=0.34, L1=0.35, L2=0.55, L3=0.6, L;
@@ -212,13 +213,18 @@ double TemplateFitter::getAvgPmm( double energy, double Uee2, double Umm2, doubl
 }
 
 
-TMatrixD covmtr(nbins,nbins);
+TMatrixD covmx(nbins,nbins);
+TMatrixD invmx(nbins,nbins);
+TMatrixD flmx(nbins,nbins);
+TMatrixD sigmx(nbins,nbins);
+TMatrixD statmx(nbins,nbins);
 
-void TemplateFitter::setCovmtr( double bincontent[nbins+1][nbins+1] )
+void TemplateFitter::setCovmtr( double fl_bct[nbins+1][nbins+1], double sig_bct[nbins+1][nbins+1] )
 {
   for(int i=0; i<nbins; i++) {
     for(int j=0; j<nbins; j++) {
-      covmtr[i][j] = bincontent[i][j];
+      flmx[i][j]  = fl_bct[i][j];
+      sigmx[i][j] = sig_bct[i][j];
     }
   }
 }
@@ -246,6 +252,7 @@ void TemplateFitter::getTarget( double *par )
   TH1D * nue_tp_ee = (TH1D*) nue_tp->Clone();
   TH1D * nue_tp_me = (TH1D*) nue_tp->Clone();
   TH1D * nue_tp_mm = (TH1D*) nue_tp->Clone();
+  TH1D * nue_tp_mt = (TH1D*) nue_tp->Clone();
   TH1D * nue_tp_os = (TH1D*) nue_tp->Clone();
   TH1D * nue_tp_unos = (TH1D*) nue_tp->Clone(); 
 
@@ -264,10 +271,8 @@ void TemplateFitter::getTarget( double *par )
 */
   // Add in oscillated neutrinos by taking the nu_mu CC templates and weighting by the oscillation probability
   for( int i = 10; i < nbins_Ev; ++i ) {
-    double mue = 0;
-    double emu = 0;
-    double ee  = 0;
-    double mm  = 0;
+    double me = 0., em = 0., mt = 0.;
+    double ee = 0., mm = 0.;
 
     if(i<240) 		     iL = (int) i/10;
     else if(i>=240 && i<400) iL = (int) 24+(i-240)/40;
@@ -280,26 +285,29 @@ void TemplateFitter::getTarget( double *par )
 
     for(int j = 0; j<1001; j++){
       double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
-      mue = mue + getAvgPmue(e, par[0], par[1], par[2], ft_m); // par[0] = Uee2, par[1] = Umm2, par[2] = dm2
-      emu = emu + getAvgPmue(e, par[0], par[1], par[2], ft_e); // par[0] = Uee2, par[1] = Umm2, par[2] = dm2
-      ee  = ee  + getAvgPee(e, par[0], par[1], par[2], ft_e);
-      mm  = mm  + getAvgPmm(e, par[0], par[1], par[2], ft_m);
+      me = me + getAvgPme(e, par[0], par[1], par[2], ft_m); // par[0] = Uee2, par[1] = Umm2, par[2] = dm2, par[3] = Utt2
+      em = em + getAvgPme(e, par[0], par[1], par[2], ft_e); // par[0] = Uee2, par[1] = Umm2, par[2] = dm2, par[3] = Utt2
+      ee = ee + getAvgPee(e, par[0], par[1], par[2], ft_e);
+      mm = mm + getAvgPmm(e, par[0], par[1], par[2], ft_m);
+      mt = mt + getAvgPmm(e, par[0], par[1], par[3], ft_m);
     }
-    double Pmue = mue/1001.0;
-    double Pemu = emu/1001.0;
-    double Pee  = ee/1001.0;
-    double Pmm  = mm/1001.0;
+    double Pme = me/1001.0;
+    double Pem = em/1001.0;
+    double Pee = ee/1001.0;
+    double Pmm = mm/1001.0;
+    double Pmt = mt/1001.0;
 
-    CC_tp_me->Add(CC_nc_m_templates[i], Pmue);
+    CC_tp_me->Add(CC_nc_m_templates[i], Pme);
     CC_tp_ee->Add(CC_e_templates[i], Pee);
 
-    CC_tp_em->Add(CC_e_templates[i], Pemu);
+    CC_tp_em->Add(CC_e_templates[i], Pem);
     CC_tp_mm->Add(CC_m_templates[i], Pmm);
 
-    nue_tp_me->Add(nue_w_m_templates[i], Pmue);
-    nue_tp_mm->Add(nue_m_templates[i], Pmm);
-    nue_tp_em->Add(nue_w_e_templates[i], Pemu);
+    nue_tp_me->Add(nue_w_m_templates[i], Pme);
+    nue_tp_mm->Add(nue_m_templates[i], Pmm+Pmt);
+    nue_tp_em->Add(nue_w_e_templates[i], Pem);
     nue_tp_ee->Add(nue_e_templates[i], Pee);
+    //nue_tp_mt->Add(nue_w_m_templates[i], Pmt);
   }
 
 
@@ -314,6 +322,79 @@ void TemplateFitter::getTarget( double *par )
   CCe_tgt->Add(CC_tp_e);
   CCm_tgt->Add(CC_tp_m);
   nue_tgt->Add(nue_tp);
+
+
+  for( int bx = 0; bx < nbins; bx++ ) {
+    for( int by = 0; by < nbins; by++ ) {
+      statmx[bx][by] = 0.;
+      if(bx==by){
+        if(bx<nbins_CC)                   statmx[bx][bx] = CCm_tgt->GetBinContent(bx+1);
+        if(bx>=nbins_CC && bx<2*nbins_CC) statmx[bx][bx] = CCe_tgt->GetBinContent(bx-nbins_CC+1);
+        if(bx>=2*nbins_CC)                statmx[bx][bx] = nue_tgt->GetBinContent(bx-2*nbins_CC+1);
+      }
+    }
+  }
+
+  covmx = statmx + flmx + sigmx;
+
+  invmx = covmx;
+  invmx.Invert();
+
+  THStack *he = new THStack("he","");
+  CCe_tgt->SetMarkerStyle(kStar);
+  CCe_tgt->SetMarkerSize(1);
+  CCe_tgt->SetMarkerColor(8);
+  CC_tp_me->SetFillColor(kRed);
+  CC_tp_ee->SetFillColor(kBlue);
+  he->Add(CC_tp_me);
+  he->Add(CC_tp_ee);
+  TCanvas *ce = new TCanvas("ce","",800,600);
+  he->Draw("hist");
+  CCe_tgt->Draw("same");
+  TLegend *legend_e = new TLegend(0.55,0.70,0.9,0.9);
+  legend_e->AddEntry(CCe_tgt,"CCe data");
+  legend_e->AddEntry(CC_tp_me,"oscillated #nu_{#mu}#rightarrow#nu_{e}");
+  legend_e->AddEntry(CC_tp_ee,"unoscillated #nu_{e}#rightarrow#nu_{e}");
+  legend_e->Draw();
+  ce->SaveAs(Form("CCe_tgt_%d%d.png",para,cutNu));
+
+  THStack *hm = new THStack("hm","");
+  CCm_tgt->SetMarkerStyle(kStar);
+  CCm_tgt->SetMarkerSize(1);
+  CCm_tgt->SetMarkerColor(8);
+  CC_tp_em->SetFillColor(kRed);
+  CC_tp_mm->SetFillColor(kBlue);
+  hm->Add(CC_tp_em);
+  hm->Add(CC_tp_mm);
+  TCanvas *cm = new TCanvas("cm","",800,600);
+  hm->Draw("hist");
+  CCm_tgt->Draw("same");
+  TLegend *legend_m = new TLegend(0.55,0.70,0.9,0.9);
+  legend_m->AddEntry(CCm_tgt,"CCm data");
+  legend_m->AddEntry(CC_tp_me,"oscillated #nu_{e}#rightarrow#nu_{#mu}");
+  legend_m->AddEntry(CC_tp_mm,"unoscillated #nu_{#mu}->#nu_{#mu}");
+  legend_m->Draw();
+  cm->SaveAs(Form("CCm_tgt_%d%d.png",para,cutNu));
+
+  THStack *hnue = new THStack("hnue","");
+  nue_tgt->SetMarkerStyle(kStar);
+  nue_tgt->SetMarkerSize(1);
+  nue_tgt->SetMarkerColor(8);
+  nue_tp_os->SetFillColor(kRed);
+  nue_tp_unos->SetFillColor(kBlue);
+  hnue->Add(nue_tp_os);
+  hnue->Add(nue_tp_unos);
+  TCanvas *cnue = new TCanvas("cnue","",800,600);
+  gPad->SetLogy();
+  hnue->Draw("hist");
+  nue_tgt->Draw("same");
+  TLegend *legend_nue = new TLegend(0.55,0.70,0.9,0.9);
+  legend_nue->AddEntry(nue_tgt,"#nu+e data");
+  legend_nue->AddEntry(nue_tp_os,"oscillated #nu_{#mu}#rightarrow#nu_{e} & #nu_{e}#rightarrow#nu_{#mu} & #nu_{#mu}#rightarrow#nu_{#tau}");
+  legend_nue->AddEntry(nue_tp_unos,"unoscillated #nu_{e}#rightarrow#nu_{e} & #nu_{#mu}->#nu_{#mu}");
+  legend_nue->Draw();
+  cnue->SaveAs(Form("nue_tgt_%d%d.png",para,cutNu));
+
 
 /*
   TRandom3 *rando = new TRandom3(12345);
@@ -359,6 +440,7 @@ double TemplateFitter::getChi2( double * par )
   TH1D * nue_tp_ee = (TH1D*) nue_tp->Clone();
   TH1D * nue_tp_me = (TH1D*) nue_tp->Clone();
   TH1D * nue_tp_mm = (TH1D*) nue_tp->Clone();
+  TH1D * nue_tp_mt = (TH1D*) nue_tp->Clone();
   TH1D * nue_tp_os = (TH1D*) nue_tp->Clone();
   TH1D * nue_tp_unos = (TH1D*) nue_tp->Clone(); 
 
@@ -369,10 +451,8 @@ double TemplateFitter::getChi2( double * par )
 
   // Add in oscillated neutrinos by taking the nu_mu CC templates and weighting by the oscillation probability
   for( int i = 10; i < nbins_Ev; ++i ) {
-    double mue = 0.;
-    double emu = 0.;
-    double ee = 0.;
-    double mm = 0.;
+    double me = 0., em = 0., mt = 0.;
+    double ee = 0., mm = 0.;
 
     if(i<240)                iL = (int)i/10;
     else if(i>=240 && i<400) iL = (int) 24+(i-240)/40;
@@ -386,28 +466,31 @@ double TemplateFitter::getChi2( double * par )
 
     for(int j = 0; j<1001; j++){
       double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
-      mue = mue + getAvgPmue(e, par[0], par[1], par[2], ft_m); // par[0] = Uee2, par[1] = Umm2, par[2] = dm2
-      emu = emu + getAvgPmue(e, par[0], par[1], par[2], ft_e); // par[0] = Uee2, par[1] = Umm2, par[2] = dm2
-      ee  = ee  + getAvgPee(e, par[0], par[1], par[2], ft_e);
-      mm  = mm  + getAvgPmm(e, par[0], par[1], par[2], ft_m);
+      me = me + getAvgPme(e, par[0], par[1], par[2], ft_m); // par[0] = Uee2, par[1] = Umm2, par[2] = dm2, par[3] = Utt2
+      em = em + getAvgPme(e, par[0], par[1], par[2], ft_e); // par[0] = Uee2, par[1] = Umm2, par[2] = dm2, par[3] = Utt2
+      ee = ee + getAvgPee(e, par[0], par[1], par[2], ft_e);
+      mm = mm + getAvgPmm(e, par[0], par[1], par[2], ft_m);
+      mt = mt + getAvgPmm(e, par[0], par[1], par[3], ft_m);
     }
+    double Pme = me/1001.0;
+    double Pem = em/1001.0;
+    double Pee = ee/1001.0;
+    double Pmm = mm/1001.0;
+    double Pmt = mt/1001.0;
 
-    double Pmue = mue/1001.0;
-    double Pemu = emu/1001.0;
-    double Pee  = ee/1001.0;
-    double Pmm  = mm/1001.0;
-
-    CC_tp_me->Add(CC_nc_m_templates[i], Pmue);
+    CC_tp_me->Add(CC_nc_m_templates[i], Pme);
     CC_tp_ee->Add(CC_e_templates[i], Pee);
 
-    CC_tp_em->Add(CC_e_templates[i], Pemu);
+    CC_tp_em->Add(CC_e_templates[i], Pem);
     CC_tp_mm->Add(CC_m_templates[i], Pmm);
 
-    nue_tp_me->Add(nue_w_m_templates[i], Pmue);
-    nue_tp_mm->Add(nue_m_templates[i], Pmm);
-    nue_tp_em->Add(nue_w_e_templates[i], Pemu);
+    nue_tp_me->Add(nue_w_m_templates[i], Pme);
+    nue_tp_mm->Add(nue_m_templates[i], Pmm+Pmt);
+    nue_tp_em->Add(nue_w_e_templates[i], Pem);
     nue_tp_ee->Add(nue_e_templates[i], Pee);
+    //nue_tp_mt->Add(nue_w_m_templates[i], Pmt);
   }
+
 
   // Now we have nue temp = mu-->e (no reco cut) + e-->e (no reco cut)
   CC_tp_e->Add(CC_tp_me); CC_tp_e->Add(CC_tp_ee);
@@ -418,17 +501,9 @@ double TemplateFitter::getChi2( double * par )
   nue_tp->Add(nue_tp_os);       nue_tp->Add(nue_tp_unos);
 
   // calculate the chi2 with the "data" target
-  double chi2 = 0.0;
 
   TMatrixD target(nbins, 1);
   TMatrixD temp(nbins, 1);
-  TMatrixD unc(nbins, nbins);
-
-  for( int bx = 0; bx < nbins; bx++ ) {
-    for( int by = 0; by < nbins; by++ ) {
-      unc[bx][by] = 0.;
-  }
-  }
 
   for( int bx = 0; bx < nbins; bx++ ) {
     if(bx<nbins_CC)                   temp[bx][0] = CC_tp_m->GetBinContent(bx+1);
@@ -438,51 +513,34 @@ double TemplateFitter::getChi2( double * par )
     if(bx<nbins_CC)                   target[bx][0] = CCm_tgt->GetBinContent(bx+1);
     if(bx>=nbins_CC && bx<2*nbins_CC) target[bx][0] = CCe_tgt->GetBinContent(bx-nbins_CC+1);
     if(bx>=2*nbins_CC)                target[bx][0] = nue_tgt->GetBinContent(bx-2*nbins_CC+1);
-
-    if(bx<nbins_CC)                   unc[bx][bx] = CCm_tgt->GetBinContent(bx+1);
-    if(bx>=nbins_CC && bx<2*nbins_CC) unc[bx][bx] = CCe_tgt->GetBinContent(bx-nbins_CC+1);
-    if(bx>=2*nbins_CC)                unc[bx][bx] = nue_tgt->GetBinContent(bx-2*nbins_CC+1);
   }
-
-  covmtr = covmtr + unc; 
 
   TMatrixD diff = temp - target;
-  TMatrixD diff_T(TMatrixD::kTransposed, diff);
-  TDecompSVD svd(covmtr);
-  TMatrixD inv = svd.Invert();
+  TMatrixD diffT(TMatrixD::kTransposed, diff);
 
-  TMatrixD diff_cov(1, nbins);
-  for( int bx = 0; bx < nbins; bx++ ) {
-    for( int by = 0; by < nbins; by++ ) {
-      diff_cov[0][bx] += diff_T[0][by] * inv[by][bx];
-    }
-    chi2 += diff_cov[0][bx] * diff[bx][0];
-  }
+  TMatrixD chi2 = diffT*invmx*diff; 
 
-  std::cout << par[0] << "\t" << par[1] << "\t" << par[2] << "\t" << chi2 << "\n";
-  return chi2;
+  std::cout << par[0] << "\t" << par[1] << "\t" << par[2] << "\t" << chi2[0][0] << "\n";
+  return chi2[0][0];
 
 }
 
 
 void TemplateFitter::Draw()
 {
-  int N = 50;
+  int N = 20;
 
-  double p0[1], p1[1], p2[1];
+  double p0[1], p1[1], p2[1], p3[1];
   p0[0] = b0;
   p1[0] = b1;
   p2[0] = b2;
+  p3[0] = b3;
 
 
   TH2D *h0 = new TH2D("h0","",N,0,0.1, N,0,12.0);
   TH2D *h1 = new TH2D("h1","",N,0,12.0,N,0,0.1);
   TH2D *h2 = new TH2D("h2","",N,0,0.1, N,0,0.1);
-/*
-  TH2D *h0L = new TH2D("h0L","",N,0,0.1, N,0,12.0);
-  TH2D *h1L = new TH2D("h1L","",N,0,12.0,N,0,0.1);
-  TH2D *h2L = new TH2D("h2L","",N,0,0.1, N,0,0.1);
-*/
+  
   TH2D *h0z = new TH2D("h0z","",N,0.0      ,2.0*p1[0],N,0.5*p2[0],1.5*p2[0]);
   TH2D *h1z = new TH2D("h1z","",N,0.5*p2[0],1.5*p2[0],N,0.0      ,2.0*p0[0]);
   TH2D *h2z = new TH2D("h2z","",N,0.0      ,2.0*p0[0],N,0.0      ,2.0*p1[0]);
@@ -490,29 +548,20 @@ void TemplateFitter::Draw()
   TH2D *h0d = new TH2D("h0d","",N,0,0.1, N,0,12.0);
   TH2D *h1d = new TH2D("h1d","",N,0,12.0,N,0,0.1);
   TH2D *h2d = new TH2D("h2d","",N,0,0.1, N,0,0.1);
-/*
-  TH2D *h0dL = new TH2D("h0dL","",N,0,0.1, N,0,12.0);
-  TH2D *h1dL = new TH2D("h1dL","",N,0,12.0,N,0,0.1);
-  TH2D *h2dL = new TH2D("h2dL","",N,0,0.1, N,0,0.1);
-*/
+  
   TH2D *h0dz = new TH2D("h0dz","",N,0.0      ,2.0*p1[0],N,0.5*p2[0],1.5*p2[0]);
   TH2D *h1dz = new TH2D("h1dz","",N,0.5*p2[0],1.5*p2[0],N,0.0      ,2.0*p0[0]);
   TH2D *h2dz = new TH2D("h2dz","",N,0.0      ,2.0*p0[0],N,0.0      ,2.0*p1[0]);
 
-  double par[3], parz[3], bin[3];
+  double par[4], parz[4], bin[4];
   par[0] = b0;
   par[1] = b1;
   par[2] = b2;
+  par[3] = parz[3] = bin[3] = 0.02;
   double chi2 = 0.0;
   double chi2z = 0.0;
 
-  double nu, Ev;
-  if(cutNu == 0)      nu = 10.0;
-  else if(cutNu == 3) nu = 0.3;
-
-  if(cutEv == 0)      Ev = 3.0;
-  else if(cutEv == 1) Ev = 0.8;
-  else if(cutEv == 2) Ev = 0.5;
+  double nu=0.3, Ev=3.0;
 
   double chi2t = getChi2(par);
   double diff, diffz;
@@ -619,20 +668,8 @@ void TemplateFitter::Draw()
   h2z->GetXaxis()->SetTitle("Uee2");
   h2z->GetYaxis()->SetTitle("Umm2");
   h2z->SetStats(0);
-/*
-  h0L->SetTitle(Form("%s Chi2 Surface (nu<%.1fGeV & Etheta2<%.1fMeV)",name,nu,Ev));
-  h0L->GetXaxis()->SetTitle("Umm2");
-  h0L->GetYaxis()->SetTitle("dm2");
-  h0L->SetStats(0);
-  h1L->SetTitle(Form("%s Chi2 Surface (nu<%.1fGeV & Etheta2<%.1fMeV)",name,nu,Ev));
-  h1L->GetXaxis()->SetTitle("dm2");
-  h1L->GetYaxis()->SetTitle("Uee2");
-  h1L->SetStats(0);
-  h2L->SetTitle(Form("%s Chi2 Surface (nu<%.1fGeV & Etheta2<%.1fMeV)",name,nu,Ev));
-  h2L->GetXaxis()->SetTitle("Uee2");
-  h2L->GetYaxis()->SetTitle("Umm2");
-  h2L->SetStats(0);
-*/
+
+
   h0d->SetTitle(Form("%s sqrt(Chi2-Chi2_true) (nu<%.1fGeV & Etheta2<%.1fMeV)",name,nu,Ev));
   h0d->GetXaxis()->SetTitle("Umm2");
   h0d->GetYaxis()->SetTitle("dm2");
@@ -657,20 +694,8 @@ void TemplateFitter::Draw()
   h2dz->GetXaxis()->SetTitle("Uee2");
   h2dz->GetYaxis()->SetTitle("Umm2");
   h2dz->SetStats(0);
-/*
-  h0dL->SetTitle(Form("%s sqrt(Chi2-Chi2_true) (nu<%.1fGeV & Etheta2<%.1fMeV)",name,nu,Ev));
-  h0dL->GetXaxis()->SetTitle("Umm2");
-  h0dL->GetYaxis()->SetTitle("dm2");
-  h0dL->SetStats(0);
-  h1dL->SetTitle(Form("%s sqrt(Chi2-Chi2_true) (nu<%.1fGeV & Etheta2<%.1fMeV)",name,nu,Ev));
-  h1dL->GetXaxis()->SetTitle("dm2");
-  h1dL->GetYaxis()->SetTitle("Uee2");
-  h1dL->SetStats(0);
-  h2dL->SetTitle(Form("%s sqrt(Chi2-Chi2_true) (nu<%.1fGeV & Etheta2<%.1fMeV)",name,nu,Ev));
-  h2dL->GetXaxis()->SetTitle("Uee2");
-  h2dL->GetYaxis()->SetTitle("Umm2");
-  h2dL->SetStats(0);
-*/
+
+
   double chi2L_max = 1E5;
   double chi2_max = 2E4;
   double chi2z_max = 400;
@@ -691,18 +716,18 @@ void TemplateFitter::Draw()
   TCanvas *cchi2 = new TCanvas("cchi2","",1200,300);
   cchi2->Divide(3,1);
   cchi2->cd(1);
-  gPad->SetLogz();
+  cchi2->SetLogz();
   h0->Draw("colz");
   g0->Draw("same C*");
   cchi2->cd(2);
-  gPad->SetLogz();
+  cchi2->SetLogz();
   h1->Draw("colz");
   g1->Draw("same C*");
   cchi2->cd(3);
-  gPad->SetLogz();
+  cchi2->SetLogz();
   h2->Draw("colz");
   g2->Draw("same C*");
-  cchi2->SaveAs(Form("%s_chi2Surface_stat_fl_5sig_%d%d.png",name,para,cutNu)); 
+  cchi2->SaveAs(Form("%s_chi2Surface_sys_%d%d.png",name,para,cutNu)); 
   
   TCanvas *cchi2_z = new TCanvas("cchi2_z","",1200,300);
   cchi2_z->Divide(3,1);
@@ -715,23 +740,23 @@ void TemplateFitter::Draw()
   cchi2_z->cd(3);
   h2z->Draw("colz");
   g2->Draw("same C*");
-  cchi2_z->SaveAs(Form("%s_chi2Surface_stat_fl_5sig_%d%d_zoom.png",name,para,cutNu)); 
+  cchi2_z->SaveAs(Form("%s_chi2Surface_sys_%d%d_zoom.png",name,para,cutNu)); 
  
   TCanvas *cdiff = new TCanvas("cdiff","",1200,300);
   cdiff->Divide(3,1);
   cdiff->cd(1);
-  gPad->SetLogz();
+  cdiff->SetLogz();
   h0d->Draw("colz");
   g0->Draw("same C*");
   cdiff->cd(2);
-  gPad->SetLogz();
+  cdiff->SetLogz();
   h1d->Draw("colz");
   g1->Draw("same C*");
   cdiff->cd(3);
-  gPad->SetLogz();
+  cdiff->SetLogz();
   h2d->Draw("colz");
   g2->Draw("same C*");
-  cdiff->SaveAs(Form("%s_chi2Diff_stat_fl_5sig_%d%d.png",name,para,cutNu)); 
+  cdiff->SaveAs(Form("%s_chi2Diff_sys_%d%d.png",name,para,cutNu)); 
   
   TCanvas *cdiff_z = new TCanvas("cdiff_z","",1200,300);
   cdiff_z->Divide(3,1);
@@ -744,161 +769,7 @@ void TemplateFitter::Draw()
   cdiff_z->cd(3);
   h2dz->Draw("colz");
   g2->Draw("same C*");
-  cdiff_z->SaveAs(Form("%s_chi2Diff_stat_fl_5sig_%d%d_zoom.png",name,para,cutNu)); 
-
-  TFile *out = new TFile(Form("%s_chi2_stat_fl_5sig_%d%d.root",name,para,cutNu),"RECREATE");
-  h0->Write();
-  h1->Write();
-  h2->Write();
-  h0z->Write();
-  h1z->Write();
-  h2z->Write();
-  h0d->Write();
-  h1d->Write();
-  h2d->Write();
-  h0dz->Write();
-  h1dz->Write();
-  h2dz->Write();
-  out->Close();
-
-/*
-  TCanvas *cchi2_0L = new TCanvas("cchi2_0L","",800,600);
-  cchi2_0L->SetLogz(1);
-  h0L->SetMaximum(chi2L_max);
-  h0L->Draw("colz");
-  g0->Draw("same C*");
-  cchi2_0L->SaveAs(Form("%s_chi2Surface_stat_%d%d_0_Log.png",name,para,cutNu));
-  TCanvas *cchi2_0 = new TCanvas("cchi2_0","",800,600);
-  cchi2_0->SetLogz(0);
-  h0->SetMaximum(chi2_max);
-  h0->Draw("colz");
-  g0->Draw("same C*");
-  cchi2_0->SaveAs(Form("%s_chi2Surface_stat_%d%d_0.png",name,para,cutNu,cutEv));
-  TCanvas *cchi2_0z = new TCanvas("cchi2_0z","",800,600);
-  cchi2_0z->SetLogz(0);
-  h0z->SetMaximum(chi2z_max);
-  h0z->Draw("colz");
-  g0->Draw("same C*");
-  cchi2_0z->SaveAs(Form("%s_chi2Surface_stat_%d%d_0_zoom.png",name,para,cutNu,cutEv));
-
-  TCanvas *cchi2_1L = new TCanvas("cchi2_1L","",800,600);
-  cchi2_1L->SetLogz(1);
-  h1L->SetMaximum(chi2L_max);
-  h1L->Draw("colz");
-  g1->Draw("same C*");
-  cchi2_1L->SaveAs(Form("%s_chi2Surface_stat_%d%d_1_Log.png",name,para,cutNu,cutEv));
-  TCanvas *cchi2_1 = new TCanvas("cchi2_1","",800,600);
-  cchi2_1->SetLogz(0);
-  h1->SetMaximum(chi2_max);
-  h1->Draw("colz");
-  g1->Draw("same C*");
-  cchi2_1->SaveAs(Form("%s_chi2Surface_stat_%d%d_1.png",name,para,cutNu,cutEv));
-  TCanvas *cchi2_1z = new TCanvas("cchi2_1z","",800,600);
-  cchi2_1z->SetLogz(0);
-  h1z->SetMaximum(chi2z_max);
-  h1z->Draw("colz");
-  g1->Draw("same C*");
-  cchi2_1z->SaveAs(Form("%s_chi2Surface_stat_%d%d_1_zoom.png",name,para,cutNu,cutEv));
-
-  TCanvas *cchi2_2L = new TCanvas("cchi2_2L","",800,600);
-  cchi2_2L->SetLogz(1);
-  h2L->SetMaximum(chi2L_max);
-  h2L->Draw("colz");
-  g2->Draw("same C*");
-  cchi2_2L->SaveAs(Form("%s_chi2Surface_stat_%d%d_2_Log.png",name,para,cutNu,cutEv));
-  TCanvas *cchi2_2 = new TCanvas("cchi2_2","",800,600);
-  cchi2_2->SetLogz(0);
-  h2->SetMaximum(chi2_max);
-  h2->Draw("colz");
-  g2->Draw("same C*");
-  cchi2_2->SaveAs(Form("%s_chi2Surface_stat_%d%d_2.png",name,para,cutNu,cutEv));
-  TCanvas *cchi2_2z = new TCanvas("cchi2_2z","",800,600);
-  cchi2_2z->SetLogz(0);
-  h2z->SetMaximum(chi2z_max);
-  h2z->Draw("colz");
-  g2->Draw("same C*");
-  cchi2_2z->SaveAs(Form("%s_chi2Surface_stat_%d%d_2_zoom.png",name,para,cutNu,cutEv));
-
-  TCanvas *cdiff_0L = new TCanvas("cdiff_0L","",800,600);
-  cdiff_0L->SetLogz(1);
-  h0dL->SetMaximum(diffL_max);
-  h0dL->Draw("colz");
-  g0->Draw("same C*");
-  cdiff_0L->SaveAs(Form("%s_chi2Diff_stat_%d%d_0_Log.png",name,para,cutNu,cutEv));
-  TCanvas *cdiff_0 = new TCanvas("cdiff_0","",800,600);
-  cdiff_0->SetLogz(0);
-  h0d->SetMaximum(diff_max);
-  h0d->Draw("colz");
-  g0->Draw("same C*");
-  cdiff_0->SaveAs(Form("%s_chi2Diff_stat_%d%d_0.png",name,para,cutNu,cutEv));
-  TCanvas *cdiff_0z = new TCanvas("cdiff_0z","",800,600);
-  cdiff_0z->SetLogz(0);
-  h0dz->SetMaximum(diffz_max);
-  h0dz->Draw("colz");
-  g0->Draw("same C*");
-  cdiff_0z->SaveAs(Form("%s_chi2Diff_stat_%d%d_0_zoom.png",name,para,cutNu,cutEv));
-
-  TCanvas *cdiff_1L = new TCanvas("cdiff_1L","",800,600);
-  cdiff_1L->SetLogz(1);
-  h1dL->SetMaximum(diffL_max);
-  h1dL->Draw("colz");
-  g1->Draw("same C*");
-  cdiff_1L->SaveAs(Form("%s_chi2Diff_stat_%d%d_1_Log.png",name,para,cutNu,cutEv));
-  TCanvas *cdiff_1 = new TCanvas("cdiff_1","",800,600);
-  cdiff_1->SetLogz(0);
-  h1d->SetMaximum(diff_max);
-  h1d->Draw("colz");
-  g1->Draw("same C*");
-  cdiff_1->SaveAs(Form("%s_chi2Diff_stat_%d%d_1.png",name,para,cutNu,cutEv));
-  TCanvas *cdiff_1z = new TCanvas("cdiff_1z","",800,600);
-  cdiff_1z->SetLogz(0);
-  h1dz->SetMaximum(diffz_max);
-  h1dz->Draw("colz");
-  g1->Draw("same C*");
-  cdiff_1z->SaveAs(Form("%s_chi2Diff_stat_%d%d_1_zoom.png",name,para,cutNu,cutEv));
-
-  TCanvas *cdiff_2L = new TCanvas("cdiff_2L","",800,600);
-  cdiff_2L->SetLogz(1);
-  h2dL->SetMaximum(diffL_max);
-  h2dL->Draw("colz");
-  g2->Draw("same C*");
-  cdiff_2L->SaveAs(Form("%s_chi2Diff_stat_%d%d_2_Log.png",name,para,cutNu));
-  TCanvas *cdiff_2 = new TCanvas("cdiff_2","",800,600);
-  cdiff_2->SetLogz(0);
-  h2d->SetMaximum(diff_max);
-  h2d->Draw("colz");
-  g2->Draw("same C*");
-  cdiff_2->SaveAs(Form("%s_chi2Diff_stat_%d%d_2.png",name,para,cutNu));
-  TCanvas *cdiff_2z = new TCanvas("cdiff_2z","",800,600);
-  cdiff_2z->SetLogz(0);
-  h2dz->SetMaximum(diffz_max);
-  h2dz->Draw("colz");
-  g2->Draw("same C*");
-  cdiff_2z->SaveAs(Form("%s_chi2Diff_stat_%d%d_2_zoom.png",name,para,cutNu));
-
-  TFile *out = new TFile(Form("%s_chi2_stat_%d%d%d.root",name,para,cutNu,cutEv),"RECREATE");
-  h0->Write();
-  h1->Write();
-  h2->Write();
-  h0L->Write();
-  h1L->Write();
-  h2L->Write();
-  h0z->Write();
-  h1z->Write();
-  h2z->Write();
-  h0d->Write();
-  h1d->Write();
-  h2d->Write();
-  h0dL->Write();
-  h1dL->Write();
-  h2dL->Write();
-  h0dz->Write();
-  h1dz->Write();
-  h2dz->Write();
-  out->Close();
-
-  gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
-*/
+  cdiff_z->SaveAs(Form("%s_chi2Diff_sys_%d%d_zoom.png",name,para,cutNu)); 
 
 }
 

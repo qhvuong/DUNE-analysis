@@ -5,6 +5,7 @@
 #include "TStyle.h"
 #include <TRandom.h>
 #include <list>
+#include <TMath.h>
 
 int main()
 {
@@ -74,10 +75,10 @@ int main()
   char var[20] = "ElepReco";
   int para, nuCut;
   para = 2;
-  nuCut = 0;
+  nuCut = 3;
 
-  TFile *CC_f  = new TFile("/dune/app/users/qvuong/data/lownu/CC_output.root","READ");
-  TFile *nue_f = new TFile("/dune/app/users/qvuong/data/lownu/nue_output.root","READ");
+  TFile *CC_f  = new TFile("/dune/app/users/qvuong/data/lownu/CC_output_test.root","READ");
+  TFile *nue_f = new TFile("/dune/app/users/qvuong/data/lownu/nue_output_test.root","READ");
 
   TH2D* CC_hm    = (TH2D*)CC_f->Get(Form("m_h%sVsEv%d",var,nuCut));
   TH2D* CC_hm_nc = (TH2D*)CC_f->Get(Form("nc_m_h%sVsEv%d",var,nuCut));
@@ -113,138 +114,125 @@ int main()
     energy_bins[b] = CC_he->GetXaxis()->GetBinLowEdge(b+1);
   } 
 
-  TFile *f_fl = new TFile(Form("../../../flux_covmtr/flux_covmtr%d_10000.root",nuCut),"READ");
+  TFile *f_fl = new TFile(Form("../../flux_covmtr/flux_covmtr%d_test.root",nuCut),"READ");
   TH2D *fl_cov = (TH2D*)f_fl->Get("hcv");
-  TFile *f_sys = new TFile(Form("../../../xS_covmtr/total_sigmtr%d_5sig.root",nuCut), "READ");
-  TH2D *sys_cov = (TH2D*)f_sys->Get("hcv");
-
+  TFile *f_sig = new TFile(Form("../../xS_covmtr/total_sigmtr%d_5sig_test.root",nuCut), "READ");
+  TH2D *sig_cov = (TH2D*)f_sig->Get("hcv");
+/*
   TCanvas *c = new TCanvas("c","",800,600);
   fl_cov->Draw("colz");
   c->SaveAs("fl.png");
   sys_cov->Draw("colz");
   c->SaveAs("sys.png");
+*/
 
-  double cov_bins[nbins+1][nbins+1], sys_bins[nbins+1][nbins+1], fl_bins[nbins+1][nbins+1];
+  double sig_bins[nbins+1][nbins+1], fl_bins[nbins+1][nbins+1];
   for(int i=0; i<nbins; i++) {
     for(int j=0; j<nbins; j++) {
-      fl_bins[i][j]  = fl_cov->GetBinContent(i+1, j+1);
-      sys_bins[i][j] = sys_cov->GetBinContent(i+1, j+1);
-      cov_bins[i][j] = fl_bins[i][j] + sys_bins[i][j];
+      fl_bins[i][j]    = fl_cov->GetBinContent(i+1, j+1);
+      sig_bins[i][j]   = sig_cov->GetBinContent(i+1, j+1);
     }
   }
 
   tf.setEnergyBins( energy_bins );
-  tf.setCovmtr( cov_bins );
-
-  double oscpar[3], seed[3];
-  if( para == 1 ) {
-  oscpar[0] = 0.01;
-  oscpar[1] = 0.0016;
-  oscpar[2] = 1.3;
-  }
-  if( para == 2 ) {
-  oscpar[0] = 0.04;
-  oscpar[1] = 0.01;
-  oscpar[2] = 6.0;
-  }
-  for(int ii = 0; ii < 3; ii++) {
-    seed[ii] = oscpar[ii]; }
-
-  tf.setPara( var, oscpar, para, nuCut, seed, fitPara_m, fitPara_e );
-
-  tf.getTarget( oscpar );
-
-  double bf_dm2, bf_Uee2, bf_Umm2;
-  double par[3];
-  bool isOK = tf.doFit( bf_Uee2, bf_Umm2 , bf_dm2);
-  par[0] = bf_Uee2;
-  par[1] = bf_Umm2;
-  par[2] = bf_dm2;
-  double bfc2 = tf.bfChi2 ( par );
-
-  std::cout << "bfchi2: " << par[0] << "\t" << par[1] << "\t" << par[2] << "\t" << bfc2 << "\n";
-
+  tf.setCovmtr( fl_bins, sig_bins );
 /*
-  double oscpar[3], oscpar_max[3], oscpar_min[3], stepsize[3], seed[3];
-  int N = 20;
+  double seed[3], par_tgt[3], par_bf[3], par_no[3];
 
-  oscpar_max[0] = 1E-4; oscpar_min[0] = 1E-4;	//Uee2 range
-  oscpar_max[1] = 1E-2; oscpar_min[1] = 1E-4;	//Umm2 range
-  oscpar_max[2] = 10.0; oscpar_min[2] = 1.0;	//dm2 range
+  seed[0] = par_tgt[0] = 0.04;
+  seed[1] = par_tgt[1] = 0.01;
+  seed[2] = par_tgt[2] = 6.0;
 
-  TH2D *h0 = new TH2D("h0","",N,oscpar_min[1],oscpar_max[1],N,oscpar_min[2],oscpar_max[2]);
+  for(int ii = 0; ii < 3; ii++) {
+    par_no[ii] = 0.;
+  }
 
-  {
+  tf.setPara( var, nuCut, seed, fitPara_m, fitPara_e );
+
+  tf.getTarget( par_no );
+
+  double bf_dm2, bf_Uee2, bf_Umm2, chi2;
+
+  bool isOK = tf.doFit( bf_Uee2, bf_Umm2 , bf_dm2);
+  par_bf[0] = bf_Uee2;
+  par_bf[1] = bf_Umm2;
+  par_bf[2] = bf_dm2;
+  chi2 = tf.bfChi2( par_bf );
+
+  printf( "nue Best-fit Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", bf_Uee2, bf_Umm2, bf_dm2, chi2);
+*/
+
+
+  double oscpar[3], oscpar_max[3], oscpar_min[3], seed[3];
+  int N = 100;
+
+  oscpar_max[0] = 1.0; oscpar_min[0] = 1E-4;	//Uee2 range
+  oscpar_max[1] = 1.0; oscpar_min[1] = 1E-4;	//Umm2 range
+  oscpar_max[2] = 100.0; oscpar_min[2] = 100.0;	//dm2 range
+
+  double log_min = TMath::Log10(oscpar_min[0]);
+  double log_max = TMath::Log10(oscpar_max[0]);
+  double binWidth = (log_max-log_min)/N;
+
+  std::vector<double> binEdges(N + 1, 0);
+  for (int i = 0; i <= N; ++i) {
+    binEdges[i] = TMath::Power(10, log_min + i * binWidth);
+  }
+
+  TH2D *h = new TH2D("h","",N,&binEdges[0],N,&binEdges[0]);
+
   for(int j = 1; j <= N; j++) {
-    oscpar[1] = h0->GetXaxis()->GetBinCenter(j);
+    oscpar[1] = h->GetXaxis()->GetBinCenter(j);
     for(int k = 1; k <= N; k++) {
-      oscpar[2] = h0->GetYaxis()->GetBinCenter(k);
+      oscpar[0] = h->GetYaxis()->GetBinCenter(k);
 
-      oscpar[0] = oscpar_min[0];
+      oscpar[2] = oscpar_min[2];
 
-      printf("%f percent...\n", ((j-1)*N+k)*100./(N*N) );
+
+      if(j*k%50 == 0) printf("%f percent...\n", ((j-1)*N+k)*100./(N*N) );
     
       for(int ii = 0; ii < 3; ii++) {
         seed[ii] = oscpar[ii]; 
       }
 
-      tf.setPara( var, oscpar, nuCut, EvCut, seed, fitPara_m, fitPara_e );
-
+      tf.setPara( var, nuCut, seed, fitPara_m, fitPara_e );
       tf.getTarget( oscpar );
 
-      double bf_dm2, bf_Uee2, bf_Umm2;
-      double par[3];
-      bool isOK = tf.doFit( bf_Uee2, bf_Umm2 , bf_dm2);
-      par[0] = bf_Uee2;
-      par[1] = bf_Umm2;
-      par[2] = bf_dm2;
-      double chi2 = tf.bfChi2( par );
-      double nochi2 = tf.noChi2( par );
-      double sen = sqrt(std::abs(nochi2 - chi2));
-      printf( "nue Best-fit Uee2 = %.2f, Umm2 = %.2f, dm2 = %.2f, chi2 = %f, noChi2 = %f, sen = %f\n", bf_Uee2, bf_Umm2, bf_dm2, chi2, nochi2, sen );
+      double nopar[3];
+      nopar[0] = nopar[1] = nopar[2] = 0.;
 
-      //double s2mue2 = (par[0]*par[0]) * (par[1]*par[1]);
+      double nochi2 = tf.bfChi2( nopar );
+      //double sen = sqrt(std::abs(nochi2 - chi2));
+      //printf( "nue Best-fit Uee2 = %f, Umm2 = %f, dm2 = %f, noChi2 = %f\n", oscpar[0], oscpar[1], oscpar[2], nochi2 );
 
-      //h1->Fill(s2mue2,oscpar[2],chi2);
-      h0->Fill(oscpar[1],oscpar[2],sen);
+      h->Fill(oscpar[1],oscpar[0],nochi2);
+
     }
     }
-
 
     gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
     gStyle->SetNumberContours(999);
+
+    h->SetStats(0);
+    //h->SetMaximum(8);
+    //h->SetMinimum(0.1);
+    h->SetTitle(Form("Sensitivity Contour (#Deltam^{2}=%.2f)",oscpar[2]));
+    h->GetYaxis()->SetTitle("U_{e4}^{2}");
+    h->GetXaxis()->SetTitle("U_{#mu4}^{2}");
 
     TCanvas *c0 = new TCanvas("c0","",600,600);
     c0->SetLogx();
+    c0->SetLogy();
     c0->SetLogz();
-    h0->SetStats(0);
-    h0->SetMaximum(8);
-    h0->SetMinimum(0.1);
-    h0->Draw("colz");
-    h0->SetTitle(Form("Sensitivity Contour (Uee2=%f)",oscpar[0]));
-    h0->GetXaxis()->SetTitle("Umm2");
-    h0->GetYaxis()->SetTitle("dm2");
-    c0->SaveAs(Form("contour_Logx.png"));
+    c0->SetGrid();
+    h->Draw("colz");
+    c0->SaveAs(Form("contour%d_Log_3.png",N));
 
-    TCanvas *c1 = new TCanvas("c1","",600,600);
-    //c0->SetLogz();
-    h0->SetStats(0);
-    h0->SetMaximum(8);
-    h0->SetMinimum(0.1);
-    h0->Draw("colz");
-    h0->SetTitle(Form("Sensitivity Contour (Uee2=%f)",oscpar[0]));
-    h0->GetXaxis()->SetTitle("Umm2");
-    h0->GetYaxis()->SetTitle("dm2");
-    c1->SaveAs(Form("contour.png"));
-
-    gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
-    gStyle->SetNumberContours(999);
-
-    TFile* out = new TFile("contour.root","RECREATE");
-    h0->Write();
+    TFile* out = new TFile(Form("contour%d_3.root",N),"RECREATE");
+    h->Write();
     out->Close();
-  }
-*/
+
+
 }
 
 

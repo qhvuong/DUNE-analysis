@@ -2,7 +2,6 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TH2.h"
-#include "TF1.h"
 #include "TStyle.h"
 #include <TRandom.h>
 #include <list>
@@ -73,8 +72,8 @@ int main()
 
 
   char var[20] = "ElepReco";
-  int par, nuCut, EvCut;
-  par = 2;
+  int para, nuCut;
+  para = 2;
   nuCut = 0;
 
   TFile *CC_f  = new TFile("/dune/app/users/qvuong/data/lownu/CC_output.root","READ");
@@ -95,6 +94,7 @@ int main()
   TH1D * nue_templates_m_w[nbins_Ev];
   TH1D * nue_templates_e[nbins_Ev];
   TH1D * nue_templates_e_w[nbins_Ev];
+
 
   for(int i=0; i<nbins_Ev; i++) {
     CC_templates_m[i]    = (TH1D*)CC_hm->ProjectionY(Form("CC_m_bin%d",i+1),i+1,i+1);
@@ -118,6 +118,12 @@ int main()
   TFile *f_sys = new TFile(Form("../../../xS_covmtr/total_sigmtr%d_5sig.root",nuCut), "READ");
   TH2D *sys_cov = (TH2D*)f_sys->Get("hcv");
 
+  TCanvas *c = new TCanvas("c","",800,600);
+  fl_cov->Draw("colz");
+  c->SaveAs("fl.png");
+  sys_cov->Draw("colz");
+  c->SaveAs("sys.png");
+
   double cov_bins[nbins+1][nbins+1], sys_bins[nbins+1][nbins+1], fl_bins[nbins+1][nbins+1];
   for(int i=0; i<nbins; i++) {
     for(int j=0; j<nbins; j++) {
@@ -130,25 +136,36 @@ int main()
   tf.setEnergyBins( energy_bins );
   tf.setCovmtr( cov_bins );
 
-  double oscpar[3], seed[3];
-  if(par==1) {
-    oscpar[0] = 0.01;
-    oscpar[1] = 0.0016;
-    oscpar[2] = 1.3;
+  double oscpar[4], seed[4];
+  if( para == 1 ) {
+  oscpar[0] = 0.01;
+  oscpar[1] = 0.0016;
+  oscpar[2] = 0.0016;
+  oscpar[3] = 1.3;
   }
-  else if(par==2) {
-    oscpar[0] = 0.04;
-    oscpar[1] = 0.01;
-    oscpar[2] = 6.0;
+  if( para == 2 ) {
+  oscpar[0] = 0.04;
+  oscpar[1] = 0.01;
+  oscpar[2] = 0.01;
+  oscpar[3] = 6.0;
   }
-  for(int j = 0; j < 3; j++) {
-    seed[j] = oscpar[j]; 
-  }
-  
-  tf.setPara( var, par, oscpar, nuCut, seed, fitPara_m, fitPara_e );
+  for(int ii = 0; ii < 4; ii++) {
+    seed[ii] = oscpar[ii]; }
+
+  tf.setPara( var, oscpar, para, nuCut, seed, fitPara_m, fitPara_e );
 
   tf.getTarget( oscpar );
-  tf.Draw();
+
+  double bf_dm2, bf_Uee2, bf_Umm2;
+  double par[4];
+  bool isOK = tf.doFit( bf_Uee2, bf_Umm2 , bf_dm2);
+  par[0] = bf_Uee2;
+  par[1] = bf_Umm2;
+  par[2] = bf_Utt2;
+  par[3] = bf_dm2;
+  double bfc2 = tf.bfChi2 ( par );
+
+  std::cout << "bfchi2: " << par[0] << "\t" << par[1] << "\t" << par[2] << "\t" << par[3] << "\t" << bfc2 << "\n";
 
 }
 

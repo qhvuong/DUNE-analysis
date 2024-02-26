@@ -77,12 +77,10 @@ int main()
   
   //for(int N = 300;N<901;N+=100){
   int N = 10000;
-  for(int para=1; para<3; para++){
-  for(int nuCut=0; nuCut<4; nuCut+=3){
 
-  //int para, nuCut;
-  //para = 2;
-  //nuCut = 0;
+  int para, nuCut;
+  para = 2;
+  nuCut = 3;
 
   TFile *CC_f  = new TFile("/dune/app/users/qvuong/data/lownu/CC_output.root","READ");
   TFile *nue_f = new TFile("/dune/app/users/qvuong/data/lownu/nue_output.root","READ");
@@ -130,7 +128,7 @@ int main()
     energy_bins[b] = CC_he->GetXaxis()->GetBinLowEdge(b+1);
   } 
 
-  TFile *cov_f = new TFile(Form("../FC_stat_fl_3sig_%d_%d.root",nuCut,N),"READ");
+  TFile *cov_f = new TFile(Form("../FC3_stat.root"),"READ");
   TH2D *cov = (TH2D*)cov_f->Get("cv");
 
   double cov_bins[nbins+1][nbins+1];
@@ -169,15 +167,6 @@ int main()
   par[2] = bf_dm2;
   //double chi2 = tf.bfChi2 ( par );
   tf.Draw( par );
-/*
-  std::ofstream out;
-  out.open(Form("FC_chi2_%d%d_%d.txt",para,nuCut,N));
-  out << chi2 << "\n";
-  out.close();
-*/
-  }
-  }
-  //}
 }
 
 

@@ -1,18 +1,23 @@
 void read()
 {
-  TFile *f = new TFile("FC3_5000.root","READ");
-
-  f->Print();
-
-  //std::cout << f->GetListOfKeys();
-
-  //TMatrixD mtr = (TMatrixD<double>)f->Get("scales");
-  //TMatrixD mtr;
+  TFile *f = new TFile("FC3_500000_2.root","READ");
 
   TMatrixD* mtr = dynamic_cast<TMatrixD*>(f->Get("scales"));
 
-  std::cout << mtr->GetNrows() << "\t" << mtr->GetNcols() << "\n";
+  int N = 500000;
+  int nbins = 250;
+  TMatrixD scales(N, nbins);
 
-  //if(f->IsOpen()) f->GetObject("scales", mtr);
+  TH2D* hscales = new TH2D("hscales","",N,0,N,nbins,0,nbins);
+
+  for(int i=0; i<N; i++){
+    for(int j=0; j<nbins; j++){
+      hscales->SetBinContent(i+1,j+1, (*mtr)(i,j));
+    }
+  }
+
+  TFile *fout = new TFile("FC3_2.root","RECREATE");
+  hscales->Write();
+  fout->Close(); 
 
 }

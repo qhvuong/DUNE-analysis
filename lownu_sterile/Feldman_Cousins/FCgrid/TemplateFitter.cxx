@@ -11,9 +11,12 @@
 #include "TMatrixD.h"
 #include "TMatrixT.h"
 #include "TDecompSVD.h"
+#include "TDecompChol.h"
 #include "TGraph.h"
 #include "TLegend.h"
 #include <TRandom3.h>
+
+using namespace std;
 
 TemplateFitter::TemplateFitter(TH1D * CC_templates_m[nbins_Ev], TH1D * CC_templates_m_nc[nbins_Ev], TH1D * CC_templates_e[nbins_Ev], TH1D * nue_templates_m[nbins_Ev], TH1D * nue_templates_m_w[nbins_Ev], TH1D * nue_templates_e[nbins_Ev], TH1D * nue_templates_e_w[nbins_Ev], TH1D * LEdep_m[29], TH1D * LEdep_e[29] )
 {
@@ -39,6 +42,7 @@ void TemplateFitter::setEnergyBins( double bins[nbins_Ev+1] )
   for( int i = 0; i < nbins_Ev+1; ++ i ) {m_energy_bins[i] = bins[i];}
 }
 
+double b0,b1,b2;
 double s0,s1,s2;
 void TemplateFitter::setPara( char var[20], int nuCut, double seed[3], double fitPara_m[29][7], double fitPara_e[29][7] )
 {
@@ -220,10 +224,10 @@ double TemplateFitter::getAvgPmm( double energy, double Uee2, double Umm2, doubl
 TMatrixD covmtr(nbins,nbins);
 TMatrixD scales(1,nbins);
 
-void TemplateFitter::setCovmtr( double covmtr_bct[nbins+1][nbins+1], double scales_bct[nbins+1] )
+void TemplateFitter::setCovmtr( double covmtr_bct[nbins+1][nbins+1], double wgt_bct[nbins+1] )
 {
   for(int i=0; i<nbins; i++) {
-    scales[0][i]  = scales_bct[i];
+    scales[0][i]  = wgt_bct[i];
     for(int j=0; j<nbins; j++) {
       covmtr[i][j]  = covmtr_bct[i][j];
     }
@@ -231,8 +235,7 @@ void TemplateFitter::setCovmtr( double covmtr_bct[nbins+1][nbins+1], double scal
 }
 
 
-
-void TemplateFitter::getTarget()
+void TemplateFitter::getTarget( double *par )
 {
   CCe_tgt->Reset();
   CCm_tgt->Reset();
@@ -261,7 +264,47 @@ void TemplateFitter::getTarget()
   int iL;
 
   // Add in oscillated neutrinos by taking the nu_mu CC templates and weighting by the oscillation probability
-  for( int i = 0; i < nbins_Ev; ++i ) {
+  for( int i = 10; i < nbins_Ev; ++i ) {
+/*
+    double mue = 0.;
+    double emu = 0;
+    double ee = 0.;
+    double mm = 0.;
+    double L  = 0.5;
+
+    if(i<240)                iL = (int)i/10;
+    else if(i>=240 && i<400) iL = (int) 24+(i-240)/40;
+    else                     iL = 28;
+
+    for(int k=0; k<7; k++) {
+      ft_m[k] = fitP_m[iL][k];
+      ft_e[k] = fitP_e[iL][k];
+    }
+
+    for(int j = 0; j<1001; j++){
+      double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
+      mue = mue + getPmue(e, par[0], par[1], par[2], L); // par[0] = Uee2, par[1] = Umm2, par[2] = dm2
+      emu = emu + getPmue(e, par[0], par[1], par[2], L); // par[0] = Uee2, par[1] = Umm2, par[2] = dm2
+      ee  = ee  + getPee(e, par[0], par[1], par[2], L);
+      mm  = mm  + getPmm(e, par[0], par[1], par[2], L);
+    }
+    double Pmue = mue/1001.0;
+    double Pemu = emu/1001.0;
+    double Pee  = ee/1001.0;
+    double Pmm  = mm/1001.0;
+
+
+    CC_tp_me->Add(CC_nc_m_templates[i], Pmue);
+    CC_tp_ee->Add(CC_e_templates[i], Pee);
+
+    CC_tp_em->Add(CC_e_templates[i], Pemu);
+    CC_tp_mm->Add(CC_m_templates[i], Pmm);
+
+    nue_tp_me->Add(nue_w_m_templates[i], Pmue);
+    nue_tp_mm->Add(nue_m_templates[i], Pmm);
+    nue_tp_em->Add(nue_w_e_templates[i], Pemu);
+    nue_tp_ee->Add(nue_e_templates[i], Pee);
+*/
 
     CC_tp_me->Add(CC_nc_m_templates[i], 0.0);
     CC_tp_ee->Add(CC_e_templates[i], 1.0);
@@ -277,16 +320,16 @@ void TemplateFitter::getTarget()
 
   // Now we have nue temp = mu-->e (no reco cut) + e-->e (no reco cut)
   CC_tp_e->Add(CC_tp_me); CC_tp_e->Add(CC_tp_ee);
-  CC_tp_m->Add(CC_tp_em);    CC_tp_m->Add(CC_tp_mm);
+  CC_tp_m->Add(CC_tp_em); CC_tp_m->Add(CC_tp_mm);
 
   nue_tp_os->Add(nue_tp_me);    nue_tp_os->Add(nue_tp_em);
   nue_tp_unos->Add(nue_tp_ee);  nue_tp_unos->Add(nue_tp_mm);
   nue_tp->Add(nue_tp_os);       nue_tp->Add(nue_tp_unos);
-
-  //CCe_tgt->Add(CC_tp_e);
-  //CCm_tgt->Add(CC_tp_m);
-  //nue_tgt->Add(nue_tp);
-  
+/*
+  CCe_tgt->Add(CC_tp_e);
+  CCm_tgt->Add(CC_tp_m);
+  nue_tgt->Add(nue_tp);
+*/
   //std::cout << scales.GetNrows() << "\n";
   //std::cout << scales.GetNcols() << "\n";
 
@@ -295,35 +338,41 @@ void TemplateFitter::getTarget()
       int b = i;
       double bct = CC_tp_m->GetBinContent(b+1);
       double wgt = scales[0][i];
+      std::cout << i << "\t" << wgt << "\t" << bct << "\t" << bct*(1.+wgt) << "\n";
       CCm_tgt->SetBinContent(b+1, bct*(1.+wgt));}
 
     if(i>=nbins_CC && i<2*nbins_CC){
       int b = i-nbins_CC;
       double bct = CC_tp_e->GetBinContent(b+1);
       double wgt = scales[0][i];
+      std::cout << i << "\t" << wgt << "\t" << bct << "\t" << bct*(1.+wgt) <<"\n";
       CCe_tgt->SetBinContent(b+1, bct*(1.+wgt));}
 
     if(i>=2*nbins_CC){
       int b = i-2*nbins_CC;
       double bct = nue_tp->GetBinContent(b+1);
       double wgt = scales[0][i];
+      std::cout << i << "\t" << wgt << "\t" << bct << "\t" << bct*(1.+wgt) << "\n";
       nue_tgt->SetBinContent(b+1, bct*(1.+wgt));}
   }
 
-  TCanvas *c = new TCanvas ("c","",1500,800);
-  c->Divide(3,2);
+
+  CCm_tgt->SetLineColor(kRed);
+  CCe_tgt->SetLineColor(kRed);
+  nue_tgt->SetLineColor(kRed);
+
+  TCanvas *c = new TCanvas ("c","",1500,400);
+  c->Divide(3,1);
   c->cd(1);
   CC_tp_m->Draw();
+  CCm_tgt->Draw("same");
   c->cd(2);
   CC_tp_e->Draw();
+  CCe_tgt->Draw("same");
   c->cd(3);
   nue_tp->Draw();
-  c->cd(4);
-  CCm_tgt->Draw();
-  c->cd(5);
-  CCe_tgt->Draw();
-  c->cd(6);
-  nue_tgt->Draw();
+  gPad->SetLogy();
+  nue_tgt->Draw("same");
   c->SaveAs("tgt.png");
 
 
@@ -356,6 +405,22 @@ double TemplateFitter::getChi2( const double * par )
 
   // Add in oscillated neutrinos by taking the nu_mu CC templates and weighting by the oscillation probability
   for( int i = 10; i < nbins_Ev; ++i ) {
+/*
+  if(par[0]==0. && par[1]==0. && par[2]==0.){
+    CC_tp_me->Add(CC_nc_m_templates[i], 0.0);
+    CC_tp_ee->Add(CC_e_templates[i], 1.0);
+
+    CC_tp_em->Add(CC_e_templates[i], 0.0);
+    CC_tp_mm->Add(CC_m_templates[i], 1.0);
+
+    nue_tp_me->Add(nue_w_m_templates[i], 0.0);
+    nue_tp_mm->Add(nue_m_templates[i], 1.0);
+    nue_tp_em->Add(nue_w_e_templates[i], 0.0);
+    nue_tp_ee->Add(nue_e_templates[i], 1.0);
+  }  
+
+  else{
+  */
     double mue = 0;
     double emu = 0;
     double ee = 0;
@@ -396,6 +461,7 @@ double TemplateFitter::getChi2( const double * par )
     nue_tp_em->Add(nue_w_e_templates[i], Pemu);
     nue_tp_ee->Add(nue_e_templates[i], Pee);
   }
+  //}
 
   // Now we have nue temp = mu-->e (no reco cut) + e-->e (no reco cut)
   CC_tp_e->Add(CC_tp_me); CC_tp_e->Add(CC_tp_ee);
@@ -421,14 +487,66 @@ double TemplateFitter::getChi2( const double * par )
     if(bx<nbins_CC)                   target[bx][0] = CCm_tgt->GetBinContent(bx+1);
     if(bx>=nbins_CC && bx<2*nbins_CC) target[bx][0] = CCe_tgt->GetBinContent(bx-nbins_CC+1);
     if(bx>=2*nbins_CC)                target[bx][0] = nue_tgt->GetBinContent(bx-2*nbins_CC+1);
+  }
 
+  for( int bx = 0; bx < nbins; bx++ ) {
+  for( int by = 0; by < nbins; by++ ) {
+    unc[bx][by]=0.;
+    if(bx==by){
     if(bx<nbins_CC)                   unc[bx][bx] = CCm_tgt->GetBinContent(bx+1);
     if(bx>=nbins_CC && bx<2*nbins_CC) unc[bx][bx] = CCe_tgt->GetBinContent(bx-nbins_CC+1);
-    if(bx>=2*nbins_CC)                unc[bx][bx] = nue_tgt->GetBinContent(bx-2*nbins_CC+1);
-  }
-  cov = covmtr + unc;
+    if(bx>=2*nbins_CC)                unc[bx][bx] = nue_tgt->GetBinContent(bx-2*nbins_CC+1);}
+  }}
+
+
+  cov = unc;
 
   TMatrixD diff = temp - target;
+  TMatrixD diffT(TMatrixD::kTransposed, diff);
+  TMatrixD inv = cov.Invert();
+/*
+  TDecompChol covDecomp( cov );
+  if( !covDecomp.Decompose() ) printf( "Cov matrix didn't decompose Cholesky\n" );
+  TDecompSVD svd(cov);
+  if( !svd.Decompose() ) printf( "Cov matrix didn't decompose SVD\n" );
+  TMatrixD toInvert = covDecomp.GetU();
+  TMatrixD inverse = toInvert.Invert();
+  TMatrixD inverseT(TMatrixD::kTransposed, inverse);
+  TMatrixD inv = inverse*inverseT;
+*/
+  diffT = diffT*inv;
+
+  TMatrixD mul = diffT*diff;
+
+  std::cout << mul.GetNrows() << "\t" << mul.GetNcols() << "\n";
+  chi2 = mul[0][0];
+
+/*
+  TMatrixD diff = temp - target;
+  TMatrixD diffT(TMatrixD::kTransposed, diff);
+
+  TMatrixD diffT(1,nbins);
+  for(int i=0;i<nbins;i++){
+    diffT[0][i] = diff[i][0];}
+
+  TDecompChol covDecomp( cov );
+  if( !covDecomp.Decompose() ) printf( "Scale matrix didn't decompolse\n" );
+  TMatrixD toInvert = covDecomp.GetU();
+  TMatrixD inverse = toInvert.Invert();
+  TMatrixD inverseT(TMatrixD::kTransposed, inverse);
+  TMatrixD inv = inverse*inverseT;
+
+  //TDecompSVD svd(cov);
+  //TMatrixD inv = svd.Invert();
+  diffT = diffT*inv;
+
+  for( int bx = 0; bx < nbins; bx++ ) {
+    chi2 += diffT[0][bx] * diff[bx][0];
+  }
+
+  std::cout << par[0] << "\t" << par[1] << "\t" << par[2] << "\t" << chi2 << "\n";
+  
+
   TMatrixD diff_T(TMatrixD::kTransposed, diff);
   TDecompSVD svd(cov);
   TMatrixD inv = svd.Invert();
@@ -437,13 +555,13 @@ double TemplateFitter::getChi2( const double * par )
   for( int bx = 0; bx < nbins; bx++ ) {
     for( int by = 0; by < nbins; by++ ) {
       diff_cov[0][bx] += diff_T[0][by] * inv[by][bx];
+      //diff_cov[0][bx] += diff_T[0][by];
     }
     chi2 += diff_cov[0][bx] * diff[bx][0];
   }
 
-  chi2 = chi2;
-
-  //std::cout << par[0] << "\t" << par[1] << "\t" << par[2] << "\t" << chi2 << "\n";
+*/
+  std::cout << par[0] << "\t" << par[1] << "\t" << par[2] << "\t" << chi2 << "\n";
   return chi2;
 }
 
@@ -462,9 +580,11 @@ bool TemplateFitter::doFit( double &Uee2, double &Umm2, double &dm2 )
   fitter->SetVariable( 0, "Uee2", s0, 0.00001 );
   fitter->SetVariable( 1, "Umm2", s1, 0.00001 );
   fitter->SetVariable( 2, "dm2",  s2, 0.01 );
-  fitter->SetVariableLowerLimit(0, 0.0);
-  fitter->SetVariableLowerLimit(1, 0.0);
+  fitter->SetVariableLimits(0, 0., 1.);
+  fitter->SetVariableLimits(1, 0., 1.);
   fitter->SetVariableLowerLimit(2, 0.0);
+  //fitter->SetVariableUpperLimit(0, 1.0);
+  //fitter->SetVariableUpperLimit(1, 1.0);
 
   // 3 free parameters = theta, dm2
   ROOT::Math::Functor lf( this, &TemplateFitter::getChi2, 3 );
@@ -570,11 +690,15 @@ double TemplateFitter::bfChi2( double *par )
   nue_tp->Add(nue_tp_os);       nue_tp->Add(nue_tp_unos);
 
 
+  CCe_tgt->SetStats(0);
+  CCm_tgt->SetStats(0);
+  nue_tgt->SetStats(0);
 
+/*
   THStack *he = new THStack("he","");
   CCe_tgt->SetMarkerStyle(kStar);
   CCe_tgt->SetMarkerSize(1);
-  CCe_tgt->SetMarkerColor(8);
+  //CCe_tgt->SetMarkerColor(8);
   CC_tp_me->SetFillColor(kRed);
   CC_tp_ee->SetFillColor(kBlue);
   he->Add(CC_tp_me);
@@ -592,7 +716,7 @@ double TemplateFitter::bfChi2( double *par )
   THStack *hm = new THStack("hm","");
   CCm_tgt->SetMarkerStyle(kStar);
   CCm_tgt->SetMarkerSize(1);
-  CCm_tgt->SetMarkerColor(8);
+  //CCm_tgt->SetMarkerColor(8);
   CC_tp_em->SetFillColor(kRed);
   CC_tp_mm->SetFillColor(kBlue);
   hm->Add(CC_tp_em);
@@ -610,7 +734,7 @@ double TemplateFitter::bfChi2( double *par )
   THStack *hnue = new THStack("hnue","");
   nue_tgt->SetMarkerStyle(kStar);
   nue_tgt->SetMarkerSize(1);
-  nue_tgt->SetMarkerColor(8);
+  //nue_tgt->SetMarkerColor(8);
   nue_tp_os->SetFillColor(kRed);
   nue_tp_unos->SetFillColor(kBlue);
   hnue->Add(nue_tp_os);
@@ -625,7 +749,7 @@ double TemplateFitter::bfChi2( double *par )
   legend_nue->AddEntry(nue_tp_unos,"unoscillated #nu_{e}#rightarrow#nu_{e} & #nu_{#mu}->#nu_{#mu}");
   legend_nue->Draw();
   cnue->SaveAs(Form("fit_nue_%d.png",cutNu));
-
+*/
 
   // calculate the chi2 with the "data" target
   double chi2 = 0.0;
@@ -649,7 +773,7 @@ double TemplateFitter::bfChi2( double *par )
     if(bx>=2*nbins_CC)                unc[bx][bx] = nue_tgt->GetBinContent(bx-2*nbins_CC+1);
   }
   cov = covmtr + unc;
-
+/*
   TMatrixD diff = temp - target;
   TMatrixD diff_T(TMatrixD::kTransposed, diff);
   TDecompSVD svd(cov);
@@ -662,7 +786,23 @@ double TemplateFitter::bfChi2( double *par )
     }
     chi2 += diff_cov[0][bx] * diff[bx][0];
   }
+*/
+  TMatrixD diff = temp - target;
+  TMatrixD diffT(TMatrixD::kTransposed, diff);
 
+  TDecompChol covDecomp( cov );
+  if( !covDecomp.Decompose() ) printf( "Cov matrix didn't decompolse\n" );
+  TMatrixD toInvert = covDecomp.GetU();
+  TMatrixD inverse = toInvert.Invert();
+  TMatrixD inverseT(TMatrixD::kTransposed, inverse);
+  TMatrixD inv = inverse*inverseT;
+
+  diffT = diffT*inv;
+
+  TMatrixD mul = diffT*diff;
+
+  std::cout << mul.GetNrows() << "\t" << mul.GetNcols() << "\n";
+  chi2 = mul[0][0];
 
   //std::cout << par[0] << "\t" << par[1] << "\t" << par[2] << "\t" << chi2 << "\n";
   return chi2;
@@ -697,6 +837,7 @@ double TemplateFitter::noChi2 ( double *par )
 
   // Add in oscillated neutrinos by taking the nu_mu CC templates and weighting by the oscillation probability
   for( int i = 10; i < nbins_Ev; ++i ) {
+/*
     double mue = 0.;
     double emu = 0;
     double ee = 0.;
@@ -735,6 +876,17 @@ double TemplateFitter::noChi2 ( double *par )
     nue_tp_mm->Add(nue_m_templates[i], Pmm);
     nue_tp_em->Add(nue_w_e_templates[i], Pemu);
     nue_tp_ee->Add(nue_e_templates[i], Pee);
+*/
+    CC_tp_me->Add(CC_nc_m_templates[i], 0.0);
+    CC_tp_ee->Add(CC_e_templates[i], 1.0);
+
+    CC_tp_em->Add(CC_e_templates[i], 0.0);
+    CC_tp_mm->Add(CC_m_templates[i], 1.0);
+
+    nue_tp_me->Add(nue_w_m_templates[i], 0.0);
+    nue_tp_mm->Add(nue_m_templates[i], 1.0);
+    nue_tp_em->Add(nue_w_e_templates[i], 0.0);
+    nue_tp_ee->Add(nue_e_templates[i], 1.0);
   }
 
   CC_tp_e->Add(CC_tp_me); CC_tp_e->Add(CC_tp_ee);
@@ -748,10 +900,13 @@ double TemplateFitter::noChi2 ( double *par )
   c->Divide(3,1);
   c->cd(1);
   CC_tp_m->Draw();
+  CCm_tgt->Draw("same");
   c->cd(2);
   CC_tp_e->Draw();
+  CCe_tgt->Draw("same");
   c->cd(3);
   nue_tp->Draw();
+  nue_tgt->Draw("same");
   c->SaveAs("test.png");
 */
   // calculate the chi2 with the "data" target
@@ -770,26 +925,56 @@ double TemplateFitter::noChi2 ( double *par )
     if(bx<nbins_CC)                   target[bx][0] = CCm_tgt->GetBinContent(bx+1);
     if(bx>=nbins_CC && bx<2*nbins_CC) target[bx][0] = CCe_tgt->GetBinContent(bx-nbins_CC+1);
     if(bx>=2*nbins_CC)                target[bx][0] = nue_tgt->GetBinContent(bx-2*nbins_CC+1);
-
+  }
+  
+  for( int bx = 0; bx < nbins; bx++ ) {
+  for( int by = 0; by < nbins; by++ ) {
+    unc[bx][by]=0.;
+    if(bx==by){
     if(bx<nbins_CC)                   unc[bx][bx] = CCm_tgt->GetBinContent(bx+1);
     if(bx>=nbins_CC && bx<2*nbins_CC) unc[bx][bx] = CCe_tgt->GetBinContent(bx-nbins_CC+1);
-    if(bx>=2*nbins_CC)                unc[bx][bx] = nue_tgt->GetBinContent(bx-2*nbins_CC+1);
-  }
-  cov = covmtr + unc;
+    if(bx>=2*nbins_CC)                unc[bx][bx] = nue_tgt->GetBinContent(bx-2*nbins_CC+1);}
+  }}
 
+  cov = unc;
+
+
+
+/*
   TMatrixD diff = temp - target;
-  TMatrixD diff_T(TMatrixD::kTransposed, diff);
-  TDecompSVD svd(cov);
-  TMatrixD inv = svd.Invert();
-
-  TMatrixD diff_cov(1, nbins);
   for( int bx = 0; bx < nbins; bx++ ) {
-    for( int by = 0; by < nbins; by++ ) {
-      diff_cov[0][bx] += diff_T[0][by] * inv[by][bx];
-    }
-    chi2 += diff_cov[0][bx] * diff[bx][0];
-  }
+    std::cout << diff[bx][0] << "\n";}
 
-  //std::cout << par[0] << "\t" << par[1] << "\t" << par[2] << "\t" << chi2 << "\n";
+  TMatrixD diffT(TMatrixD::kTransposed, diff);
+*/
+/*
+  TDecompChol covDecomp( cov );
+  if( !covDecomp.Decompose() ) printf( "Cov matrix didn't decompose Cholesky\n" );
+  TDecompSVD svd(cov);
+  if( !svd.Decompose() ) printf( "Cov matrix didn't decompose SVD\n" );
+  TMatrixD toInvert = covDecomp.GetU();
+
+  TMatrixD inverse = toInvert.Invert();
+  TMatrixD inverseT(TMatrixD::kTransposed, inverse);
+  TMatrixD inv = inverse*inverseT;
+*/
+  //TMatrixD inv = cov.Invert();
+  //test.Invert();
+/*
+  TMatrixD prod = test*cov;
+  for( int bx = 0; bx < nbins; bx++ ) {
+  for( int by = 0; by < nbins; by++ ) {
+    std::cout << prod[bx][by] << "\t";}
+    std::cout << "\n";}
+*/
+  //diffT = diffT*inv;
+/*
+  TMatrixD mul = diffT*inv*diff;
+
+  std::cout << mul.GetNrows() << "\t" << mul.GetNcols() << "\n";
+  chi2 = mul[0][0];
+  
+  std::cout << par[0] << "\t" << par[1] << "\t" << par[2] << "\t" << chi2 << "\n";
+*/
   return chi2;
 }

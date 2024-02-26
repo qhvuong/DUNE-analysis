@@ -5,7 +5,6 @@
 #include "TStyle.h"
 #include <TRandom.h>
 #include <list>
-#include <TMath.h>
 
 int main()
 {
@@ -77,8 +76,8 @@ int main()
   para = 2;
   nuCut = 3;
 
-  TFile *CC_f  = new TFile("/dune/app/users/qvuong/data/lownu/CC_output.root","READ");
-  TFile *nue_f = new TFile("/dune/app/users/qvuong/data/lownu/nue_output.root","READ");
+  TFile *CC_f  = new TFile("/dune/app/users/qvuong/data/lownu/CC_output_test.root","READ");
+  TFile *nue_f = new TFile("/dune/app/users/qvuong/data/lownu/nue_output_test.root","READ");
 
   TH2D* CC_hm    = (TH2D*)CC_f->Get(Form("m_h%sVsEv%d",var,nuCut));
   TH2D* CC_hm_nc = (TH2D*)CC_f->Get(Form("nc_m_h%sVsEv%d",var,nuCut));
@@ -114,76 +113,52 @@ int main()
     energy_bins[b] = CC_he->GetXaxis()->GetBinLowEdge(b+1);
   } 
 
-  TFile *f_fl = new TFile(Form("../../../flux_covmtr/flux_covmtr%d_10000.root",nuCut),"READ");
+  TFile *f_fl = new TFile(Form("../../../flux_covmtr/flux_covmtr%d_test.root",nuCut),"READ");
   TH2D *fl_cov = (TH2D*)f_fl->Get("hcv");
-  TFile *f_sys = new TFile(Form("../../../xS_covmtr/total_sigmtr%d_5sig.root",nuCut), "READ");
-  TH2D *sys_cov = (TH2D*)f_sys->Get("hcv");
+  TFile *f_sig = new TFile(Form("../../../xS_covmtr/total_sigmtr%d_5sig_test.root",nuCut), "READ");
+  TH2D *sig_cov = (TH2D*)f_sig->Get("hcv");
+/*
+  TCanvas *c = new TCanvas("c","",800,600);
+  fl_cov->Draw("colz");
+  c->SaveAs("fl.png");
+  sys_cov->Draw("colz");
+  c->SaveAs("sys.png");
+*/
 
-  double cov_bins[nbins+1][nbins+1], sys_bins[nbins+1][nbins+1], fl_bins[nbins+1][nbins+1];
+  double sig_bins[nbins+1][nbins+1], fl_bins[nbins+1][nbins+1];
   for(int i=0; i<nbins; i++) {
     for(int j=0; j<nbins; j++) {
-      fl_bins[i][j]  = fl_cov->GetBinContent(i+1, j+1);
-      //sys_bins[i][j] = sys_cov->GetBinContent(i+1, j+1);
-      //cov_bins[i][j] = fl_bins[i][j] + sys_bins[i][j];
-      cov_bins[i][j] = fl_bins[i][j];
+      fl_bins[i][j]    = fl_cov->GetBinContent(i+1, j+1);
+      sig_bins[i][j]   = sig_cov->GetBinContent(i+1, j+1);
     }
   }
 
-  std::cout << cov_bins[1][1] << "\n";
-
   tf.setEnergyBins( energy_bins );
-  tf.setCovmtr( cov_bins );
+  tf.setCovmtr( fl_bins, sig_bins );
 
-  double oscpar[3], seed[3];
-  if( para == 1 ) {
-  oscpar[0] = 0.01;
-  oscpar[1] = 0.0016;
-  oscpar[2] = 1.3;
-  }
-  if( para == 2 ) {
-  oscpar[0] = 0.04;
-  oscpar[1] = 0.01;
-  oscpar[2] = 6.0;
-  }
-/*
+  double seed[3], par_tgt[3], par_bf[3], par_no[3];
+
+  seed[0] = par_tgt[0] = 0.04;
+  seed[1] = par_tgt[1] = 0.01;
+  seed[2] = par_tgt[2] = 6.0;
+
   for(int ii = 0; ii < 3; ii++) {
-    seed[ii] = oscpar[ii]; }
-*/
-  seed[0] = 0.1;
-  seed[1] = 0.1;
-  seed[2] = 9.0;
-  int run = 1;
-  double chi2[run];
-  double bfc2=1e9;
-
-  for(int r=0;r<run;r++){
-  //seed[2] = s2 + r*TMath::Pi()/0.762;
-
-  std::cout << seed[2] << "\n";
-
-  tf.setPara( var, oscpar, para, nuCut, seed, fitPara_m, fitPara_e );
-
-  tf.getTarget( oscpar );
-
-  double bf_dm2, bf_Uee2, bf_Umm2;
-  double par[3];
-  bool isOK = tf.doFit( bf_Uee2, bf_Umm2 , bf_dm2);
-  par[0] = bf_Uee2;
-  par[1] = bf_Umm2;
-  par[2] = bf_dm2;
-  chi2[r] = tf.bfChi2(par);
-
-  //if(bfc2>chi2[r]) bfc2=chi2[r];
-
-  std::cout << "bfchi2: " << par[0] << "\t" << par[1] << "\t" << par[2] << "\t" << chi2[r] << "\n";
+    par_no[ii] = 0.;
   }
 
-  //tf.Draw( par );
+  tf.setPara( var, nuCut, seed, fitPara_m, fitPara_e );
 
+  tf.getTarget( par_tgt );
 
+  double bf_dm2, bf_Uee2, bf_Umm2, chi2;
 
+  bool isOK = tf.doFit( bf_Uee2, bf_Umm2 , bf_dm2);
+  par_bf[0] = bf_Uee2;
+  par_bf[1] = bf_Umm2;
+  par_bf[2] = bf_dm2;
+  chi2 = tf.bfChi2( par_bf );
 
-
+  printf( "nue Best-fit Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", bf_Uee2, bf_Umm2, bf_dm2, chi2);
 
 
 /*

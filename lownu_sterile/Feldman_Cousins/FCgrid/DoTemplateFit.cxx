@@ -10,10 +10,22 @@
 
 using namespace std;
 
-int main()
+int main(int argc, char const *argv[])
 {
-  TFile *ftP_m = new TFile("/dune/app/users/qvuong/lownu/LEdep/fitPara_m.root","READ");
-  TFile *ftP_e = new TFile("/dune/app/users/qvuong/lownu/LEdep/fitPara_e.root","READ");
+
+  int u;
+  int i = 0;
+  while( i < argc ) {
+    if( argv[i] == std::string("--u") ) {
+      u = atof(argv[i+1]);
+      i += 2;
+    }
+
+    else i += 1;
+  }
+  
+  TFile *ftP_m = new TFile("fitPara_m.root","READ");
+  TFile *ftP_e = new TFile("fitPara_e.root","READ");
 
   TTree *tree_m = (TTree*)ftP_m->Get("pardir");
   TTree *tree_e = (TTree*)ftP_e->Get("pardir");
@@ -62,7 +74,7 @@ int main()
   ftP_e->Close();
 
 
-  TFile *f = new TFile("/dune/app/users/qvuong/lownu/LEdep/LE_1112_2.root","READ");
+  TFile *f = new TFile("LE_1112_2.root","READ");
   TH2D *LvsE_e = (TH2D*)f->Get("h_e");
   TH2D *LvsE_m = (TH2D*)f->Get("h_m");
   TH1D *LEdep_e[29], *LEdep_m[29];
@@ -77,14 +89,11 @@ int main()
 
   char var[20] = "ElepReco";
   
-  //for(int para=1; para<3; para++){
-  //for(int nuCut=0; nuCut<4; nuCut+=3){
-
-  //int para, nuCut;
+  int para = 2;
   int nuCut = 3;
 
-  TFile *CC_f  = new TFile("/dune/app/users/qvuong/data/lownu/CC_output.root","READ");
-  TFile *nue_f = new TFile("/dune/app/users/qvuong/data/lownu/nue_output.root","READ");
+  TFile *CC_f  = new TFile("CC_output.root","READ");
+  TFile *nue_f = new TFile("nue_output.root","READ");
 
   TH2D* CC_hm    = (TH2D*)CC_f->Get(Form("m_h%sVsEv%d",var,nuCut));
   TH2D* CC_hm_nc = (TH2D*)CC_f->Get(Form("nc_m_h%sVsEv%d",var,nuCut));
@@ -121,61 +130,62 @@ int main()
   } 
 
 
-  TFile *f_fl = new TFile(Form("../../flux_covmtr/flux_covmtr%d_10000.root",nuCut),"READ");
+  TFile *f_fl = new TFile(Form("flux_covmtr%d_10000.root",nuCut),"READ");
   TH2D *fl_cov = (TH2D*)f_fl->Get("hcv");
-  TFile *f_sys = new TFile(Form("../../xS_covmtr/total_sigmtr%d_5sig.root",nuCut), "READ");
+  TFile *f_sys = new TFile(Form("total_sigmtr%d_5sig.root",nuCut), "READ");
   TH2D *sys_cov = (TH2D*)f_sys->Get("hcv");
-  TFile *cov_tgt_f = new TFile(Form("../FC%d_300.root",nuCut),"READ");
-  TH2D *cov_tgt = (TH2D*)cov_tgt_f->Get("hcv");
+  TFile *scales_f = new TFile(Form("FC%d_1.root",nuCut),"READ");
+  TH2D *scales = (TH2D*)scales_f->Get("hscales");
 
-  std::cout << cov_tgt->GetNbinsX() << "\t" << cov_tgt->GetNbinsY() << "\n";
-
-  int N=1;
-  for(int u=0; u<N; u++){
-
-  if(u%3==0) cout << u*100./N << " percent \n";
-
-  double scales[nbins+1], covtp_bins[nbins+1][nbins+1];
+  double wgt[nbins+1], covtp_bins[nbins+1][nbins+1];
   double sys_bins[nbins+1][nbins+1], fl_bins[nbins+1][nbins+1];
   for(int i=0; i<nbins; i++) {
-    scales[i] = cov_tgt->GetBinContent(u+1, i+1);
+    wgt[i] = scales->GetBinContent(u+1, i+1);
     for(int j=0; j<nbins; j++) {
-      fl_bins[i][j]      = fl_cov->GetBinContent(i+1, j+1);
-      sys_bins[i][j]     = sys_cov->GetBinContent(i+1, j+1);
-      covtp_bins[i][j]  = fl_bins[i][j] + sys_bins[i][j];
+      fl_bins[i][j]    = fl_cov->GetBinContent(i+1, j+1);
+      sys_bins[i][j]   = sys_cov->GetBinContent(i+1, j+1);
+      covtp_bins[i][j] = fl_bins[i][j] + sys_bins[i][j];
     }
   }
-
+  
 
   tf.setEnergyBins( energy_bins );
-  tf.setCovmtr( covtp_bins, scales );
+  tf.setCovmtr( covtp_bins, wgt );
 
-  double seed[3];
-  seed[0] = seed[1] = seed[2] = 0.;
+  double seed[3], par_tgt[3], par_bf[3], par_no[3];
+
+  seed[0] = seed[1] = 0.01;
+  seed[2] = 1.0;
+
+  for(int ii = 0; ii < 3; ii++) {
+    par_tgt[ii] = 0.;
+    par_no[ii] = 0.;
+  }
 
   tf.setPara( var, nuCut, seed, fitPara_m, fitPara_e );
 
-  tf.getTarget();
-
+  //tf.getTarget( par_tgt );
+  double nochi2 = tf.noChi2( par_no );
+  //std::cout << nochi2 << "\n";
+/*
   double bf_dm2, bf_Uee2, bf_Umm2;
-  double par[3];
   bool isOK = tf.doFit( bf_Uee2, bf_Umm2 , bf_dm2);
-  par[0] = bf_Uee2;
-  par[1] = bf_Umm2;
-  par[2] = bf_dm2;
-  double chi2 = tf.bfChi2( par );
-  double nochi2 = tf.noChi2( par );
-  double sen = sqrt(std::abs(nochi2 - chi2));
 
-  //printf( "nue Best-fit Uee2 = %.2f, Umm2 = %.2f, dm2 = %.2f, chi2 = %f, noChi2 = %f, sen = %f\n", bf_Uee2, bf_Umm2, bf_dm2, chi2, nochi2, sen );
-  
+
+  par_bf[0] = bf_Uee2;
+  par_bf[1] = bf_Umm2;
+  par_bf[2] = bf_dm2;
+  double chi2 = tf.bfChi2( par_bf );
+  double sen = nochi2 - chi2;
+
+  printf( "nue Best-fit Uee2 = %.2f, Umm2 = %.2f, dm2 = %.2f, chi2 = %f, noChi2 = %f, sen = %f\n", bf_Uee2, bf_Umm2, bf_dm2, chi2, nochi2, sen );
 
   ofstream myfile;
   myfile.open(Form("output_%d.txt",u));
-  myfile << bf_Uee2 << "\t" << bf_Umm2 << "\t" << bf_dm2 << "\t" << sen << "\n";
+  myfile << bf_Uee2 << "\t" << bf_Umm2 << "\t" << bf_dm2 << "\t" << chi2 << "\t" << nochi2 << "\n";
   myfile.close();
-
-  }
+*/
+  //}
 }
 
 
