@@ -22,7 +22,7 @@ int main()
   TChain * tree = new TChain( "tree", "tree" );
   TChain * meta = new TChain( "meta", "meta" );
 
-  for(int i = 50; i<60; i++){
+  for(int i = 24; i<36; i++){
   //if(i==39) continue;
   tree->Add( Form("root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/marshalc/nue_study/FHC/nueFHC_%03d.root",i) );
   meta->Add( Form("root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/marshalc/nue_study/FHC/nueFHC_%03d.root",i) );
@@ -47,9 +47,10 @@ int main()
   const double mubins[20] = {0.,0.5,1.,1.5,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,7.,8.,12.,16.,20.,40.,100.};
   const double ebins[8] = {0.,2.,4.,6.,8.,10.,20.,100.};
 
-  const Int_t nbinsX = 430;
-  Double_t xEdges[nbinsX+1];
-  xEdges[0]=0;
+
+  const Int_t nbinsX = 430; const Int_t nbinsY = 8;
+  Double_t xEdges[nbinsX+1], yEdges[nbinsY+1];
+  xEdges[0]=yEdges[0]=0;
   for(int i=0; i<nbinsX+1; i++)
   {
     if(i<200)                xEdges[i+1] = xEdges[i] + 0.02;
@@ -58,18 +59,28 @@ int main()
     else if(i>=400 && i<420) xEdges[i+1] = xEdges[i] + 1.0;
     else                     xEdges[i+1] = xEdges[i] + 4.0;
   }
+  for(int i=0; i<nbinsY+1; i++)
+  {
+    if(i<3)               yEdges[i+1] = yEdges[i] + 0.3;
+    else if(i>=3 && i<4) yEdges[i+1] = yEdges[i] + 0.4;
+    else if(i>=4 && i<5) yEdges[i+1] = yEdges[i] + 0.5;
+    else if(i>=5 && i<6) yEdges[i+1] = yEdges[i] + 0.7;
+    else if(i>=6 && i<7) yEdges[i+1] = yEdges[i] + 1.5;
+    else                   yEdges[i+1] = yEdges[i] + 12.0;
+  }
+
    
-  TH2D *m_hElepRecoVsEv0   = new TH2D("m_hElepRecoVsEv0","",nbinsX,xEdges,20,0,16);
-  TH2D *m_hElepRecoVsEv0_w = new TH2D("m_hElepRecoVsEv0_w","",nbinsX,xEdges,20,0,16);
-  TH2D *e_hElepRecoVsEv0   = new TH2D("e_hElepRecoVsEv0","",nbinsX,xEdges,20,0,16);
-  TH2D *e_hElepRecoVsEv0_w = new TH2D("e_hElepRecoVsEv0_w","",nbinsX,xEdges,20,0,16);
+  TH2D *m_hElepRecoVsEv0   = new TH2D("m_hElepRecoVsEv0","",nbinsX,xEdges,nbinsY,yEdges);
+  TH2D *m_hElepRecoVsEv0_w = new TH2D("m_hElepRecoVsEv0_w","",nbinsX,xEdges,nbinsY,yEdges);
+  TH2D *e_hElepRecoVsEv0   = new TH2D("e_hElepRecoVsEv0","",nbinsX,xEdges,nbinsY,yEdges);
+  TH2D *e_hElepRecoVsEv0_w = new TH2D("e_hElepRecoVsEv0_w","",nbinsX,xEdges,nbinsY,yEdges);
 
-  TH2D *m_hElepRecoVsEv0_cov = new TH2D("m_hElepRecoVsEv0_cov","",19,mubins,20,0,16);
-  TH2D *e_hElepRecoVsEv0_cov = new TH2D("e_hElepRecoVsEv0_cov","",7,ebins,20,0,16);
+  TH2D *m_hElepRecoVsEv0_cov = new TH2D("m_hElepRecoVsEv0_cov","",19,mubins,nbinsY,yEdges);
+  TH2D *e_hElepRecoVsEv0_cov = new TH2D("e_hElepRecoVsEv0_cov","",7,ebins,nbinsY,yEdges);
 
-  TH1D *m_hElep0 = new TH1D("m_hElep0","",20,0,16);
-  TH1D *e_hElep0 = new TH1D("e_hElep0","",20,0,16);
-  TH1D *hElep0 = new TH1D("hElep0","",20,0,16);
+  TH1D *m_hElep0 = new TH1D("m_hElep0","",nbinsY,yEdges);
+  TH1D *e_hElep0 = new TH1D("e_hElep0","",nbinsY,yEdges);
+  TH1D *hElep0 = new TH1D("hElep0","",nbinsY,yEdges);
 
 
   // information about the true neutrino interaction
@@ -284,7 +295,7 @@ int main()
 */
 
 
-  TFile *out = new TFile("/dune/app/users/qvuong/data/lownu/nue_output_5_test.root","RECREATE");
+  TFile *out = new TFile("/exp/dune/app/users/qvuong/data/lownu/nue_output_2_test.root","RECREATE");
   m_hElepRecoVsEv0->Write();
   m_hElepRecoVsEv0_w->Write();
   e_hElepRecoVsEv0->Write();

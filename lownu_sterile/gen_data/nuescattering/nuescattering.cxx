@@ -22,10 +22,10 @@ int main()
   TChain * tree = new TChain( "tree", "tree" );
   TChain * meta = new TChain( "meta", "meta" );
 
-  for(int i = 0; i<1; i++){
-  if(i==39) continue;
-  tree->Add( Form("/pnfs/dune/persistent/users/marshalc/nue_study/FHC/nueFHC_%03d.root",i) );
-  meta->Add( Form("/pnfs/dune/persistent/users/marshalc/nue_study/FHC/nueFHC_%03d.root",i) );
+  for(int i = 36; i<48; i++){
+  //if(i==39) continue;
+  tree->Add( Form("root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/marshalc/nue_study/FHC/nueFHC_%03d.root",i) );
+  meta->Add( Form("root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/marshalc/nue_study/FHC/nueFHC_%03d.root",i) );
   std::cout << "Nue File number:" << i << "\n";
   }
   
@@ -39,16 +39,16 @@ int main()
     total_pot += pot;
   }
   double yrPOT = 1.1E21;
-  double scalePOT = yrPOT/total_pot;
-  //double scalePOT = 1.0;
+  //double scalePOT = yrPOT/total_pot;
+  double scalePOT = 1.0;
 
   //std::cout << total_pot << "\t" << yrPOT*total_pot/1.1E21 << "\t" << scalePOT << "\n";
 
   const double mubins[20] = {0.,0.5,1.,1.5,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,7.,8.,12.,16.,20.,40.,100.};
   const double ebins[8] = {0.,2.,4.,6.,8.,10.,20.,100.};
 
-  
-  const Int_t nbinsX = 430; const Int_t nbinsY = 58;
+
+  const Int_t nbinsX = 430; const Int_t nbinsY = 8;
   Double_t xEdges[nbinsX+1], yEdges[nbinsY+1];
   xEdges[0]=yEdges[0]=0;
   for(int i=0; i<nbinsX+1; i++)
@@ -60,13 +60,13 @@ int main()
     else                     xEdges[i+1] = xEdges[i] + 4.0;
   }
   for(int i=0; i<nbinsY+1; i++)
-  { 
-    if(i<40)               yEdges[i+1] = yEdges[i] + 0.1;
-    else if(i>=40 && i<45) yEdges[i+1] = yEdges[i] + 0.2;
-    else if(i>=45 && i<50) yEdges[i+1] = yEdges[i] + 0.4;
-    else if(i>=50 && i<55) yEdges[i+1] = yEdges[i] + 0.8;
-    else if(i>=55 && i<57) yEdges[i+1] = yEdges[i] + 1.5;
-    else                   yEdges[i+1] = yEdges[i] + 2.0;
+  {
+    if(i<3)               yEdges[i+1] = yEdges[i] + 0.3;
+    else if(i>=3 && i<4) yEdges[i+1] = yEdges[i] + 0.4;
+    else if(i>=4 && i<5) yEdges[i+1] = yEdges[i] + 0.5;
+    else if(i>=5 && i<6) yEdges[i+1] = yEdges[i] + 0.7;
+    else if(i>=6 && i<7) yEdges[i+1] = yEdges[i] + 1.5;
+    else                   yEdges[i+1] = yEdges[i] + 12.0;
   }
 
  
@@ -209,93 +209,7 @@ int main()
 
 
 
-
-  //gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
-
-/*
-  m_hElepRecoVsEv0->SetTitle("nu+e numu Elep_reco Vs true Ev (Etheta2 < 3.0MeV)");
-  m_hElepRecoVsEv0->GetXaxis()->SetTitle("true Ev (GeV)");
-  m_hElepRecoVsEv0->GetYaxis()->SetTitle("Elep_reco (GeV)");
-  e_hElepRecoVsEv0->SetTitle("nu+e nue Elep_reco Vs true Ev (Etheta2 < 3.0MeV)");
-  e_hElepRecoVsEv0->GetXaxis()->SetTitle("true Ev (GeV)");
-  e_hElepRecoVsEv0->GetYaxis()->SetTitle("Elep_reco (GeV)");
-  TCanvas *cElepVsEv = new TCanvas("cElepVsEv","",1800,1400);
-  cElepVsEv->Divide(2,1);
-  cElepVsEv->cd(1);
-  e_hElepRecoVsEv0->Draw("colz");
-  cElepVsEv->cd(2);
-  m_hElepRecoVsEv0->Draw("colz");
-  cElepVsEv->SaveAs("nue_Elep_templates.png");
-
-  m_hElepRecoVsEv0_cov->SetTitle("nu+e numu Elep_reco Vs true Ev (Etheta2 < 3.0MeV)");
-  m_hElepRecoVsEv0_cov->GetXaxis()->SetTitle("true Ev (GeV)");
-  m_hElepRecoVsEv0_cov->GetYaxis()->SetTitle("Elep_reco (GeV)");
-  e_hElepRecoVsEv0_cov->SetTitle("nu+e nue Elep_reco Vs true Ev (Etheta2 < 3.0MeV)");
-  e_hElepRecoVsEv0_cov->GetXaxis()->SetTitle("true Ev (GeV)");
-  e_hElepRecoVsEv0_cov->GetYaxis()->SetTitle("Elep_reco (GeV)");
-  TCanvas *cElepVsEv_cov = new TCanvas("cElepVsEv_cov","",1800,1400);
-  cElepVsEv_cov->Divide(2,2);
-  cElepVsEv_cov->cd(1);
-  e_hElepRecoVsEv0_cov->Draw("colz");
-  cElepVsEv_cov->cd(2);
-  e_hElepRecoVsEv2_cov->Draw("colz");
-  cElepVsEv_cov->cd(3);
-  m_hElepRecoVsEv0_cov->Draw("colz");
-  cElepVsEv_cov->cd(4);
-  m_hElepRecoVsEv2_cov->Draw("colz");
-  cElepVsEv_cov->SaveAs("cov_nue_Elep.png");
-
-  m_hElepRecoVsEv0_cov_sigma2->SetTitle("nu+e numu Elep_reco Vs true Ev (Etheta2 < 3.0MeV) (-1sigma)");
-  m_hElepRecoVsEv0_cov_sigma2->GetXaxis()->SetTitle("true Ev (GeV)");
-  m_hElepRecoVsEv0_cov_sigma2->GetYaxis()->SetTitle("Elep_reco (GeV)");
-  e_hElepRecoVsEv0_cov_sigma2->SetTitle("nu+e nue Elep_reco Vs true Ev (Etheta2 < 3.0MeV) (-1sigma)");
-  e_hElepRecoVsEv0_cov_sigma2->GetXaxis()->SetTitle("true Ev (GeV)");
-  e_hElepRecoVsEv0_cov_sigma2->GetYaxis()->SetTitle("Elep_reco (GeV)");
-  m_hElepRecoVsEv2_cov_sigma2->SetTitle("nu+e numu Elep_reco Vs true Ev (Etheta2 < 0.5MeV) (-1sigma)");
-  m_hElepRecoVsEv2_cov_sigma2->GetXaxis()->SetTitle("true Ev (GeV)");
-  m_hElepRecoVsEv2_cov_sigma2->GetYaxis()->SetTitle("Elep_reco (GeV)");
-  e_hElepRecoVsEv2_cov_sigma2->SetTitle("nu+e nue Elep_reco Vs true Ev (Etheta2 < 0.5MeV) (-1sigma)");
-  e_hElepRecoVsEv2_cov_sigma2->GetXaxis()->SetTitle("true Ev (GeV)");
-  e_hElepRecoVsEv2_cov_sigma2->GetYaxis()->SetTitle("Elep_reco (GeV)");
-  TCanvas *cElepVsEv_cov_sigma2 = new TCanvas("cElepVsEv_cov_sigma2","",1800,1400);
-  cElepVsEv_cov_sigma2->Divide(2,2);
-  cElepVsEv_cov_sigma2->cd(1);
-  e_hElepRecoVsEv0_cov_sigma2->Draw("colz");
-  cElepVsEv_cov_sigma2->cd(2);
-  e_hElepRecoVsEv2_cov_sigma2->Draw("colz");
-  cElepVsEv_cov_sigma2->cd(3);
-  m_hElepRecoVsEv0_cov_sigma2->Draw("colz");
-  cElepVsEv_cov_sigma2->cd(4);
-  m_hElepRecoVsEv2_cov_sigma2->Draw("colz");
-  cElepVsEv_cov_sigma2->SaveAs("cov_sigma2_nue_Elep.png");
-
-  m_hElepRecoVsEv0_cov_sigma4->SetTitle("nu+e numu Elep_reco Vs true Ev (Etheta2 < 3.0MeV) (+1sigma)");
-  m_hElepRecoVsEv0_cov_sigma4->GetXaxis()->SetTitle("true Ev (GeV)");
-  m_hElepRecoVsEv0_cov_sigma4->GetYaxis()->SetTitle("Elep_reco (GeV)");
-  e_hElepRecoVsEv0_cov_sigma4->SetTitle("nu+e nue Elep_reco Vs true Ev (Etheta2 < 3.0MeV) (+1sigma)");
-  e_hElepRecoVsEv0_cov_sigma4->GetXaxis()->SetTitle("true Ev (GeV)");
-  e_hElepRecoVsEv0_cov_sigma4->GetYaxis()->SetTitle("Elep_reco (GeV)");
-  m_hElepRecoVsEv2_cov_sigma4->SetTitle("nu+e numu Elep_reco Vs true Ev (Etheta2 < 0.5MeV) (+1sigma)");
-  m_hElepRecoVsEv2_cov_sigma4->GetXaxis()->SetTitle("true Ev (GeV)");
-  m_hElepRecoVsEv2_cov_sigma4->GetYaxis()->SetTitle("Elep_reco (GeV)");
-  e_hElepRecoVsEv2_cov_sigma4->SetTitle("nu+e nue Elep_reco Vs true Ev (Etheta2 < 0.5MeV) (+1sigma)");
-  e_hElepRecoVsEv2_cov_sigma4->GetXaxis()->SetTitle("true Ev (GeV)");
-  e_hElepRecoVsEv2_cov_sigma4->GetYaxis()->SetTitle("Elep_reco (GeV)");
-  TCanvas *cElepVsEv_cov_sigma4 = new TCanvas("cElepVsEv_cov_sigma4","",1800,1400);
-  cElepVsEv_cov_sigma4->Divide(2,2);
-  cElepVsEv_cov_sigma4->cd(1);
-  e_hElepRecoVsEv0_cov_sigma4->Draw("colz");
-  cElepVsEv_cov_sigma4->cd(2);
-  e_hElepRecoVsEv2_cov_sigma4->Draw("colz");
-  cElepVsEv_cov_sigma4->cd(3);
-  m_hElepRecoVsEv0_cov_sigma4->Draw("colz");
-  cElepVsEv_cov_sigma4->cd(4);
-  m_hElepRecoVsEv2_cov_sigma4->Draw("colz");
-  cElepVsEv_cov_sigma4->SaveAs("cov_sigma4_nue_Elep.png");
-*/
-
-
-  TFile *out = new TFile("/exp/dune/app/users/qvuong/data/lownu/nue_output_58.root","RECREATE");
+  TFile *out = new TFile("/exp/dune/app/users/qvuong/data/lownu/nue_output_3.root","RECREATE");
   m_hElepRecoVsEv0->Write();
   m_hElepRecoVsEv0_w->Write();
   e_hElepRecoVsEv0->Write();

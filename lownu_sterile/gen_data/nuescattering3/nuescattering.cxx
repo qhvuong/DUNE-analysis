@@ -22,7 +22,8 @@ int main()
   TChain * tree = new TChain( "tree", "tree" );
   TChain * meta = new TChain( "meta", "meta" );
 
-  for(int i = 48; i<60; i++){
+  for(int i = 60; i<69; i++){
+  //if(i==39) continue;
   tree->Add( Form("root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/marshalc/nue_study/FHC/nueFHC_%03d.root",i) );
   meta->Add( Form("root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/marshalc/nue_study/FHC/nueFHC_%03d.root",i) );
   std::cout << "Nue File number:" << i << "\n";
@@ -68,7 +69,7 @@ int main()
     else                   yEdges[i+1] = yEdges[i] + 12.0;
   }
 
-   
+ 
   TH2D *m_hElepRecoVsEv0   = new TH2D("m_hElepRecoVsEv0","",nbinsX,xEdges,nbinsY,yEdges);
   TH2D *m_hElepRecoVsEv0_w = new TH2D("m_hElepRecoVsEv0_w","",nbinsX,xEdges,nbinsY,yEdges);
   TH2D *e_hElepRecoVsEv0   = new TH2D("e_hElepRecoVsEv0","",nbinsX,xEdges,nbinsY,yEdges);
@@ -122,6 +123,8 @@ int main()
   double Ev_reco;
 
   const int N = tree->GetEntries();
+  //const int N = 10000;
+  //scalePOT = 10;
 
   double E_max;
 
@@ -206,7 +209,7 @@ int main()
 
 
 
-  TFile *out = new TFile("/exp/dune/app/users/qvuong/data/lownu/nue_output_4_test.root","RECREATE");
+  TFile *out = new TFile("/exp/dune/app/users/qvuong/data/lownu/nue_output_5.root","RECREATE");
   m_hElepRecoVsEv0->Write();
   m_hElepRecoVsEv0_w->Write();
   e_hElepRecoVsEv0->Write();
