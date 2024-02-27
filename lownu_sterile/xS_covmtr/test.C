@@ -1,37 +1,37 @@
 static const int N = 1; // number of universes
-static const int nbins_CC = 50;
-static const int nbins_nue = 20;
+static const int nbins_CC = 58;
+static const int nbins_nue = 8;
 static const int nbins = 2*nbins_CC + nbins_nue;
 
 
 TMatrixD E_m(N, nbins_CC);
 TMatrixD E_e(N, nbins_CC);
-TMatrixD E_m_nue(N, nbins_CC);
-TMatrixD E_e_nue(N, nbins_CC);
-TMatrixD E_nue(N, nbins_CC);
+TMatrixD E_m_nue(N, nbins_nue);
+TMatrixD E_e_nue(N, nbins_nue);
+TMatrixD E_nue(N, nbins_nue);
   
 TMatrixD ECovars_m2_m2   ( nbins_CC, nbins_CC );
 TMatrixD ECovars_e2_e2   ( nbins_CC, nbins_CC );
-TMatrixD ECovars_nue_nue ( nbins_CC, nbins_CC );
+TMatrixD ECovars_nue_nue ( nbins_nue, nbins_nue );
 
 TMatrixD ECovars_m2_e2   ( nbins_CC, nbins_CC );
-TMatrixD ECovars_m2_nue  ( nbins_CC, nbins_CC );
+TMatrixD ECovars_m2_nue  ( nbins_CC, nbins_nue );
 TMatrixD ECovars_e2_m2   ( nbins_CC, nbins_CC );
-TMatrixD ECovars_e2_nue  ( nbins_CC, nbins_CC );
-TMatrixD ECovars_nue_m2  ( nbins_CC, nbins_CC );
-TMatrixD ECovars_nue_e2  ( nbins_CC, nbins_CC );
+TMatrixD ECovars_e2_nue  ( nbins_CC, nbins_nue );
+TMatrixD ECovars_nue_m2  ( nbins_nue, nbins_CC );
+TMatrixD ECovars_nue_e2  ( nbins_nue, nbins_CC );
 
 
 TMatrixD frECovars_m2_m2   ( nbins_CC, nbins_CC );
 TMatrixD frECovars_e2_e2   ( nbins_CC, nbins_CC );
-TMatrixD frECovars_nue_nue ( nbins_CC, nbins_CC );
+TMatrixD frECovars_nue_nue ( nbins_nue, nbins_nue );
 
 TMatrixD frECovars_m2_e2   ( nbins_CC, nbins_CC );
-TMatrixD frECovars_m2_nue  ( nbins_CC, nbins_CC );
+TMatrixD frECovars_m2_nue  ( nbins_CC, nbins_nue );
 TMatrixD frECovars_e2_m2   ( nbins_CC, nbins_CC );
-TMatrixD frECovars_e2_nue  ( nbins_CC, nbins_CC );
-TMatrixD frECovars_nue_m2  ( nbins_CC, nbins_CC );
-TMatrixD frECovars_nue_e2  ( nbins_CC, nbins_CC );
+TMatrixD frECovars_e2_nue  ( nbins_CC, nbins_nue );
+TMatrixD frECovars_nue_m2  ( nbins_nue, nbins_CC );
+TMatrixD frECovars_nue_e2  ( nbins_nue, nbins_CC );
 
 TMatrixD ECovars2  ( nbins, nbins );
 TMatrixD frECovars2  ( nbins, nbins );
@@ -42,21 +42,21 @@ TMatrixD ECovars_m4_m4   ( nbins_CC, nbins_CC );
 TMatrixD ECovars_e4_e4   ( nbins_CC, nbins_CC );
 
 TMatrixD ECovars_m4_e4   ( nbins_CC, nbins_CC );
-TMatrixD ECovars_m4_nue  ( nbins_CC, nbins_CC );
+TMatrixD ECovars_m4_nue  ( nbins_CC, nbins_nue );
 TMatrixD ECovars_e4_m4   ( nbins_CC, nbins_CC );
-TMatrixD ECovars_e4_nue  ( nbins_CC, nbins_CC );
-TMatrixD ECovars_nue_m4  ( nbins_CC, nbins_CC );
-TMatrixD ECovars_nue_e4  ( nbins_CC, nbins_CC );
+TMatrixD ECovars_e4_nue  ( nbins_CC, nbins_nue );
+TMatrixD ECovars_nue_m4  ( nbins_nue, nbins_CC );
+TMatrixD ECovars_nue_e4  ( nbins_nue, nbins_CC );
 
 TMatrixD frECovars_m4_m4   ( nbins_CC, nbins_CC );
 TMatrixD frECovars_e4_e4   ( nbins_CC, nbins_CC );
 
 TMatrixD frECovars_m4_e4   ( nbins_CC, nbins_CC );
-TMatrixD frECovars_m4_nue  ( nbins_CC, nbins_CC );
+TMatrixD frECovars_m4_nue  ( nbins_CC, nbins_nue );
 TMatrixD frECovars_e4_m4   ( nbins_CC, nbins_CC );
-TMatrixD frECovars_e4_nue  ( nbins_CC, nbins_CC );
-TMatrixD frECovars_nue_m4  ( nbins_CC, nbins_CC );
-TMatrixD frECovars_nue_e4  ( nbins_CC, nbins_CC );
+TMatrixD frECovars_e4_nue  ( nbins_CC, nbins_nue );
+TMatrixD frECovars_nue_m4  ( nbins_nue, nbins_CC );
+TMatrixD frECovars_nue_e4  ( nbins_nue, nbins_CC );
 
 TMatrixD ECovars4  ( nbins, nbins );
 TMatrixD frECovars4  ( nbins, nbins );
@@ -67,21 +67,21 @@ TMatrixD ECovars_mm   ( nbins_CC, nbins_CC );
 TMatrixD ECovars_ee   ( nbins_CC, nbins_CC );
 
 TMatrixD ECovars_me   ( nbins_CC, nbins_CC );
-TMatrixD ECovars_mnue  ( nbins_CC, nbins_CC );
+TMatrixD ECovars_mnue ( nbins_CC, nbins_nue );
 TMatrixD ECovars_em   ( nbins_CC, nbins_CC );
-TMatrixD ECovars_enue  ( nbins_CC, nbins_CC );
-TMatrixD ECovars_nuem  ( nbins_CC, nbins_CC );
-TMatrixD ECovars_nuee  ( nbins_CC, nbins_CC );
+TMatrixD ECovars_enue ( nbins_CC, nbins_nue );
+TMatrixD ECovars_nuem ( nbins_nue, nbins_CC );
+TMatrixD ECovars_nuee ( nbins_nue, nbins_CC );
 
 TMatrixD frECovars_mm   ( nbins_CC, nbins_CC );
 TMatrixD frECovars_ee   ( nbins_CC, nbins_CC );
 
 TMatrixD frECovars_me   ( nbins_CC, nbins_CC );
-TMatrixD frECovars_mnue  ( nbins_CC, nbins_CC );
+TMatrixD frECovars_mnue ( nbins_CC, nbins_nue );
 TMatrixD frECovars_em   ( nbins_CC, nbins_CC );
-TMatrixD frECovars_enue  ( nbins_CC, nbins_CC );
-TMatrixD frECovars_nuem  ( nbins_CC, nbins_CC );
-TMatrixD frECovars_nuee  ( nbins_CC, nbins_CC );
+TMatrixD frECovars_enue ( nbins_CC, nbins_nue );
+TMatrixD frECovars_nuem ( nbins_nue, nbins_CC );
+TMatrixD frECovars_nuee ( nbins_nue, nbins_CC );
 
 TMatrixD ECovars  ( nbins, nbins );
 TMatrixD frECovars  ( nbins, nbins );
@@ -92,17 +92,17 @@ void test()
 
   int cutNu=3;
 
-  TFile *f     = new TFile("/dune/app/users/qvuong/data/lownu/CC_output_test.root");
-  TFile *f_nue = new TFile("/dune/app/users/qvuong/data/lownu/nue_output_test.root");
+  TFile *f     = new TFile("/exp/dune/app/users/qvuong/data/lownu/CC_output_58.root");
+  TFile *f_nue = new TFile("/exp/dune/app/users/qvuong/data/lownu/nue_output_test.root");
 
-  std::list <const char *> namelist1 = {"wgt_MaCCQE", "wgt_VecFFCCQEshape", "wgt_MaNCEL", "wgt_EtaNCEL", "wgt_MaCCRES", "wgt_MvCCRES", "wgt_MaNCRES", "wgt_MvNCRES", "wgt_RDecBR1gamma", "wgt_RDecBR1eta", "wgt_Theta_Delta2Npi", "wgt_AhtBY", "wgt_BhtBY", "wgt_CV1uBY", "wgt_CV2uBY", "wgt_FormZone", "wgt_MFP_pi", "wgt_FrCEx_pi", "wgt_FrElas_pi", "wgt_FrInel_pi", "wgt_FrAbs_pi", "wgt_FrPiProd_pi", "wgt_MFP_N", "wgt_FrCEx_N", "wgt_FrElas_N", "wgt_FrInel_N", "wgt_FrAbs_N", "wgt_FrPiProd_N", "wgt_CCQEPauliSupViaKF", "wgt_Mnv2p2hGaussEnhancement", "wgt_MKSPP_ReWeight", "wgt_E2p2h_A_nu", "wgt_E2p2h_B_nu", "wgt_E2p2h_A_nubar", "wgt_E2p2h_B_nubar", "wgt_NR_nu_n_CC_2Pi", "wgt_NR_nu_n_CC_3Pi", "wgt_NR_nu_p_CC_2Pi", "wgt_NR_nu_p_CC_3Pi", "wgt_NR_nu_np_CC_1Pi", "wgt_NR_nu_n_NC_1Pi", "wgt_NR_nu_n_NC_2Pi", "wgt_NR_nu_n_NC_3Pi", "wgt_NR_nu_p_NC_1Pi", "wgt_NR_nu_p_NC_2Pi", "wgt_NR_nu_p_NC_3Pi", "wgt_NR_nubar_n_CC_1Pi", "wgt_NR_nubar_n_CC_2Pi", "wgt_NR_nubar_n_CC_3Pi", "wgt_NR_nubar_p_CC_1Pi", "wgt_NR_nubar_p_CC_2Pi", "wgt_NR_nubar_p_CC_3Pi", "wgt_NR_nubar_n_NC_1Pi", "wgt_NR_nubar_n_NC_2Pi", "wgt_NR_nubar_n_NC_3Pi", "wgt_NR_nubar_p_NC_1Pi", "wgt_NR_nubar_p_NC_2Pi", "wgt_NR_nubar_p_NC_3Pi", "wgt_BeRPA_A", "wgt_BeRPA_B", "wgt_BeRPA_D", "wgt_BeRPA_E", "wgt_C12ToAr40_2p2hScaling_nu", "wgt_C12ToAr40_2p2hScaling_nubar", "wgt_nuenuebar_xsec_ratio", "wgt_nuenumu_xsec_ratio", "wgt_SPPLowQ2Suppression", "wgt_FSILikeEAvailSmearing"};
+  //std::list <const char *> namelist1 = {"wgt_MaCCQE", "wgt_VecFFCCQEshape", "wgt_MaNCEL", "wgt_EtaNCEL", "wgt_MaCCRES", "wgt_MvCCRES", "wgt_MaNCRES", "wgt_MvNCRES", "wgt_RDecBR1gamma", "wgt_RDecBR1eta", "wgt_Theta_Delta2Npi", "wgt_AhtBY", "wgt_BhtBY", "wgt_CV1uBY", "wgt_CV2uBY", "wgt_FormZone", "wgt_MFP_pi", "wgt_FrCEx_pi", "wgt_FrElas_pi", "wgt_FrInel_pi", "wgt_FrAbs_pi", "wgt_FrPiProd_pi", "wgt_MFP_N", "wgt_FrCEx_N", "wgt_FrElas_N", "wgt_FrInel_N", "wgt_FrAbs_N", "wgt_FrPiProd_N", "wgt_CCQEPauliSupViaKF", "wgt_Mnv2p2hGaussEnhancement", "wgt_MKSPP_ReWeight", "wgt_E2p2h_A_nu", "wgt_E2p2h_B_nu", "wgt_E2p2h_A_nubar", "wgt_E2p2h_B_nubar", "wgt_NR_nu_n_CC_2Pi", "wgt_NR_nu_n_CC_3Pi", "wgt_NR_nu_p_CC_2Pi", "wgt_NR_nu_p_CC_3Pi", "wgt_NR_nu_np_CC_1Pi", "wgt_NR_nu_n_NC_1Pi", "wgt_NR_nu_n_NC_2Pi", "wgt_NR_nu_n_NC_3Pi", "wgt_NR_nu_p_NC_1Pi", "wgt_NR_nu_p_NC_2Pi", "wgt_NR_nu_p_NC_3Pi", "wgt_NR_nubar_n_CC_1Pi", "wgt_NR_nubar_n_CC_2Pi", "wgt_NR_nubar_n_CC_3Pi", "wgt_NR_nubar_p_CC_1Pi", "wgt_NR_nubar_p_CC_2Pi", "wgt_NR_nubar_p_CC_3Pi", "wgt_NR_nubar_n_NC_1Pi", "wgt_NR_nubar_n_NC_2Pi", "wgt_NR_nubar_n_NC_3Pi", "wgt_NR_nubar_p_NC_1Pi", "wgt_NR_nubar_p_NC_2Pi", "wgt_NR_nubar_p_NC_3Pi", "wgt_BeRPA_A", "wgt_BeRPA_B", "wgt_BeRPA_D", "wgt_BeRPA_E", "wgt_C12ToAr40_2p2hScaling_nu", "wgt_C12ToAr40_2p2hScaling_nubar", "wgt_nuenuebar_xsec_ratio", "wgt_nuenumu_xsec_ratio", "wgt_SPPLowQ2Suppression", "wgt_FSILikeEAvailSmearing"};
 
   //const char *name[] = {"wgt_MaCCQE", "wgt_VecFFCCQEshape", "wgt_MaNCEL", "wgt_EtaNCEL", "wgt_MaCCRES", "wgt_MvCCRES", "wgt_MaNCRES", "wgt_MvNCRES", "wgt_RDecBR1gamma", "wgt_RDecBR1eta", "wgt_Theta_Delta2Npi", "wgt_AhtBY", "wgt_BhtBY", "wgt_CV1uBY", "wgt_CV2uBY", "wgt_FormZone", "wgt_MFP_pi", "wgt_FrCEx_pi", "wgt_FrElas_pi", "wgt_FrInel_pi", "wgt_FrAbs_pi", "wgt_FrPiProd_pi", "wgt_MFP_N", "wgt_FrCEx_N", "wgt_FrElas_N", "wgt_FrInel_N", "wgt_FrAbs_N", "wgt_FrPiProd_N", "wgt_CCQEPauliSupViaKF", "wgt_Mnv2p2hGaussEnhancement", "wgt_MKSPP_ReWeight", "wgt_E2p2h_A_nu", "wgt_E2p2h_B_nu", "wgt_E2p2h_A_nubar", "wgt_E2p2h_B_nubar", "wgt_NR_nu_n_CC_2Pi", "wgt_NR_nu_n_CC_3Pi", "wgt_NR_nu_p_CC_2Pi", "wgt_NR_nu_p_CC_3Pi", "wgt_NR_nu_np_CC_1Pi", "wgt_NR_nu_n_NC_1Pi", "wgt_NR_nu_n_NC_2Pi", "wgt_NR_nu_n_NC_3Pi", "wgt_NR_nu_p_NC_1Pi", "wgt_NR_nu_p_NC_2Pi", "wgt_NR_nu_p_NC_3Pi", "wgt_NR_nubar_n_CC_1Pi", "wgt_NR_nubar_n_CC_2Pi", "wgt_NR_nubar_n_CC_3Pi", "wgt_NR_nubar_p_CC_1Pi", "wgt_NR_nubar_p_CC_2Pi", "wgt_NR_nubar_p_CC_3Pi", "wgt_NR_nubar_n_NC_1Pi", "wgt_NR_nubar_n_NC_2Pi", "wgt_NR_nubar_n_NC_3Pi", "wgt_NR_nubar_p_NC_1Pi", "wgt_NR_nubar_p_NC_2Pi", "wgt_NR_nubar_p_NC_3Pi", "wgt_BeRPA_A", "wgt_BeRPA_B", "wgt_BeRPA_D", "wgt_BeRPA_E", "wgt_C12ToAr40_2p2hScaling_nu", "wgt_C12ToAr40_2p2hScaling_nubar", "wgt_nuenuebar_xsec_ratio", "wgt_nuenumu_xsec_ratio", "wgt_SPPLowQ2Suppression", "wgt_FSILikeEAvailSmearing"}; 
 
-  std::list <const char *> namelist = {"wgt_MaCCQE", "wgt_BeRPA_A", "wgt_BeRPA_B", "wgt_BeRPA_D", "wgt_Mnv2p2hGaussEnhancement"};
-  const char *name[] = {"wgt_MaCCQE", "wgt_BeRPA_A", "wgt_BeRPA_B", "wgt_BeRPA_D", "wgt_Mnv2p2hGaussEnhancement"}; 
-  //std::list <const char *> namelist = {"wgt_BeRPA_B", "wgt_BeRPA_D"};
-  //const char *name[] = {"wgt_BeRPA_B", "wgt_BeRPA_D"}; 
+  //std::list <const char *> namelist = {"wgt_MaCCQE", "wgt_BeRPA_A", "wgt_BeRPA_B", "wgt_BeRPA_D", "wgt_Mnv2p2hGaussEnhancement"};
+  //const char *name[] = {"wgt_MaCCQE", "wgt_BeRPA_A", "wgt_BeRPA_B", "wgt_BeRPA_D", "wgt_Mnv2p2hGaussEnhancement"}; 
+  std::list <const char *> namelist = {"wgt_MaCCQE"};
+  const char *name[] = {"wgt_MaCCQE"}; 
 
   int N_wgt = namelist.size();
   //int N_wgt = 1;
