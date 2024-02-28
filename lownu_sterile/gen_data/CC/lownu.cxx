@@ -40,30 +40,39 @@ int main()
   double scalePOT = yrPOT/total_pot;
   //double scalePOT = 1;
 
-/*
-  const Int_t nbinsX = 400;
-  Double_t xEdges[nbinsX+1];
-  xEdges[0] = 0;
+
+  const Int_t nbinsX = 430;
+  const Int_t nbinsCCm = 240;
+  const Int_t nbinsCCe = 32;
+  double xEdges[nbinsX+1], CCeEdges[nbinsCCe+1], CCmEdges[nbinsCCm+1];
+  xEdges[0]=CCeEdges[0]=CCmEdges[0]=0.;
+
   for(int i=0; i<nbinsX+1; i++)
   {
     if(i<200)                xEdges[i+1] = xEdges[i] + 0.02;
     else if(i>=200 && i<240) xEdges[i+1] = xEdges[i] + 0.1;
-    else		     xEdges[i+1] = xEdges[i] + 0.2;
-    std::cout << i << "\t" << xEdges[i] << "\n";
+    else if(i>=240 && i<400) xEdges[i+1] = xEdges[i] + 0.2;
+    else if(i>=400 && i<420) xEdges[i+1] = xEdges[i] + 1.0;
+    else                     xEdges[i+1] = xEdges[i] + 4.0;
   }
 
-
-  const Int_t nbinsElep = 51;
-  Double_t ElepEdges[nbinsElep+1];
-  ElepEdges[0] = 0.;
-  for(int i=0; i<nbinsElep+1; i++)
+  for(int i=0; i<nbinsCCm+1; i++)
   {
-    if(i<50) ElepEdges[i+1] = ElepEdges[i] + 0.1;
-    else     ElepEdges[i+1] = ElepEdges[i] + 11.0;
-    //std::cout << i << "\t" << ElepEdges[i] << "\n";
+    if(i<200)                CCmEdges[i+1] = CCmEdges[i] + 0.02;
+    else if(i>=200 && i<220) CCmEdges[i+1] = CCmEdges[i] + 0.1;
+    else if(i>=220 && i<230) CCmEdges[i+1] = CCmEdges[i] + 0.4;
+    else                     CCmEdges[i+1] = CCmEdges[i] + 0.6;
   }
-*/
+  for(int i=0; i<nbinsCCe+1; i++)
+  {
+    if(i<20)               CCeEdges[i+1] = CCeEdges[i] + 0.2;
+    else if(i>=20 && i<28) CCeEdges[i+1] = CCeEdges[i] + 0.5;
+    else if(i>=28 && i<30) CCeEdges[i+1] = CCeEdges[i] + 1.0;
+    else                   CCeEdges[i+1] = CCeEdges[i] + 3.0;
+  }
 
+
+/*
   const Int_t nbinsX = 430; const Int_t nbinsY = 58;
   Double_t xEdges[nbinsX+1], yEdges[nbinsY+1];
   xEdges[0]=yEdges[0]=0;
@@ -84,21 +93,22 @@ int main()
     else if(i>=55 && i<57) yEdges[i+1] = yEdges[i] + 1.5;
     else                   yEdges[i+1] = yEdges[i] + 2.0;
   }
+*/
 
   const double mubins[20] = {0.,0.5,1.,1.5,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,7.,8.,12.,16.,20.,40.,100.};
   const double ebins[8] = {0.,2.,4.,6.,8.,10.,20.,100.};
 
-  TH2D *m_hElepRecoVsEv0    = new TH2D("m_hElepRecoVsEv0","",   nbinsX, xEdges,nbinsY,yEdges);
-  TH2D *m_hElepRecoVsEv3    = new TH2D("m_hElepRecoVsEv3","",   nbinsX,xEdges,nbinsY,yEdges);
-  TH2D *nc_m_hElepRecoVsEv0 = new TH2D("nc_m_hElepRecoVsEv0","",nbinsX,xEdges,nbinsY,yEdges);
-  TH2D *nc_m_hElepRecoVsEv3 = new TH2D("nc_m_hElepRecoVsEv3","",nbinsX,xEdges,nbinsY,yEdges);
-  TH2D *e_hElepRecoVsEv0    = new TH2D("e_hElepRecoVsEv0","",   nbinsX,xEdges,nbinsY,yEdges);
-  TH2D *e_hElepRecoVsEv3    = new TH2D("e_hElepRecoVsEv3","",   nbinsX,xEdges,nbinsY,yEdges);
+  TH2D *m_hElepRecoVsEv0    = new TH2D("m_hElepRecoVsEv0","",   nbinsX,xEdges,nbinsCCm,CCmEdges);
+  TH2D *m_hElepRecoVsEv3    = new TH2D("m_hElepRecoVsEv3","",   nbinsX,xEdges,nbinsCCm,CCmEdges);
+  TH2D *nc_m_hElepRecoVsEv0 = new TH2D("nc_m_hElepRecoVsEv0","",nbinsX,xEdges,nbinsCCm,CCmEdges);
+  TH2D *nc_m_hElepRecoVsEv3 = new TH2D("nc_m_hElepRecoVsEv3","",nbinsX,xEdges,nbinsCCm,CCmEdges);
+  TH2D *e_hElepRecoVsEv0    = new TH2D("e_hElepRecoVsEv0","",   nbinsX,xEdges,nbinsCCe,CCeEdges);
+  TH2D *e_hElepRecoVsEv3    = new TH2D("e_hElepRecoVsEv3","",   nbinsX,xEdges,nbinsCCe,CCeEdges);
 
-  TH2D *m_hElepRecoVsEv0_cov = new TH2D("m_hElepRecoVsEv0_cov","",19,mubins,nbinsY,yEdges);
-  TH2D *m_hElepRecoVsEv3_cov = new TH2D("m_hElepRecoVsEv3_cov","",19,mubins,nbinsY,yEdges);
-  TH2D *e_hElepRecoVsEv0_cov = new TH2D("e_hElepRecoVsEv0_cov","",7, ebins,nbinsY,yEdges);
-  TH2D *e_hElepRecoVsEv3_cov = new TH2D("e_hElepRecoVsEv3_cov","",7, ebins,nbinsY,yEdges);
+  TH2D *m_hElepRecoVsEv0_cov = new TH2D("m_hElepRecoVsEv0_cov","",19,mubins,nbinsCCm,CCmEdges);
+  TH2D *m_hElepRecoVsEv3_cov = new TH2D("m_hElepRecoVsEv3_cov","",19,mubins,nbinsCCm,CCmEdges);
+  TH2D *e_hElepRecoVsEv0_cov = new TH2D("e_hElepRecoVsEv0_cov","",7, ebins,nbinsCCe,CCeEdges);
+  TH2D *e_hElepRecoVsEv3_cov = new TH2D("e_hElepRecoVsEv3_cov","",7, ebins,nbinsCCe,CCeEdges);
 
 
   // Most of them are weights related to systematic uncertainties
@@ -171,48 +181,48 @@ int main()
     TH2D** tgt_e34    = new TH2D*[N_wgt];  
 
   for(int i=0; i<N_wgt; i++){
-    hm01[i] = new TH1D(Form("%s_m_hElep0_sigma1",name[i]),"",nbinsY,yEdges);
-    hm31[i] = new TH1D(Form("%s_m_hElep3_sigma1",name[i]),"",nbinsY,yEdges);
-    hm02[i] = new TH1D(Form("%s_m_hElep0_sigma2",name[i]),"",nbinsY,yEdges);
-    hm32[i] = new TH1D(Form("%s_m_hElep3_sigma2",name[i]),"",nbinsY,yEdges);
-    hm03[i] = new TH1D(Form("%s_m_hElep0_sigma3",name[i]),"",nbinsY,yEdges);
-    hm33[i] = new TH1D(Form("%s_m_hElep3_sigma3",name[i]),"",nbinsY,yEdges);
-    hm04[i] = new TH1D(Form("%s_m_hElep0_sigma4",name[i]),"",nbinsY,yEdges);
-    hm34[i] = new TH1D(Form("%s_m_hElep3_sigma4",name[i]),"",nbinsY,yEdges);
-    hm05[i] = new TH1D(Form("%s_m_hElep0_sigma5",name[i]),"",nbinsY,yEdges);
-    hm35[i] = new TH1D(Form("%s_m_hElep3_sigma5",name[i]),"",nbinsY,yEdges);
+    hm01[i] = new TH1D(Form("%s_m_hElep0_sigma1",name[i]),"",nbinsCCm,CCmEdges);
+    hm31[i] = new TH1D(Form("%s_m_hElep3_sigma1",name[i]),"",nbinsCCm,CCmEdges);
+    hm02[i] = new TH1D(Form("%s_m_hElep0_sigma2",name[i]),"",nbinsCCm,CCmEdges);
+    hm32[i] = new TH1D(Form("%s_m_hElep3_sigma2",name[i]),"",nbinsCCm,CCmEdges);
+    hm03[i] = new TH1D(Form("%s_m_hElep0_sigma3",name[i]),"",nbinsCCm,CCmEdges);
+    hm33[i] = new TH1D(Form("%s_m_hElep3_sigma3",name[i]),"",nbinsCCm,CCmEdges);
+    hm04[i] = new TH1D(Form("%s_m_hElep0_sigma4",name[i]),"",nbinsCCm,CCmEdges);
+    hm34[i] = new TH1D(Form("%s_m_hElep3_sigma4",name[i]),"",nbinsCCm,CCmEdges);
+    hm05[i] = new TH1D(Form("%s_m_hElep0_sigma5",name[i]),"",nbinsCCm,CCmEdges);
+    hm35[i] = new TH1D(Form("%s_m_hElep3_sigma5",name[i]),"",nbinsCCm,CCmEdges);
 
-    he01[i] = new TH1D(Form("%s_e_hElep0_sigma1",name[i]),"",nbinsY,yEdges);
-    he31[i] = new TH1D(Form("%s_e_hElep3_sigma1",name[i]),"",nbinsY,yEdges);
-    he02[i] = new TH1D(Form("%s_e_hElep0_sigma2",name[i]),"",nbinsY,yEdges);
-    he32[i] = new TH1D(Form("%s_e_hElep3_sigma2",name[i]),"",nbinsY,yEdges);
-    he03[i] = new TH1D(Form("%s_e_hElep0_sigma3",name[i]),"",nbinsY,yEdges);
-    he33[i] = new TH1D(Form("%s_e_hElep3_sigma3",name[i]),"",nbinsY,yEdges);
-    he04[i] = new TH1D(Form("%s_e_hElep0_sigma4",name[i]),"",nbinsY,yEdges);
-    he34[i] = new TH1D(Form("%s_e_hElep3_sigma4",name[i]),"",nbinsY,yEdges);
-    he05[i] = new TH1D(Form("%s_e_hElep0_sigma5",name[i]),"",nbinsY,yEdges);
-    he35[i] = new TH1D(Form("%s_e_hElep3_sigma5",name[i]),"",nbinsY,yEdges);
+    he01[i] = new TH1D(Form("%s_e_hElep0_sigma1",name[i]),"",nbinsCCe,CCeEdges);
+    he31[i] = new TH1D(Form("%s_e_hElep3_sigma1",name[i]),"",nbinsCCe,CCeEdges);
+    he02[i] = new TH1D(Form("%s_e_hElep0_sigma2",name[i]),"",nbinsCCe,CCeEdges);
+    he32[i] = new TH1D(Form("%s_e_hElep3_sigma2",name[i]),"",nbinsCCe,CCeEdges);
+    he03[i] = new TH1D(Form("%s_e_hElep0_sigma3",name[i]),"",nbinsCCe,CCeEdges);
+    he33[i] = new TH1D(Form("%s_e_hElep3_sigma3",name[i]),"",nbinsCCe,CCeEdges);
+    he04[i] = new TH1D(Form("%s_e_hElep0_sigma4",name[i]),"",nbinsCCe,CCeEdges);
+    he34[i] = new TH1D(Form("%s_e_hElep3_sigma4",name[i]),"",nbinsCCe,CCeEdges);
+    he05[i] = new TH1D(Form("%s_e_hElep0_sigma5",name[i]),"",nbinsCCe,CCeEdges);
+    he35[i] = new TH1D(Form("%s_e_hElep3_sigma5",name[i]),"",nbinsCCe,CCeEdges);
 
-    tgt_m02[i]  = new TH2D(Form("%s_m_hElepRecoVsEv0_sigma2",name[i]),"",nbinsX,xEdges,nbinsY,yEdges);
-    tgt_m32[i]  = new TH2D(Form("%s_m_hElepRecoVsEv3_sigma2",name[i]),"",nbinsX,xEdges,nbinsY,yEdges);
-    tgt_m03[i]  = new TH2D(Form("%s_m_hElepRecoVsEv0_sigma3",name[i]),"",nbinsX,xEdges,nbinsY,yEdges);
-    tgt_m33[i]  = new TH2D(Form("%s_m_hElepRecoVsEv3_sigma3",name[i]),"",nbinsX,xEdges,nbinsY,yEdges);
-    tgt_m04[i]  = new TH2D(Form("%s_m_hElepRecoVsEv0_sigma4",name[i]),"",nbinsX,xEdges,nbinsY,yEdges);
-    tgt_m34[i]  = new TH2D(Form("%s_m_hElepRecoVsEv3_sigma4",name[i]),"",nbinsX,xEdges,nbinsY,yEdges);
+    tgt_m02[i]  = new TH2D(Form("%s_m_hElepRecoVsEv0_sigma2",name[i]),"",nbinsX,xEdges,nbinsCCm,CCmEdges);
+    tgt_m32[i]  = new TH2D(Form("%s_m_hElepRecoVsEv3_sigma2",name[i]),"",nbinsX,xEdges,nbinsCCm,CCmEdges);
+    tgt_m03[i]  = new TH2D(Form("%s_m_hElepRecoVsEv0_sigma3",name[i]),"",nbinsX,xEdges,nbinsCCm,CCmEdges);
+    tgt_m33[i]  = new TH2D(Form("%s_m_hElepRecoVsEv3_sigma3",name[i]),"",nbinsX,xEdges,nbinsCCm,CCmEdges);
+    tgt_m04[i]  = new TH2D(Form("%s_m_hElepRecoVsEv0_sigma4",name[i]),"",nbinsX,xEdges,nbinsCCm,CCmEdges);
+    tgt_m34[i]  = new TH2D(Form("%s_m_hElepRecoVsEv3_sigma4",name[i]),"",nbinsX,xEdges,nbinsCCm,CCmEdges);
 
-    tgt_nc_m02[i]  = new TH2D(Form("%s_nc_m_hElepRecoVsEv0_sigma2",name[i]),"",nbinsX,xEdges,nbinsY,yEdges);
-    tgt_nc_m32[i]  = new TH2D(Form("%s_nc_m_hElepRecoVsEv3_sigma2",name[i]),"",nbinsX,xEdges,nbinsY,yEdges);
-    tgt_nc_m03[i]  = new TH2D(Form("%s_nc_m_hElepRecoVsEv0_sigma3",name[i]),"",nbinsX,xEdges,nbinsY,yEdges);
-    tgt_nc_m33[i]  = new TH2D(Form("%s_nc_m_hElepRecoVsEv3_sigma3",name[i]),"",nbinsX,xEdges,nbinsY,yEdges);
-    tgt_nc_m04[i]  = new TH2D(Form("%s_nc_m_hElepRecoVsEv0_sigma4",name[i]),"",nbinsX,xEdges,nbinsY,yEdges);
-    tgt_nc_m34[i]  = new TH2D(Form("%s_nc_m_hElepRecoVsEv3_sigma4",name[i]),"",nbinsX,xEdges,nbinsY,yEdges);
+    tgt_nc_m02[i]  = new TH2D(Form("%s_nc_m_hElepRecoVsEv0_sigma2",name[i]),"",nbinsX,xEdges,nbinsCCm,CCmEdges);
+    tgt_nc_m32[i]  = new TH2D(Form("%s_nc_m_hElepRecoVsEv3_sigma2",name[i]),"",nbinsX,xEdges,nbinsCCm,CCmEdges);
+    tgt_nc_m03[i]  = new TH2D(Form("%s_nc_m_hElepRecoVsEv0_sigma3",name[i]),"",nbinsX,xEdges,nbinsCCm,CCmEdges);
+    tgt_nc_m33[i]  = new TH2D(Form("%s_nc_m_hElepRecoVsEv3_sigma3",name[i]),"",nbinsX,xEdges,nbinsCCm,CCmEdges);
+    tgt_nc_m04[i]  = new TH2D(Form("%s_nc_m_hElepRecoVsEv0_sigma4",name[i]),"",nbinsX,xEdges,nbinsCCm,CCmEdges);
+    tgt_nc_m34[i]  = new TH2D(Form("%s_nc_m_hElepRecoVsEv3_sigma4",name[i]),"",nbinsX,xEdges,nbinsCCm,CCmEdges);
 
-    tgt_e02[i]  = new TH2D(Form("%s_e_hElepRecoVsEv0_sigma2",name[i]),"",nbinsX,xEdges,nbinsY,yEdges);
-    tgt_e32[i]  = new TH2D(Form("%s_e_hElepRecoVsEv3_sigma2",name[i]),"",nbinsX,xEdges,nbinsY,yEdges);
-    tgt_e03[i]  = new TH2D(Form("%s_e_hElepRecoVsEv0_sigma3",name[i]),"",nbinsX,xEdges,nbinsY,yEdges);
-    tgt_e33[i]  = new TH2D(Form("%s_e_hElepRecoVsEv3_sigma3",name[i]),"",nbinsX,xEdges,nbinsY,yEdges);
-    tgt_e04[i]  = new TH2D(Form("%s_e_hElepRecoVsEv0_sigma4",name[i]),"",nbinsX,xEdges,nbinsY,yEdges);
-    tgt_e34[i]  = new TH2D(Form("%s_e_hElepRecoVsEv3_sigma4",name[i]),"",nbinsX,xEdges,nbinsY,yEdges);
+    tgt_e02[i]  = new TH2D(Form("%s_e_hElepRecoVsEv0_sigma2",name[i]),"",nbinsX,xEdges,nbinsCCe,CCeEdges);
+    tgt_e32[i]  = new TH2D(Form("%s_e_hElepRecoVsEv3_sigma2",name[i]),"",nbinsX,xEdges,nbinsCCe,CCeEdges);
+    tgt_e03[i]  = new TH2D(Form("%s_e_hElepRecoVsEv0_sigma3",name[i]),"",nbinsX,xEdges,nbinsCCe,CCeEdges);
+    tgt_e33[i]  = new TH2D(Form("%s_e_hElepRecoVsEv3_sigma3",name[i]),"",nbinsX,xEdges,nbinsCCe,CCeEdges);
+    tgt_e04[i]  = new TH2D(Form("%s_e_hElepRecoVsEv0_sigma4",name[i]),"",nbinsX,xEdges,nbinsCCe,CCeEdges);
+    tgt_e34[i]  = new TH2D(Form("%s_e_hElepRecoVsEv3_sigma4",name[i]),"",nbinsX,xEdges,nbinsCCe,CCeEdges);
   }
 
   double wgt[N_wgt][6];
@@ -443,7 +453,7 @@ int main()
   }
 
 
-  TFile *out = new TFile("/exp/dune/app/users/qvuong/data/lownu/CC_output_58.root","RECREATE");
+  TFile *out = new TFile("/exp/dune/app/users/qvuong/data/lownu/input_dfiles/CC_output_280.root","RECREATE");
 
   m_hElepRecoVsEv0->Write();
   m_hElepRecoVsEv3->Write();

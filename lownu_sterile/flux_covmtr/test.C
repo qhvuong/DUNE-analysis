@@ -1,7 +1,7 @@
-static const int N = 10000; // number of universes
+static const int N = 100000; // number of universes
 static const int nbins = 52;
-static const int nbins_CC = 100;
-static const int nbins_nue = 20;
+static const int nbins_CC = 58;
+static const int nbins_nue = 8;
 static const int nbins_tot = 2*nbins_CC + nbins_nue;
 
 const int n_mu = 19; // number of muon bins in covariance
@@ -22,8 +22,6 @@ TMatrixD E_nue(N, nbins_nue);
   
 TMatrixD ECovars_mm   ( nbins_CC, nbins_CC );
 TMatrixD ECovars_ee   ( nbins_CC, nbins_CC );
-TMatrixD ECovars_m_nue( nbins_CC, nbins_nue );
-TMatrixD ECovars_e_nue( nbins_CC, nbins_nue );
 TMatrixD ECovars_nuenue  ( nbins_nue, nbins_nue );
 
 TMatrixD ECovars_me  ( nbins_CC, nbins_CC );
@@ -32,6 +30,19 @@ TMatrixD ECovars_em  ( nbins_CC, nbins_CC );
 TMatrixD ECovars_enue( nbins_CC, nbins_nue );
 TMatrixD ECovars_nuem( nbins_nue, nbins_CC );
 TMatrixD ECovars_nuee( nbins_nue, nbins_CC );
+
+
+TMatrixD frECovars_mm   ( nbins_CC, nbins_CC );
+TMatrixD frECovars_ee   ( nbins_CC, nbins_CC );
+TMatrixD frECovars_nuenue  ( nbins_nue, nbins_nue );
+
+TMatrixD frECovars_me  ( nbins_CC, nbins_CC );
+TMatrixD frECovars_mnue( nbins_CC, nbins_nue );
+TMatrixD frECovars_em  ( nbins_CC, nbins_CC );
+TMatrixD frECovars_enue( nbins_CC, nbins_nue );
+TMatrixD frECovars_nuem( nbins_nue, nbins_CC );
+TMatrixD frECovars_nuee( nbins_nue, nbins_CC );
+
 
 TMatrixD ECorrel_mm ( nbins_CC, nbins_CC );
 TMatrixD ECorrel_ee ( nbins_CC, nbins_CC );
@@ -45,6 +56,7 @@ TMatrixD ECorrel_nuem( nbins_nue, nbins_CC );
 TMatrixD ECorrel_nuee( nbins_nue, nbins_CC );
 
 TMatrixD ECovars( nbins_tot, nbins_tot );
+TMatrixD frECovars( nbins_tot, nbins_tot );
 TMatrixD ECorrel( nbins_tot, nbins_tot );
 
 void test()
@@ -118,8 +130,8 @@ void test()
   int cutNu = 3;
 
   //for(para = 1; para <3; para++) {
-  TFile *f     = new TFile("/dune/app/users/qvuong/data/lownu/CC_output.root");
-  TFile *f_nue = new TFile("/dune/app/users/qvuong/data/lownu/nue_output_test.root");
+  TFile *f     = new TFile("/exp/dune/app/users/qvuong/data/lownu/CC_output_58.root");
+  TFile *f_nue = new TFile("/exp/dune/app/users/qvuong/data/lownu/nue_output_test.root");
   TH2D *CC_m  = (TH2D*)f->Get(Form("m_h%sVsEv%d_cov",name,cutNu));
   TH2D *CC_e  = (TH2D*)f->Get(Form("e_h%sVsEv%d_cov",name,cutNu));
   TH2D *nue_m = (TH2D*)f_nue->Get(Form("m_h%sVsEv0_cov",name));
@@ -139,26 +151,43 @@ void test()
     tp_e_nue[eb] = (TH1D*)nue_e->ProjectionY(Form("e_bin_nue%d",eb+1),eb+1,eb+1);
   }
 
-/*
-  Double_t ElepEdges[nbins_CC+1];
-  ElepEdges[0] = 0.;
+
+  double CCEdges[nbins_CC+1];
+  CCEdges[0]=0;
   for(int i=0; i<nbins_CC+1; i++)
   {
-    if(i<50) ElepEdges[i+1] = ElepEdges[i] + 0.1;
-    else     ElepEdges[i+1] = ElepEdges[i] + 11.0;
+    if(i<40)               CCEdges[i+1] = CCEdges[i] + 0.1;
+    else if(i>=40 && i<45) CCEdges[i+1] = CCEdges[i] + 0.2;
+    else if(i>=45 && i<50) CCEdges[i+1] = CCEdges[i] + 0.4;
+    else if(i>=50 && i<55) CCEdges[i+1] = CCEdges[i] + 0.8;
+    else if(i>=55 && i<57) CCEdges[i+1] = CCEdges[i] + 1.5;
+    else                   CCEdges[i+1] = CCEdges[i] + 2.0;
   }
-*/
 
-  TH1D *m     = new TH1D("m","",nbins_CC,0,16);
-  TH1D *e     = new TH1D("e","",nbins_CC,0,16);
-  TH1D *m_nue = new TH1D("m_nue","",nbins_nue,0,16);
-  TH1D *e_nue = new TH1D("e_nue","",nbins_nue,0,16);
-  TH1D *nue   = new TH1D("nue","",nbins_nue,0,16);
-  TH1D *CC_m_nom  = new TH1D("CC_m_nom","",nbins_CC,0,16);
-  TH1D *CC_e_nom  = new TH1D("CC_e_nom","",nbins_CC,0,16);
-  TH1D *nue_m_nom = new TH1D("nue_m_nom","",nbins_nue,0,16);
-  TH1D *nue_e_nom = new TH1D("nue_e_nom","",nbins_nue,0,16);
-  TH1D *nue_nom   = new TH1D("nue_nom","",nbins_nue,0,16);
+
+  double nueEdges[nbins_nue+1];
+  nueEdges[0]=0;
+  for(int i=0; i<nbins_nue+1; i++)
+  {
+    if(i<3)              nueEdges[i+1] = nueEdges[i] + 0.3;
+    else if(i>=3 && i<4) nueEdges[i+1] = nueEdges[i] + 0.4;
+    else if(i>=4 && i<5) nueEdges[i+1] = nueEdges[i] + 0.5;
+    else if(i>=5 && i<6) nueEdges[i+1] = nueEdges[i] + 0.7;
+    else if(i>=6 && i<7) nueEdges[i+1] = nueEdges[i] + 1.5;
+    else                 nueEdges[i+1] = nueEdges[i] + 12.0;
+  }
+  
+
+  TH1D *m     = new TH1D("m","",nbins_CC,CCEdges);
+  TH1D *e     = new TH1D("e","",nbins_CC,CCEdges);
+  TH1D *m_nue = new TH1D("m_nue","",nbins_nue,nueEdges);
+  TH1D *e_nue = new TH1D("e_nue","",nbins_nue,nueEdges);
+  TH1D *nue   = new TH1D("nue","",nbins_nue,nueEdges);
+  TH1D *CC_m_nom  = new TH1D("CC_m_nom","",nbins_CC,CCEdges);
+  TH1D *CC_e_nom  = new TH1D("CC_e_nom","",nbins_CC,CCEdges);
+  TH1D *nue_m_nom = new TH1D("nue_m_nom","",nbins_nue,nueEdges);
+  TH1D *nue_e_nom = new TH1D("nue_e_nom","",nbins_nue,nueEdges);
+  TH1D *nue_nom   = new TH1D("nue_nom","",nbins_nue,nueEdges);
 
   for( int u = 0; u < N; ++u ) {
     m->Reset();
@@ -253,6 +282,7 @@ void test()
       }
 
 
+      //This is covariance matrix
       if(i<nbins_CC){
         if(j<nbins_CC)                  ECovars_mm[i][j]              = covar_mm  /N;
         if(j>=nbins_CC && j<2*nbins_CC) ECovars_me[i][j-nbins_CC]     = covar_me  /N;
@@ -269,24 +299,25 @@ void test()
         if(j>=2*nbins_CC)               ECovars_nuenue[i-2*nbins_CC][j-2*nbins_CC] = covar_nuenue/N;}
 
 
-//This is fractional covariance matrix
-/*
+      //This is fractional covariance matrix
       if(i<nbins_CC){
-        if(j<nbins_CC)                  ECovars_mm[i][j]              = covar_mm  /(N * CC_m_nom->GetBinContent(i+1)  * CC_m_nom->GetBinContent(j+1));
-        if(j>=nbins_CC && j<2*nbins_CC) ECovars_me[i][j-nbins_CC]     = covar_me  /(N * CC_m_nom->GetBinContent(i+1)  * CC_e_nom->GetBinContent(j-nbins_CC+1));
-        if(j>=2*nbins_CC)               ECovars_mnue[i][j-2*nbins_CC] = covar_mnue/(N * CC_m_nom->GetBinContent(i+1)  * nue_nom->GetBinContent(j-2*nbins_CC+1));}
+        if(j<nbins_CC)                  frECovars_mm[i][j]              = covar_mm  /(N * CC_m_nom->GetBinContent(i+1)  * CC_m_nom->GetBinContent(j+1));
+        if(j>=nbins_CC && j<2*nbins_CC) frECovars_me[i][j-nbins_CC]     = covar_me  /(N * CC_m_nom->GetBinContent(i+1)  * CC_e_nom->GetBinContent(j-nbins_CC+1));
+        if(j>=2*nbins_CC)               frECovars_mnue[i][j-2*nbins_CC] = covar_mnue/(N * CC_m_nom->GetBinContent(i+1)  * nue_nom->GetBinContent(j-2*nbins_CC+1));}
 
       if(i>=nbins_CC && i<2*nbins_CC){
-        if(j<nbins_CC)                  ECovars_em[i-nbins_CC][j]              = covar_em  /(N * CC_e_nom->GetBinContent(i-nbins_CC+1)  * CC_m_nom->GetBinContent(j+1));
-        if(j>=nbins_CC && j<2*nbins_CC) ECovars_ee[i-nbins_CC][j-nbins_CC]     = covar_ee  /(N * CC_e_nom->GetBinContent(i-nbins_CC+1)  * CC_e_nom->GetBinContent(j-nbins_CC+1));
-        if(j>=2*nbins_CC)               ECovars_enue[i-nbins_CC][j-2*nbins_CC] = covar_enue/(N * CC_e_nom->GetBinContent(i-nbins_CC+1)  * nue_nom->GetBinContent(j-2*nbins_CC+1));}
+        if(j<nbins_CC)                  frECovars_em[i-nbins_CC][j]              = covar_em  /(N * CC_e_nom->GetBinContent(i-nbins_CC+1)  * CC_m_nom->GetBinContent(j+1));
+        if(j>=nbins_CC && j<2*nbins_CC) frECovars_ee[i-nbins_CC][j-nbins_CC]     = covar_ee  /(N * CC_e_nom->GetBinContent(i-nbins_CC+1)  * CC_e_nom->GetBinContent(j-nbins_CC+1));
+        if(j>=2*nbins_CC)               frECovars_enue[i-nbins_CC][j-2*nbins_CC] = covar_enue/(N * CC_e_nom->GetBinContent(i-nbins_CC+1)  * nue_nom->GetBinContent(j-2*nbins_CC+1));}
 
       if(i>=2*nbins_CC){
-        if(j<nbins_CC)                  ECovars_nuem[i-2*nbins_CC][j]              = covar_nuem  /(N * nue_nom->GetBinContent(i-2*nbins_CC+1)  * CC_m_nom->GetBinContent(j+1));
-        if(j>=nbins_CC && j<2*nbins_CC) ECovars_nuee[i-2*nbins_CC][j-nbins_CC]     = covar_nuee  /(N * nue_nom->GetBinContent(i-2*nbins_CC+1)  * CC_e_nom->GetBinContent(j-nbins_CC+1));
-        if(j>=2*nbins_CC)               ECovars_nuenue[i-2*nbins_CC][j-2*nbins_CC] = covar_nuenue/(N * nue_nom->GetBinContent(i-2*nbins_CC+1)  * nue_nom->GetBinContent(j-2*nbins_CC+1));}
-*/
+        if(j<nbins_CC)                  frECovars_nuem[i-2*nbins_CC][j]              = covar_nuem  /(N * nue_nom->GetBinContent(i-2*nbins_CC+1)  * CC_m_nom->GetBinContent(j+1));
+        if(j>=nbins_CC && j<2*nbins_CC) frECovars_nuee[i-2*nbins_CC][j-nbins_CC]     = covar_nuee  /(N * nue_nom->GetBinContent(i-2*nbins_CC+1)  * CC_e_nom->GetBinContent(j-nbins_CC+1));
+        if(j>=2*nbins_CC)               frECovars_nuenue[i-2*nbins_CC][j-2*nbins_CC] = covar_nuenue/(N * nue_nom->GetBinContent(i-2*nbins_CC+1)  * nue_nom->GetBinContent(j-2*nbins_CC+1));}
 
+
+
+      //This is correlation matrix
       if(i<nbins_CC){
         if(j<nbins_CC)                  ECorrel_mm[i][j]              = covar_mm  /sqrt(var_m_i * var_m_j);
         if(j>=nbins_CC && j<2*nbins_CC) ECorrel_me[i][j-nbins_CC]     = covar_me  /sqrt(var_m_i * var_e_j);
@@ -322,6 +353,26 @@ void test()
         if(j<nbins_CC)                  ECovars[i][j] = ECovars_nuem[i-2*nbins_CC][j];
         if(j>=nbins_CC && j<2*nbins_CC) ECovars[i][j] = ECovars_nuee[i-2*nbins_CC][j-nbins_CC];
         if(j>=2*nbins_CC)               ECovars[i][j] = ECovars_nuenue[i-2*nbins_CC][j-2*nbins_CC];}
+      
+
+
+
+      if(i<nbins_CC){
+        if(j<nbins_CC)                  frECovars[i][j] = frECovars_mm[i][j];
+        if(j>=nbins_CC && j<2*nbins_CC) frECovars[i][j] = frECovars_me[i][j-nbins_CC];
+        if(j>=2*nbins_CC)               frECovars[i][j] = frECovars_mnue[i][j-2*nbins_CC];}
+
+      if(i>=nbins_CC && i<2*nbins_CC){
+        if(j<nbins_CC)                  frECovars[i][j] = frECovars_em[i-nbins_CC][j];
+        if(j>=nbins_CC && j<2*nbins_CC) frECovars[i][j] = frECovars_ee[i-nbins_CC][j-nbins_CC];
+        if(j>=2*nbins_CC)               frECovars[i][j] = frECovars_enue[i-nbins_CC][j-2*nbins_CC];}
+
+      if(i>=2*nbins_CC){
+        if(j<nbins_CC)                  frECovars[i][j] = frECovars_nuem[i-2*nbins_CC][j];
+        if(j>=nbins_CC && j<2*nbins_CC) frECovars[i][j] = frECovars_nuee[i-2*nbins_CC][j-nbins_CC];
+        if(j>=2*nbins_CC)               frECovars[i][j] = frECovars_nuenue[i-2*nbins_CC][j-2*nbins_CC];}
+
+
 
 
       if(i<nbins_CC){
@@ -343,12 +394,13 @@ void test()
   }
 
   TH2D *hcv = new TH2D("hcv","",nbins_tot,0,nbins_tot,nbins_tot,0,nbins_tot);
+  TH2D *hcvfr = new TH2D("hcvfr","",nbins_tot,0,nbins_tot,nbins_tot,0,nbins_tot);
   TH2D *hcr = new TH2D("hcr","",nbins_tot,0,nbins_tot,nbins_tot,0,nbins_tot);
   for(int i=0; i<nbins_tot; i++) {
     for(int j=0; j<nbins_tot; j++) {
       hcv->SetBinContent(i+1, j+1, ECovars[i][j]);
+      hcvfr->SetBinContent(i+1, j+1, frECovars[i][j]);
       hcr->SetBinContent(i+1, j+1, ECorrel[i][j]);
-      //if(i>nbins_CC || j>nbins_CC) std::cout << ECorrel[i][j] << "\t";  
     }
   }
  
@@ -356,12 +408,18 @@ void test()
 
 
   hcv->SetStats(0);
-
+  hcvfr->SetStats(0);
   hcr->SetStats(0);
 
   TCanvas *c = new TCanvas("c","",700,700);
+  gPad->SetRightMargin(0.15);
   hcv->Draw("colz");
-  c->SaveAs(Form("flux_frCovmtr%d_%d.png",cutNu,N));
+  c->SaveAs(Form("flux_totCovmtr%d_%d.png",cutNu,N));
+  
+  TCanvas *c0 = new TCanvas("c0","",700,700);
+  gPad->SetRightMargin(0.15);
+  hcvfr->Draw("colz");
+  c0->SaveAs(Form("flux_frCovmtr%d_%d.png",cutNu,N));
   
 
   const Int_t Number = 3;
@@ -374,13 +432,15 @@ void test()
 
   TCanvas *c1 = new TCanvas("c1","",700,700);
   hcr->GetZaxis()->SetRangeUser(-1., 1.);
+  gPad->SetRightMargin(0.15);
   hcr->Draw("colz");
   c1->SaveAs(Form("flux_Cormtr%d_%d.png",cutNu,N));
 
   //gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
 
-  TFile *out = new TFile(Form("flux_covmtr%d_100binsCC.root",cutNu),"RECREATE");
+  TFile *out = new TFile(Form("flux_covmtr%d_124.root",cutNu),"RECREATE");
   hcv->Write();
+  hcvfr->Write();
   hcr->Write();
   out->Close();
 

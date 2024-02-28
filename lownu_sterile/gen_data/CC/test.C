@@ -22,7 +22,7 @@ void test()
   TChain * tree = new TChain( "cafTree", "cafTree" );
   TChain * meta = new TChain( "meta", "meta" );
   
-  for(int i = 0; i<1; i++){
+  for(int i = 0; i<4; i++){
   tree->Add( Form("root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/LBL_TDR/CAFs/v4/ND_FHC_FV_%02d.root",i) );
   meta->Add( Form("root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/LBL_TDR/CAFs/v4/ND_FHC_FV_%02d.root",i) ); // make certain this is the exact same file(s)
   std::cout << "File number:" << i << "\n";
@@ -40,33 +40,13 @@ void test()
   double scalePOT = yrPOT/total_pot;
   //double scalePOT = 1;
 
-/*
-  const Int_t nbinsX = 400;
-  Double_t xEdges[nbinsX+1];
-  xEdges[0] = 0;
-  for(int i=0; i<nbinsX+1; i++)
-  {
-    if(i<200)                xEdges[i+1] = xEdges[i] + 0.02;
-    else if(i>=200 && i<240) xEdges[i+1] = xEdges[i] + 0.1;
-    else		     xEdges[i+1] = xEdges[i] + 0.2;
-    std::cout << i << "\t" << xEdges[i] << "\n";
-  }
 
+  const Int_t nbinsX = 430; 
+  const Int_t nbinsCCm = 240;
+  const Int_t nbinsCCe = 32;
+  double xEdges[nbinsX+1], CCeEdges[nbinsCCe+1], CCmEdges[nbinsCCm+1];
+  xEdges[0]=CCeEdges[0]=CCmEdges[0]=0.;
 
-  const Int_t nbinsElep = 51;
-  Double_t ElepEdges[nbinsElep+1];
-  ElepEdges[0] = 0.;
-  for(int i=0; i<nbinsElep+1; i++)
-  {
-    if(i<50) ElepEdges[i+1] = ElepEdges[i] + 0.1;
-    else     ElepEdges[i+1] = ElepEdges[i] + 11.0;
-    //std::cout << i << "\t" << ElepEdges[i] << "\n";
-  }
-*/
-
-  const Int_t nbinsX = 430; const Int_t nbinsY = 58;
-  Double_t xEdges[nbinsX+1], yEdges[nbinsY+1];
-  xEdges[0]=yEdges[0]=0;
   for(int i=0; i<nbinsX+1; i++)
   {
     if(i<200)                xEdges[i+1] = xEdges[i] + 0.02;
@@ -75,35 +55,29 @@ void test()
     else if(i>=400 && i<420) xEdges[i+1] = xEdges[i] + 1.0;
     else                     xEdges[i+1] = xEdges[i] + 4.0;
   }
-  for(int i=0; i<nbinsY+1; i++)
+
+  for(int i=0; i<nbinsCCm+1; i++)
   {
-    if(i<40)               yEdges[i+1] = yEdges[i] + 0.1;
-    else if(i>=40 && i<45) yEdges[i+1] = yEdges[i] + 0.2;
-    else if(i>=45 && i<50) yEdges[i+1] = yEdges[i] + 0.4;
-    else if(i>=50 && i<55) yEdges[i+1] = yEdges[i] + 0.8;
-    else if(i>=55 && i<57) yEdges[i+1] = yEdges[i] + 1.5;
-    else                   yEdges[i+1] = yEdges[i] + 2.0;
+    if(i<200)                CCmEdges[i+1] = CCmEdges[i] + 0.02;
+    else if(i>=200 && i<220) CCmEdges[i+1] = CCmEdges[i] + 0.1;
+    else if(i>=220 && i<230) CCmEdges[i+1] = CCmEdges[i] + 0.4;
+    else                     CCmEdges[i+1] = CCmEdges[i] + 0.6;
+  }
+  for(int i=0; i<nbinsCCe+1; i++)
+  {
+    if(i<20)               CCeEdges[i+1] = CCeEdges[i] + 0.2;
+    else if(i>=20 && i<28) CCeEdges[i+1] = CCeEdges[i] + 0.5;
+    else if(i>=28 && i<30) CCeEdges[i+1] = CCeEdges[i] + 1.0;
+    else                   CCeEdges[i+1] = CCeEdges[i] + 3.0;
   }
 
-  TH1D *hm0 = new TH1D("hm0","",nbinsY,yEdges);
-  TH1D *hm3 = new TH1D("hm3","",nbinsY,yEdges);
-  TH1D *he0 = new TH1D("he0","",nbinsY,yEdges);
-  TH1D *he3 = new TH1D("he3","",nbinsY,yEdges);
+  TH1D *hm0 = new TH1D("hm0","",nbinsCCm,CCmEdges);
+  TH1D *hm3 = new TH1D("hm3","",nbinsCCm,CCmEdges);
+  TH1D *he0 = new TH1D("he0","",nbinsCCe,CCeEdges);
+  TH1D *he3 = new TH1D("he3","",nbinsCCe,CCeEdges);
 
   const double mubins[20] = {0.,0.5,1.,1.5,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,7.,8.,12.,16.,20.,40.,100.};
   const double ebins[8] = {0.,2.,4.,6.,8.,10.,20.,100.};
-
-  TH2D *m_hElepRecoVsEv0    = new TH2D("m_hElepRecoVsEv0","",   nbinsX, xEdges,nbinsY,yEdges);
-  TH2D *m_hElepRecoVsEv3    = new TH2D("m_hElepRecoVsEv3","",   nbinsX,xEdges,nbinsY,yEdges);
-  TH2D *nc_m_hElepRecoVsEv0 = new TH2D("nc_m_hElepRecoVsEv0","",nbinsX,xEdges,nbinsY,yEdges);
-  TH2D *nc_m_hElepRecoVsEv3 = new TH2D("nc_m_hElepRecoVsEv3","",nbinsX,xEdges,nbinsY,yEdges);
-  TH2D *e_hElepRecoVsEv0    = new TH2D("e_hElepRecoVsEv0","",   nbinsX,xEdges,nbinsY,yEdges);
-  TH2D *e_hElepRecoVsEv3    = new TH2D("e_hElepRecoVsEv3","",   nbinsX,xEdges,nbinsY,yEdges);
-
-  TH2D *m_hElepRecoVsEv0_cov = new TH2D("m_hElepRecoVsEv0_cov","",19,mubins,nbinsY,yEdges);
-  TH2D *m_hElepRecoVsEv3_cov = new TH2D("m_hElepRecoVsEv3_cov","",19,mubins,nbinsY,yEdges);
-  TH2D *e_hElepRecoVsEv0_cov = new TH2D("e_hElepRecoVsEv0_cov","",7, ebins,nbinsY,yEdges);
-  TH2D *e_hElepRecoVsEv3_cov = new TH2D("e_hElepRecoVsEv3_cov","",7, ebins,nbinsY,yEdges);
 
 
   // Most of them are weights related to systematic uncertainties
@@ -210,6 +184,10 @@ void test()
     }
   }
 
+
+  hm3->Scale(scalePOT);
+  he3->Scale(scalePOT);
+
   for(int i=0; i<hm0->GetNbinsX(); i++){
     std::cout << i << "\t" << hm0->GetBinContent(i+1) << "\t" << hm3->GetBinContent(i+1) << "\n";}
 
@@ -219,6 +197,7 @@ void test()
   hm0->Draw();
   c->cd(2);
   hm3->Draw();
+  c->SaveAs("hm.png");
  
   TCanvas *c1 = new TCanvas("c1","",1200,500);
   c1->Divide(2,1);
@@ -226,6 +205,7 @@ void test()
   he0->Draw();
   c1->cd(2);
   he3->Draw();
+  c1->SaveAs("he.png");
 
 /* 
   e_hElepRecoVsEv0->Scale(scalePOT);    
