@@ -1,6 +1,6 @@
-static const int N = 100000; // number of universes
+static const int N = 1000; // number of universes
 static const int nbins = 52;
-static const int nbins_CC = 58;
+static const int nbins_CC = 56;
 static const int nbins_nue = 8;
 static const int nbins_tot = 2*nbins_CC + nbins_nue;
 
@@ -130,8 +130,8 @@ void test()
   int cutNu = 3;
 
   //for(para = 1; para <3; para++) {
-  TFile *f     = new TFile("/exp/dune/app/users/qvuong/data/lownu/CC_output_58.root");
-  TFile *f_nue = new TFile("/exp/dune/app/users/qvuong/data/lownu/nue_output_test.root");
+  TFile *f     = new TFile("/exp/dune/app/users/qvuong/data/lownu/input_dfiles/CC_output_56bins.root");
+  TFile *f_nue = new TFile("/exp/dune/app/users/qvuong/data/lownu/input_dfiles/nue_output_8bins.root");
   TH2D *CC_m  = (TH2D*)f->Get(Form("m_h%sVsEv%d_cov",name,cutNu));
   TH2D *CC_e  = (TH2D*)f->Get(Form("e_h%sVsEv%d_cov",name,cutNu));
   TH2D *nue_m = (TH2D*)f_nue->Get(Form("m_h%sVsEv0_cov",name));
@@ -153,30 +153,18 @@ void test()
 
 
   double CCEdges[nbins_CC+1];
-  CCEdges[0]=0;
-  for(int i=0; i<nbins_CC+1; i++)
+  CCEdges[0]=0., CCEdges[1]=0.3;
+  for(int i=1; i<nbins_CC+1; i++)
   {
-    if(i<40)               CCEdges[i+1] = CCEdges[i] + 0.1;
-    else if(i>=40 && i<45) CCEdges[i+1] = CCEdges[i] + 0.2;
-    else if(i>=45 && i<50) CCEdges[i+1] = CCEdges[i] + 0.4;
-    else if(i>=50 && i<55) CCEdges[i+1] = CCEdges[i] + 0.8;
-    else if(i>=55 && i<57) CCEdges[i+1] = CCEdges[i] + 1.5;
+    if(i<38)               CCEdges[i+1] = CCEdges[i] + 0.1;
+    else if(i>=38 && i<43) CCEdges[i+1] = CCEdges[i] + 0.2;
+    else if(i>=43 && i<48) CCEdges[i+1] = CCEdges[i] + 0.4;
+    else if(i>=48 && i<53) CCEdges[i+1] = CCEdges[i] + 0.8;
+    else if(i>=53 && i<55) CCEdges[i+1] = CCEdges[i] + 1.5;
     else                   CCEdges[i+1] = CCEdges[i] + 2.0;
   }
 
-
-  double nueEdges[nbins_nue+1];
-  nueEdges[0]=0;
-  for(int i=0; i<nbins_nue+1; i++)
-  {
-    if(i<3)              nueEdges[i+1] = nueEdges[i] + 0.3;
-    else if(i>=3 && i<4) nueEdges[i+1] = nueEdges[i] + 0.4;
-    else if(i>=4 && i<5) nueEdges[i+1] = nueEdges[i] + 0.5;
-    else if(i>=5 && i<6) nueEdges[i+1] = nueEdges[i] + 0.7;
-    else if(i>=6 && i<7) nueEdges[i+1] = nueEdges[i] + 1.5;
-    else                 nueEdges[i+1] = nueEdges[i] + 12.0;
-  }
-  
+  const double nueEdges[9] = {0., 0.3, 0.6, 0.92, 1.3, 1.75, 2.45, 3.9, 16.0};
 
   TH1D *m     = new TH1D("m","",nbins_CC,CCEdges);
   TH1D *e     = new TH1D("e","",nbins_CC,CCEdges);
@@ -211,6 +199,7 @@ void test()
       CC_m_nom->Add(tp_m[mb], 1.);
       nue_m_nom->Add(tp_m_nue[mb],1.);
     }
+
     for(int eb=0; eb<n_e; eb++) {
       int fluxbin = 38+eb+1;
       double evtwgt = scales[u][fluxbin];
@@ -411,15 +400,19 @@ void test()
   hcvfr->SetStats(0);
   hcr->SetStats(0);
 
+  hcv->SetTitle("Total Flux Covariance Matrix");
+  hcvfr->SetTitle("Fractional Flux Covariance Matrix");
+  hcr->SetTitle("Flux Correlation Matrix");
+
   TCanvas *c = new TCanvas("c","",700,700);
   gPad->SetRightMargin(0.15);
   hcv->Draw("colz");
-  c->SaveAs(Form("flux_totCovmtr%d_%d.png",cutNu,N));
+  c->SaveAs(Form("flux_totCovmtr%d.png",cutNu));
   
   TCanvas *c0 = new TCanvas("c0","",700,700);
   gPad->SetRightMargin(0.15);
   hcvfr->Draw("colz");
-  c0->SaveAs(Form("flux_frCovmtr%d_%d.png",cutNu,N));
+  c0->SaveAs(Form("flux_frCovmtr%d.png",cutNu));
   
 
   const Int_t Number = 3;
@@ -434,11 +427,11 @@ void test()
   hcr->GetZaxis()->SetRangeUser(-1., 1.);
   gPad->SetRightMargin(0.15);
   hcr->Draw("colz");
-  c1->SaveAs(Form("flux_Cormtr%d_%d.png",cutNu,N));
+  c1->SaveAs(Form("flux_Cormtr%d.png",cutNu));
 
   //gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
 
-  TFile *out = new TFile(Form("flux_covmtr%d_124.root",cutNu),"RECREATE");
+  TFile *out = new TFile(Form("flux_covmtr%d_120.root",cutNu),"RECREATE");
   hcv->Write();
   hcvfr->Write();
   hcr->Write();
