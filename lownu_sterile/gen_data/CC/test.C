@@ -42,10 +42,10 @@ void test()
 
 
   const Int_t nbinsX = 430; 
-  const Int_t nbinsCCm = 240;
-  const Int_t nbinsCCe = 32;
-  double xEdges[nbinsX+1], CCeEdges[nbinsCCe+1], CCmEdges[nbinsCCm+1];
-  xEdges[0]=CCeEdges[0]=CCmEdges[0]=0.;
+  const Int_t nbinsCC = 56;
+  double xEdges[nbinsX+1], CCEdges[nbinsCC+1];
+  xEdges[0]=CCEdges[0]=0.;
+  CCEdges[1] = 0.3;
 
   for(int i=0; i<nbinsX+1; i++)
   {
@@ -56,25 +56,30 @@ void test()
     else                     xEdges[i+1] = xEdges[i] + 4.0;
   }
 
-  for(int i=0; i<nbinsCCm+1; i++)
+  for(int i=1; i<nbinsCC+1; i++)
   {
-    if(i<200)                CCmEdges[i+1] = CCmEdges[i] + 0.02;
-    else if(i>=200 && i<220) CCmEdges[i+1] = CCmEdges[i] + 0.1;
-    else if(i>=220 && i<230) CCmEdges[i+1] = CCmEdges[i] + 0.4;
-    else                     CCmEdges[i+1] = CCmEdges[i] + 0.6;
-  }
-  for(int i=0; i<nbinsCCe+1; i++)
-  {
-    if(i<20)               CCeEdges[i+1] = CCeEdges[i] + 0.2;
-    else if(i>=20 && i<28) CCeEdges[i+1] = CCeEdges[i] + 0.5;
-    else if(i>=28 && i<30) CCeEdges[i+1] = CCeEdges[i] + 1.0;
-    else                   CCeEdges[i+1] = CCeEdges[i] + 3.0;
+    if(i<38)               CCEdges[i+1] = CCEdges[i] + 0.1;
+    else if(i>=38 && i<43) CCEdges[i+1] = CCEdges[i] + 0.2;
+    else if(i>=43 && i<48) CCEdges[i+1] = CCEdges[i] + 0.4;
+    else if(i>=48 && i<53) CCEdges[i+1] = CCEdges[i] + 0.8;
+    else if(i>=53 && i<55) CCEdges[i+1] = CCEdges[i] + 1.5;
+    else                   CCEdges[i+1] = CCEdges[i] + 2.0;
   }
 
-  TH1D *hm0 = new TH1D("hm0","",nbinsCCm,CCmEdges);
-  TH1D *hm3 = new TH1D("hm3","",nbinsCCm,CCmEdges);
-  TH1D *he0 = new TH1D("he0","",nbinsCCe,CCeEdges);
-  TH1D *he3 = new TH1D("he3","",nbinsCCe,CCeEdges);
+
+/*
+  for(int i=1; i<nbinsCC+1; i++)
+  {
+    if(i<38)               CCEdges[i+1] = CCEdges[i] + 0.1;
+    else if(i>=38 && i<43) CCEdges[i+1] = CCEdges[i] + 0.2;
+    else if(i>=43 && i<53) CCEdges[i+1] = CCEdges[i] + 0.5;
+    else                   CCEdges[i+1] = CCEdges[i] + 1.2;
+  }
+*/
+  TH1D *hm0 = new TH1D("hm0","",nbinsCC,CCEdges);
+  TH1D *hm3 = new TH1D("hm3","",nbinsCC,CCEdges);
+  TH1D *he0 = new TH1D("he0","",nbinsCC,CCEdges);
+  TH1D *he3 = new TH1D("he3","",nbinsCC,CCEdges);
 
   const double mubins[20] = {0.,0.5,1.,1.5,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,7.,8.,12.,16.,20.,40.,100.};
   const double ebins[8] = {0.,2.,4.,6.,8.,10.,20.,100.};
