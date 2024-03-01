@@ -22,7 +22,7 @@ int main()
   TChain * tree = new TChain( "cafTree", "cafTree" );
   TChain * meta = new TChain( "meta", "meta" );
   
-  for(int i = 0; i<400; i++){
+  for(int i = 0; i<10; i++){
   tree->Add( Form("root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/LBL_TDR/CAFs/v4/ND_FHC_FV_%02d.root",i) );
   meta->Add( Form("root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/LBL_TDR/CAFs/v4/ND_FHC_FV_%02d.root",i) ); // make certain this is the exact same file(s)
   std::cout << "File number:" << i << "\n";

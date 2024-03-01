@@ -22,7 +22,7 @@ int main()
   TChain * tree = new TChain( "tree", "tree" );
   TChain * meta = new TChain( "meta", "meta" );
 
-  for(int i = 60; i<61; i++){
+  for(int i=48; i<60; i++){
   //if(i==39) continue;
   tree->Add( Form("root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/marshalc/nue_study/FHC/nueFHC_%03d.root",i) );
   meta->Add( Form("root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/marshalc/nue_study/FHC/nueFHC_%03d.root",i) );
@@ -39,8 +39,8 @@ int main()
     total_pot += pot;
   }
   double yrPOT = 1.1E21;
-  double scalePOT = yrPOT/total_pot;
-  //double scalePOT = 1.0;
+  //double scalePOT = yrPOT/total_pot;
+  double scalePOT = 1.0;
 
   //std::cout << total_pot << "\t" << yrPOT*total_pot/1.1E21 << "\t" << scalePOT << "\n";
 
@@ -74,7 +74,7 @@ int main()
   }
 */
 
-  const double yEdges[9] = {0., 0.3, 0.6, 1.0, 1.4, 1.9, 2.5, 3.8, 16.0};
+  const double yEdges[9] = {0., 0.3, 0.6, 0.92, 1.3, 1.75, 2.45, 3.9, 16.0};
  
   TH2D *m_hElepRecoVsEv0   = new TH2D("m_hElepRecoVsEv0","",nbinsX,xEdges,nbinsY,yEdges);
   TH2D *m_hElepRecoVsEv0_w = new TH2D("m_hElepRecoVsEv0_w","",nbinsX,xEdges,nbinsY,yEdges);
@@ -211,12 +211,12 @@ int main()
 
   hElep0->Add(m_hElep0); 
   hElep0->Add(e_hElep0);
-
+/*
   TCanvas *c = new TCanvas("c","",800,600);
   hElep0->Draw();
   c->SaveAs("hElep.png");
-/*
-  TFile *out = new TFile("/exp/dune/app/users/qvuong/data/lownu/nue_output_3.root","RECREATE");
+*/
+  TFile *out = new TFile("/exp/dune/app/users/qvuong/data/lownu/input_dfiles/nue_output_4.root","RECREATE");
   m_hElepRecoVsEv0->Write();
   m_hElepRecoVsEv0_w->Write();
   e_hElepRecoVsEv0->Write();
@@ -234,7 +234,7 @@ int main()
   totalPOT.Write();
 
   out->Close();
-*/
+
   return(0);
 }
 
