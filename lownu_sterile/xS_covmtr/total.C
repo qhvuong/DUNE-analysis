@@ -1,4 +1,4 @@
-static const int nbins_CC = 58;
+static const int nbins_CC = 56;
 static const int nbins_nue = 8;
 static const int nbins = 2*nbins_CC + nbins_nue;
 
@@ -21,7 +21,7 @@ void total()
   for(int iw=0; iw<N_wgt; iw++){
     if(iw%10==0) std::cout << iw*100.0/N_wgt << "\n";
 
-    TFile *f = new TFile(Form("%s_covmtr%d.root",name[iw],cutNu),"READ");
+    TFile *f = new TFile(Form("%s_covmtr%d_%d.root",name[iw],cutNu,nbins),"READ");
 
     TH2D *cv2 = (TH2D*)f->Get("hcv2");    
     TH2D *cv  = (TH2D*)f->Get("hcv");    
@@ -63,7 +63,7 @@ void total()
   c1->SaveAs(Form("sigma%d_5sig_logz.png",cutNu));
 
 
-  TFile *out = new TFile(Form("total_sigmtr%d_5sig.root",cutNu),"RECREATE");
+  TFile *out = new TFile(Form("total_sigmtr%d_5sig_%d.root",cutNu,nbins),"RECREATE");
   hcv->Write();
   frhcv->Write();
   out->Close();

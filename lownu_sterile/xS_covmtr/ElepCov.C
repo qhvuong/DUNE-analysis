@@ -1,5 +1,5 @@
 static const int N = 1; // number of universes
-static const int nbins_CC = 58;
+static const int nbins_CC = 56;
 static const int nbins_nue = 8;
 static const int nbins = 2*nbins_CC + nbins_nue;
 
@@ -94,8 +94,8 @@ TMatrixD frECovars4 ( nbins, nbins );
 void ElepCov()
 {
 
-  TFile *f     = new TFile("/exp/dune/app/users/qvuong/data/lownu/CC_output_58.root");
-  TFile *f_nue = new TFile("/exp/dune/app/users/qvuong/data/lownu/nue_output_test.root");
+  TFile *f     = new TFile("/exp/dune/app/users/qvuong/data/lownu/input_dfiles/CC_output_56bins.root");
+  TFile *f_nue = new TFile("/exp/dune/app/users/qvuong/data/lownu/input_dfiles/nue_output_8bins.root");
   int cutNu = 3;
 
   //std::list <const char *> namelist = {"wgt_MaCCQE", "wgt_VecFFCCQEshape", "wgt_MaNCEL", "wgt_EtaNCEL", "wgt_MaCCRES", "wgt_MvCCRES", "wgt_MaNCRES", "wgt_MvNCRES", "wgt_RDecBR1gamma", "wgt_RDecBR1eta", "wgt_Theta_Delta2Npi", "wgt_AhtBY", "wgt_BhtBY", "wgt_CV1uBY", "wgt_CV2uBY", "wgt_FormZone", "wgt_MFP_pi", "wgt_FrCEx_pi", "wgt_FrElas_pi", "wgt_FrInel_pi", "wgt_FrAbs_pi", "wgt_FrPiProd_pi", "wgt_MFP_N", "wgt_FrCEx_N", "wgt_FrElas_N", "wgt_FrInel_N", "wgt_FrAbs_N", "wgt_FrPiProd_N", "wgt_CCQEPauliSupViaKF", "wgt_Mnv2p2hGaussEnhancement", "wgt_MKSPP_ReWeight", "wgt_E2p2h_A_nu", "wgt_E2p2h_B_nu", "wgt_E2p2h_A_nubar", "wgt_E2p2h_B_nubar", "wgt_NR_nu_n_CC_2Pi", "wgt_NR_nu_n_CC_3Pi", "wgt_NR_nu_p_CC_2Pi", "wgt_NR_nu_p_CC_3Pi", "wgt_NR_nu_np_CC_1Pi", "wgt_NR_nu_n_NC_1Pi", "wgt_NR_nu_n_NC_2Pi", "wgt_NR_nu_n_NC_3Pi", "wgt_NR_nu_p_NC_1Pi", "wgt_NR_nu_p_NC_2Pi", "wgt_NR_nu_p_NC_3Pi", "wgt_NR_nubar_n_CC_1Pi", "wgt_NR_nubar_n_CC_2Pi", "wgt_NR_nubar_n_CC_3Pi", "wgt_NR_nubar_p_CC_1Pi", "wgt_NR_nubar_p_CC_2Pi", "wgt_NR_nubar_p_CC_3Pi", "wgt_NR_nubar_n_NC_1Pi", "wgt_NR_nubar_n_NC_2Pi", "wgt_NR_nubar_n_NC_3Pi", "wgt_NR_nubar_p_NC_1Pi", "wgt_NR_nubar_p_NC_2Pi", "wgt_NR_nubar_p_NC_3Pi", "wgt_BeRPA_A", "wgt_BeRPA_B", "wgt_BeRPA_D", "wgt_BeRPA_E", "wgt_C12ToAr40_2p2hScaling_nu", "wgt_C12ToAr40_2p2hScaling_nubar", "wgt_nuenuebar_xsec_ratio", "wgt_nuenumu_xsec_ratio", "wgt_SPPLowQ2Suppression", "wgt_FSILikeEAvailSmearing"};
@@ -540,7 +540,7 @@ void ElepCov()
   gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
 
 
-  TFile *out = new TFile(Form("%s_covmtr%d.root",name[iw],cutNu),"RECREATE");
+  TFile *out = new TFile(Form("%s_covmtr%d_120.root",name[iw],cutNu),"RECREATE");
   hcv2->Write();
   hcv->Write();
   hcv4->Write();
