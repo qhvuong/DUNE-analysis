@@ -4,7 +4,7 @@ void dk2nu()
 
   TH2D *h = new TH2D("h","",200,0,5,200,300,600);
 
-  TFile * fout = new TFile( "/dune/app/users/qvuong/data/lownu/LEdep/LEdep.root", "RECREATE" );
+  TFile * fout = new TFile( "out_1112.root", "RECREATE" );
   TTree * nudir = new TTree( "nudir", "neutrinodirection" );
   double nu_px, nu_py, nu_pz, nuE; // the neutrino momentum 4-vector
   double vtx_x, vtx_y, vtx_z, creation_z; // the neutrino *interaction* vertex and creation point in NuMI-z
@@ -36,9 +36,19 @@ void dk2nu()
   TChain *meta = new TChain("dkmetaTree", "dkmetaTree");
   TChain *tree = new TChain("dk2nuTree", "dk2nuTree");
 
-  for(int i=1; i<11; i++) {
-    meta->Add(Form("/pnfs/dune/persistent/stash/Flux/g4lbne/v3r5p4/QGSP_BERT/OptimizedEngineeredNov2017/neutrino/flux/g4lbne_v3r5p4_QGSP_BERT_OptimizedEngineeredNov2017_neutrino_%05d.dk2nu.root",i));
-    tree->Add(Form("/pnfs/dune/persistent/stash/Flux/g4lbne/v3r5p4/QGSP_BERT/OptimizedEngineeredNov2017/neutrino/flux/g4lbne_v3r5p4_QGSP_BERT_OptimizedEngineeredNov2017_neutrino_%05d.dk2nu.root",i));
+  for(int i=1; i<251; i++) {
+  if(i<10) {
+    meta->Add(Form("/pnfs/dune/persistent/stash/Flux/g4lbne/v3r5p4/QGSP_BERT/OptimizedEngineeredNov2017/neutrino/flux/g4lbne_v3r5p4_QGSP_BERT_OptimizedEngineeredNov2017_neutrino_0000%d.dk2nu.root",i));
+    tree->Add(Form("/pnfs/dune/persistent/stash/Flux/g4lbne/v3r5p4/QGSP_BERT/OptimizedEngineeredNov2017/neutrino/flux/g4lbne_v3r5p4_QGSP_BERT_OptimizedEngineeredNov2017_neutrino_0000%d.dk2nu.root",i));
+  }
+  else if(i<100) {
+    meta->Add(Form("/pnfs/dune/persistent/stash/Flux/g4lbne/v3r5p4/QGSP_BERT/OptimizedEngineeredNov2017/neutrino/flux/g4lbne_v3r5p4_QGSP_BERT_OptimizedEngineeredNov2017_neutrino_000%d.dk2nu.root",i));
+    tree->Add(Form("/pnfs/dune/persistent/stash/Flux/g4lbne/v3r5p4/QGSP_BERT/OptimizedEngineeredNov2017/neutrino/flux/g4lbne_v3r5p4_QGSP_BERT_OptimizedEngineeredNov2017_neutrino_000%d.dk2nu.root",i));
+  }
+  else {
+    meta->Add(Form("/pnfs/dune/persistent/stash/Flux/g4lbne/v3r5p4/QGSP_BERT/OptimizedEngineeredNov2017/neutrino/flux/g4lbne_v3r5p4_QGSP_BERT_OptimizedEngineeredNov2017_neutrino_00%d.dk2nu.root",i));
+    tree->Add(Form("/pnfs/dune/persistent/stash/Flux/g4lbne/v3r5p4/QGSP_BERT/OptimizedEngineeredNov2017/neutrino/flux/g4lbne_v3r5p4_QGSP_BERT_OptimizedEngineeredNov2017_neutrino_00%d.dk2nu.root",i));
+  }
   }
 
   double total_POT = 0.;
