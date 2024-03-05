@@ -6,8 +6,8 @@
 #include "TMatrixD.h"
 
 static const int nbins_Ev = 430;
-static const int nbins_CC = 50;
-static const int nbins_nue = 20;
+static const int nbins_CC = 56;
+static const int nbins_nue = 8;
 static const int nbins = 2*nbins_CC + nbins_nue;
 
 
@@ -19,10 +19,10 @@ class TemplateFitter {
     ~TemplateFitter(){};
     void setEnergyBins(double bins[nbins_Ev+1]);
     void setCovmtr(double flmx_bct[nbins+1][nbins+1], double sigmx_bct[nbins+1][nbins+1]);
-    void setPara(char var[20], int nuCut, double seed[3], double fitPara_m[29][7], double fitPara_e[29][7]);
-    void getTarget(double *par_tgt);
+    void setPara(char var[20], int nuCut, double par[3], double fitPara_m[29][7], double fitPara_e[29][7]);
+    void getTarget(double *par);
     void Draw();
-    double getChi2(double * par);
+    double getChi2(double *par);
 
 
   private:
@@ -55,40 +55,10 @@ class TemplateFitter {
     double s0,s1,s2;
 
     // this is the thing you are trying to fit to, i.e. the data distribution
-    TH1D * CCe_tgt = new TH1D("CCe_tgt","",nbins_CC,0,16);
-    TH1D * CCm_tgt = new TH1D("CCm_tgt","",nbins_CC,0,16);
-    TH1D * nue_tgt = new TH1D("nue_tgt","",nbins_nue,0,16);
+    TH1D * CCe_tgt = new TH1D();
+    TH1D * CCm_tgt = new TH1D();
+    TH1D * nue_tgt = new TH1D();
 
-/*
-    TH1D * CCm_tgt;
-    TH1D * CCe_tgt;
-    TH1D * nue_tgt;
-*/   
-    //TMatrixD covmtr(300, 300); 
 };
-/*
-class TemplateFitter_nue {
-
-  public:
-
-    TemplateFitter_nue(TH1D * templates_nue[100], TH1D * intrinsic_nue, TH1D * nue_tgt);
-    ~TemplateFitter_nue(){};
-    void setEnergyBins(double bins[101]);
-    bool doFit(double &theta, double &dm2);
-
-  private:
-
-    double getOscProb(double energy, double theta, double dm2);
-    double getChi2(const double * par);
-
-    // The templates are reconstructed lepton energy, in a slice of true neutrino energy
-    TH1D * m_templates_nue[100];
-    // The template for the intrinsic nue
-    TH1D * m_intrinsic_nue; 
-    // define the energy bins used in the template
-    double m_energy_bins_nue[101];
-    // this is the thing you are trying to fit to, i.e. the data distribution
-    TH1D * m_nue_tgt;
-};*/
 
 #endif

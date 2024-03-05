@@ -9,8 +9,10 @@
 
 int main()
 {
-  TFile *ftP_m = new TFile("/dune/app/users/qvuong/lownu/LEdep/fitPara_m.root","READ");
-  TFile *ftP_e = new TFile("/dune/app/users/qvuong/lownu/LEdep/fitPara_e.root","READ");
+  const char data_path[] = "/exp/dune/app/users/qvuong/data/lownu";
+
+  TFile *ftP_m = new TFile(Form("%s/LEdep/fitPara_m.root", data_path),"READ");
+  TFile *ftP_e = new TFile(Form("%s/LEdep/fitPara_e.root", data_path),"READ");
 
   TTree *tree_m = (TTree*)ftP_m->Get("pardir");
   TTree *tree_e = (TTree*)ftP_e->Get("pardir");
@@ -58,8 +60,7 @@ int main()
   }
   ftP_e->Close();
 
-
-  TFile *f = new TFile("/dune/app/users/qvuong/lownu/LEdep/LE_1112_2.root","READ");
+  TFile *f = new TFile(Form("%s/LEdep/LE_1112_2.root", data_path),"READ");
   TH2D *LvsE_e = (TH2D*)f->Get("h_e");
   TH2D *LvsE_m = (TH2D*)f->Get("h_m");
   TH1D *LEdep_e[29], *LEdep_m[29];
@@ -75,8 +76,8 @@ int main()
   char var[20] = "ElepReco";
   int nuCut=3;
 
-  TFile *CC_f  = new TFile("/dune/app/users/qvuong/data/lownu/CC_output_test.root","READ");
-  TFile *nue_f = new TFile("/dune/app/users/qvuong/data/lownu/nue_output_test.root","READ");
+  TFile *CC_f  = new TFile(Form("%s/input_dfiles/CC_output_56bins.root",data_path),"READ");
+  TFile *nue_f = new TFile(Form("%s/input_dfiles/nue_output_8bins.root",data_path),"READ");
 
   TH2D* CC_hm    = (TH2D*)CC_f->Get(Form("m_h%sVsEv%d",var,nuCut));
   TH2D* CC_hm_nc = (TH2D*)CC_f->Get(Form("nc_m_h%sVsEv%d",var,nuCut));
@@ -111,9 +112,9 @@ int main()
     energy_bins[b] = CC_he->GetXaxis()->GetBinLowEdge(b+1);
   } 
 
-  TFile *f_fl = new TFile(Form("../../../flux_covmtr/flux_covmtr%d_test.root",nuCut),"READ");
+  TFile *f_fl = new TFile(Form("%s/flux_covmtr/flux_covmtr%d_120.root",data_path,nuCut),"READ");
   TH2D *fl_cov = (TH2D*)f_fl->Get("hcv");
-  TFile *f_sig = new TFile(Form("../../../xS_covmtr/total_sigmtr%d_5sig_test.root",nuCut), "READ");
+  TFile *f_sig = new TFile(Form("%s/xS_covmtr/total_sigmtr%d_5sig_120.root",data_path,nuCut), "READ");
   TH2D *sig_cov = (TH2D*)f_sig->Get("hcv");
 
   double sig_bins[nbins+1][nbins+1], fl_bins[nbins+1][nbins+1];
@@ -129,15 +130,15 @@ int main()
 
   double seed[3], par_tgt[3], par_bf[3], par_no[3];
 
-  seed[0] = par_tgt[0] = 0.;
-  seed[1] = par_tgt[1] = 0.;
-  seed[2] = par_tgt[2] = 100.0;
+  seed[0] = par_tgt[0] = 0.04;
+  seed[1] = par_tgt[1] = 0.01;
+  seed[2] = par_tgt[2] = 6.0;
 
   for(int ii = 0; ii < 3; ii++) {
     par_no[ii] = 0.;
   }
 
-  tf.setPara( var, nuCut, seed, fitPara_m, fitPara_e );
+  tf.setPara( var, nuCut, par_tgt, fitPara_m, fitPara_e );
 
   tf.getTarget( par_tgt );
 
