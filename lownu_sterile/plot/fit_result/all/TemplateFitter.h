@@ -6,8 +6,8 @@
 #include "TMatrixD.h"
 
 static const int nbins_Ev = 430;
-static const int nbins_CC = 50;
-static const int nbins_nue = 20;
+static const int nbins_CC = 56;
+static const int nbins_nue = 8;
 static const int nbins = 2*nbins_CC + nbins_nue;
 
 class TemplateFitter {
@@ -18,10 +18,12 @@ class TemplateFitter {
     ~TemplateFitter(){};
     void setEnergyBins(double bins[nbins_Ev+1]);
     void setCovmtr(double flmx_bct[nbins+1][nbins+1], double sigmx_bct[nbins+1][nbins+1]);
-    void setPara(char var[20], int nuCut, double seed[3], double fitPara_m[29][7], double fitPara_e[29][7]);
-    bool doFit(double &Uee2, double &Umm2, double &dm2);
+    void setPara(char var[20], int nuCut, double fitPara_m[29][7], double fitPara_e[29][7]);
+    bool doFitFine1(double seed[3], double &Uee2, double &Umm2, double &dm2);
+    bool doFitFine2(double seed[3], double &Uee2, double &Umm2, double &dm2);
+    bool doFitCoarse(double seed[3], double &Uee2, double &Umm2, double &dm2);
     void getTarget(double *par_tgt);
-    double bfChi2(double *par_bf);
+    double bfChi2(double Uee2, double Umm2, double dm2);
     double noChi2(double *par_no);
 
 
@@ -53,13 +55,30 @@ class TemplateFitter {
     char *name;
     int cutNu;
 
+/*
+    double CCEdges[nbins_CC+1];
+    void binning(){
+      CCEdges[0]=0., CCEdges[1]=0.3;
+      for(int i=1; i<nbins_CC+1; i++)
+      {
+      if(i<38)               CCEdges[i+1] = CCEdges[i] + 0.1;
+      else if(i>=38 && i<43) CCEdges[i+1] = CCEdges[i] + 0.2;
+      else if(i>=43 && i<48) CCEdges[i+1] = CCEdges[i] + 0.4;
+      else if(i>=48 && i<53) CCEdges[i+1] = CCEdges[i] + 0.8;
+      else if(i>=53 && i<55) CCEdges[i+1] = CCEdges[i] + 1.5;
+      else                   CCEdges[i+1] = CCEdges[i] + 2.0;
+      }
+    }
+    const double nueEdges[9] = {0., 0.3, 0.6, 0.92, 1.3, 1.75, 2.45, 3.9, 16.0};
 
     // this is the thing you are trying to fit to, i.e. the data distribution
-
-    TH1D * CCe_tgt = new TH1D("CCe_tgt","",nbins_CC,0,16);
-    TH1D * CCm_tgt = new TH1D("CCm_tgt","",nbins_CC,0,16);
-    TH1D * nue_tgt = new TH1D("nue_tgt","",nbins_nue,0,16);
-
+    TH1D * CCe_tgt = new TH1D("CCe_tgt","",nbins_CC,CCEdges);
+    TH1D * CCm_tgt = new TH1D("CCm_tgt","",nbins_CC,CCEdges);
+    TH1D * nue_tgt = new TH1D("nue_tgt","",nbins_nue,nueEdges);
+*/
+    TH1D * CCe_tgt = new TH1D();
+    TH1D * CCm_tgt = new TH1D();
+    TH1D * nue_tgt = new TH1D();
 };
 
 #endif

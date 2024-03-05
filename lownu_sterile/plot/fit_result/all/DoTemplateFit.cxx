@@ -5,11 +5,14 @@
 #include "TStyle.h"
 #include <TRandom.h>
 #include <list>
+#include <TMath.h>
 
 int main()
 {
-  TFile *ftP_m = new TFile("/dune/app/users/qvuong/lownu/LEdep/fitPara_m.root","READ");
-  TFile *ftP_e = new TFile("/dune/app/users/qvuong/lownu/LEdep/fitPara_e.root","READ");
+  const char data_path[] = "/exp/dune/app/users/qvuong/data/lownu";
+
+  TFile *ftP_m = new TFile(Form("%s/LEdep/fitPara_m.root", data_path),"READ");
+  TFile *ftP_e = new TFile(Form("%s/LEdep/fitPara_e.root", data_path),"READ");
 
   TTree *tree_m = (TTree*)ftP_m->Get("pardir");
   TTree *tree_e = (TTree*)ftP_e->Get("pardir");
@@ -58,7 +61,7 @@ int main()
   ftP_e->Close();
 
 
-  TFile *f = new TFile("/dune/app/users/qvuong/lownu/LEdep/LE_1112_2.root","READ");
+  TFile *f = new TFile(Form("%s/LEdep/LE_1112_2.root", data_path),"READ");
   TH2D *LvsE_e = (TH2D*)f->Get("h_e");
   TH2D *LvsE_m = (TH2D*)f->Get("h_m");
   TH1D *LEdep_e[29], *LEdep_m[29];
@@ -76,8 +79,8 @@ int main()
   para = 2;
   nuCut = 3;
 
-  TFile *CC_f  = new TFile("/dune/app/users/qvuong/data/lownu/CC_output_test.root","READ");
-  TFile *nue_f = new TFile("/dune/app/users/qvuong/data/lownu/nue_output_test.root","READ");
+  TFile *CC_f  = new TFile(Form("%s/input_dfiles/CC_output_56bins.root",data_path),"READ");
+  TFile *nue_f = new TFile(Form("%s/input_dfiles/nue_output_8bins.root",data_path),"READ");
 
   TH2D* CC_hm    = (TH2D*)CC_f->Get(Form("m_h%sVsEv%d",var,nuCut));
   TH2D* CC_hm_nc = (TH2D*)CC_f->Get(Form("nc_m_h%sVsEv%d",var,nuCut));
@@ -113,9 +116,9 @@ int main()
     energy_bins[b] = CC_he->GetXaxis()->GetBinLowEdge(b+1);
   } 
 
-  TFile *f_fl = new TFile(Form("../../../flux_covmtr/flux_covmtr%d_test.root",nuCut),"READ");
+  TFile *f_fl = new TFile(Form("%s/flux_covmtr/flux_covmtr%d_120.root",data_path,nuCut),"READ");
   TH2D *fl_cov = (TH2D*)f_fl->Get("hcv");
-  TFile *f_sig = new TFile(Form("../../../xS_covmtr/total_sigmtr%d_5sig_test.root",nuCut), "READ");
+  TFile *f_sig = new TFile(Form("%s/xS_covmtr/total_sigmtr%d_5sig_120.root",data_path,nuCut), "READ");
   TH2D *sig_cov = (TH2D*)f_sig->Get("hcv");
 /*
   TCanvas *c = new TCanvas("c","",800,600);
@@ -138,27 +141,88 @@ int main()
 
   double seed[3], par_tgt[3], par_bf[3], par_no[3];
 
-  seed[0] = par_tgt[0] = 0.04;
-  seed[1] = par_tgt[1] = 0.01;
-  seed[2] = par_tgt[2] = 6.0;
+  par_tgt[0] = 0.01;
+  par_tgt[1] = 0.05;
+  par_tgt[2] = 7.0;
 
   for(int ii = 0; ii < 3; ii++) {
     par_no[ii] = 0.;
   }
 
-  tf.setPara( var, nuCut, seed, fitPara_m, fitPara_e );
+  tf.setPara( var, nuCut, fitPara_m, fitPara_e );
 
   tf.getTarget( par_tgt );
 
-  double bf_dm2, bf_Uee2, bf_Umm2, chi2;
+  double bf_dm2, bf_Uee2, bf_Umm2, bf_chi2=1E9;
 
-  bool isOK = tf.doFit( bf_Uee2, bf_Umm2 , bf_dm2);
-  par_bf[0] = bf_Uee2;
-  par_bf[1] = bf_Umm2;
-  par_bf[2] = bf_dm2;
-  chi2 = tf.bfChi2( par_bf );
+  double seed_set[4][3], chi2[4];
+  seed_set[0][0] = 0.;
+  seed_set[0][1] = 0.;
+  seed_set[0][2] = 0.;
+  seed_set[1][0] = 0.16;
+  seed_set[1][1] = 0.24;
+  seed_set[1][2] = 0.;
+  seed_set[2][0] = 0.;
+  seed_set[2][1] = 0.;
+  seed_set[2][2] = 100.;
+  seed_set[3][0] = 0.16;
+  seed_set[3][1] = 0.24;
+  seed_set[3][2] = 100.;
 
-  printf( "nue Best-fit Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", bf_Uee2, bf_Umm2, bf_dm2, chi2);
+  for(int run=0; run<4; run++){
+    seed[0] = seed_set[run][0];
+    seed[1] = seed_set[run][1];
+    seed[2] = seed_set[run][2];
+    std::cout << "\ncoarse\t" << run+1 << "\t" << seed[0] << "\t" << seed[1] << "\t" << seed[2] << "\n";
+    bool isOK = tf.doFitCoarse( seed, bf_Uee2, bf_Umm2 , bf_dm2);
+    chi2[run] = tf.bfChi2( bf_Uee2, bf_Umm2 , bf_dm2 );
+    printf( "COARSE nue Best-fit Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", bf_Uee2, bf_Umm2, bf_dm2, chi2[run]);
+    if(bf_chi2>chi2[run]) {
+      bf_chi2 = chi2[run];
+      par_bf[0] = bf_Uee2;
+      par_bf[1] = bf_Umm2;
+      par_bf[2] = bf_dm2;
+    }
+  }  
+  printf( "FINAL COARSE nue Best-fit Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", par_bf[0], par_bf[1], par_bf[2], bf_chi2);
+
+
+
+  seed[0] = par_bf[0];
+  seed[1] = par_bf[1];
+  seed[2] = par_bf[2];
+
+
+  do{  
+    seed[2] = seed[2]/2.; 
+    std::cout << "\n FINE \t" << seed[0] << "\t" << seed[1] << "\t" << seed[2] << "\n";
+    bool isOK1 = tf.doFitFine1( seed, bf_Uee2, bf_Umm2 , bf_dm2);
+    double fine_chi2 = tf.bfChi2( bf_Uee2, bf_Umm2 , bf_dm2 );
+    printf( "FINE nue Best-fit Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", bf_Uee2, bf_Umm2, bf_dm2, fine_chi2);
+    if(bf_chi2 > fine_chi2) {
+      bf_chi2 = fine_chi2;
+      par_bf[0] = bf_Uee2;
+      par_bf[1] = bf_Umm2;
+      par_bf[2] = bf_dm2;
+    }
+  } while(seed[2]>1.0);
+  printf( "FINAL FINE1 nue Best-fit Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", par_bf[0], par_bf[1], par_bf[2], bf_chi2);
+
+/*
+  seed[0] = par_bf[0] = 0.159924;
+  seed[1] = par_bf[1] = 0.010835;
+  seed[2] = par_bf[2] = 10.756705;
+*/
+  bool isOK2 = tf.doFitFine2( par_bf, bf_Uee2, bf_Umm2 , bf_dm2 );
+  double fine_chi2 = tf.bfChi2( bf_Uee2, bf_Umm2 , bf_dm2 );
+  printf( "FINE nue Best-fit Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", bf_Uee2, bf_Umm2, bf_dm2, fine_chi2);
+  if(bf_chi2 > fine_chi2) {
+    bf_chi2 = fine_chi2;
+    par_bf[0] = bf_Uee2;
+    par_bf[1] = bf_Umm2;
+    par_bf[2] = bf_dm2;
+   }
+  printf( "FINAL FINE2 nue Best-fit Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", par_bf[0], par_bf[1], par_bf[2], bf_chi2);
 
 
 /*
