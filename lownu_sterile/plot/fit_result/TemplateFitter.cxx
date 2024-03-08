@@ -243,9 +243,88 @@ void TemplateFitter::setCovmtr( double flmx_bct[nbins+1][nbins+1], double sigmx_
 }
 
 
+double TemplateFitter::getProb(double Uee2, double Umm2, double dm2, double Pmue, double Pemu, double Pmm, double Pee, int i)
+{
+  //int i = energy_bin;
+  int iL;
+  double par[3];
+  par[0] = Uee2;
+  par[1] = Umm2;
+  par[2] = dm2;
+
+  if(i<240)                iL = (int)i/10;
+  else if(i>=240 && i<400) iL = (int) 24+(i-240)/40;
+  else                     iL = 28;
+  
+  for(int k=0; k<7; k++) {
+    ft_m[k] = fitP_m[iL][k];
+    ft_e[k] = fitP_e[iL][k];
+  }
+  
+  if(par[2]==0.){
+    Pemu = Pmue = 0.;
+    Pmm = Pee = 1.;
+  }
+  else{
+    if(par[0]==0. && par[1]==0.){
+      Pemu = Pmue = 0.;
+      Pmm = Pee = 1.;
+    }
+  
+    if(par[0]==0. || par[1]==0.){
+      Pmue = Pemu = 0.;
+  
+      if(par[0]==0.){
+        Pee = 1.;
+        double mm = 0;
+        for(int j = 0; j<1001; j++){
+          double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
+          mm  = mm  + getAvgPmm(e, par[0], par[1], par[2], ft_m);
+        }
+        Pmm  = mm/1001.0;
+      }
+  
+    if(par[1]==0.){
+      Pmm = 1.;
+      double ee = 0;
+      for(int j = 0; j<1001; j++){
+        double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
+        ee  = ee  + getAvgPee(e, par[0], par[1], par[2], ft_e);
+      }
+      Pee  = ee/1001.0;
+    }
+  }
+  
+  else{
+    double mue = 0;
+    double emu = 0;
+    double ee = 0;
+    double mm = 0;
+    
+    for(int j = 0; j<1001; j++){
+      double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
+      mue = mue + getAvgPmue(e, par[0], par[1], par[2], ft_m);
+      emu = emu + getAvgPmue(e, par[0], par[1], par[2], ft_e);
+      ee  = ee  + getAvgPee(e, par[0], par[1], par[2], ft_e);
+      mm  = mm  + getAvgPmm(e, par[0], par[1], par[2], ft_m);
+    }
+    
+    Pmue = mue/1001.0;
+    Pemu = emu/1001.0;
+    Pee  = ee/1001.0;
+    Pmm  = mm/1001.0;
+    }
+  }
+  return(0.);
+}
+
 
 void TemplateFitter::getTarget( double *par )
 {
+  CCe_tgt->Reset();
+  CCm_tgt->Reset();
+  nue_tgt->Reset();
+
   // Create a histogram "temp" from the templates
   TH1D * CC_tp_e = (TH1D*) CC_m_templates[0]->Clone();
   CC_tp_e->Reset();
@@ -268,6 +347,7 @@ void TemplateFitter::getTarget( double *par )
 
   // Add in oscillated neutrinos by taking the nu_mu CC templates and weighting by the oscillation probability
   for( int i = 10; i < nbins_Ev; ++i ) {
+
     if(i<240)                iL = (int)i/10;
     else if(i>=240 && i<400) iL = (int) 24+(i-240)/40;
     else                     iL = 28;
@@ -333,6 +413,10 @@ void TemplateFitter::getTarget( double *par )
       }
     }
 
+/*
+    double Pmue, Pemu, Pmm, Pee;
+    getProb(par[0], par[1], par[2], Pmue, Pemu, Pmm, Pee, i);
+*/
     CC_tp_me->Add(CC_nc_m_templates[i], Pmue);
     CC_tp_ee->Add(CC_e_templates[i], Pee);
 
@@ -451,7 +535,7 @@ void TemplateFitter::getTarget( double *par )
   legend_nue->Draw();
   cnue->SaveAs(Form("nue_tgt%d.png",cutNu));
 */
-
+/*
   TH1D *hOsc = new TH1D("hOsc","",nbins,0,nbins);
   TH1D *hnOsc = new TH1D("hnOsc","",nbins,0,nbins);
   for(int i=0; i<nbins; i++){
@@ -501,7 +585,7 @@ void TemplateFitter::getTarget( double *par )
   lg->AddEntry(hnOsc,"unoscillated");
   lg->Draw();
   c->SaveAs("tgt.png");
- 
+*/ 
 
 }
 
@@ -533,6 +617,7 @@ double TemplateFitter::getChi2( const double * par )
 
   // Add in oscillated neutrinos by taking the nu_mu CC templates and weighting by the oscillation probability
   for( int i = 10; i < nbins_Ev; ++i ) {
+
     if(i<240)                iL = (int)i/10;
     else if(i>=240 && i<400) iL = (int) 24+(i-240)/40;
     else                     iL = 28;
@@ -597,7 +682,10 @@ double TemplateFitter::getChi2( const double * par )
 	Pmm  = mm/1001.0;
       }
     }
-
+/*
+    double Pmue, Pemu, Pmm, Pee;
+    getProb(par[0], par[1], par[2], Pmue, Pemu, Pmm, Pee, i);
+*/
     CC_tp_me->Add(CC_nc_m_templates[i], Pmue);
     CC_tp_ee->Add(CC_e_templates[i], Pee);
 
@@ -640,7 +728,7 @@ double TemplateFitter::getChi2( const double * par )
 
   TMatrixD chi2 = diffT*invmx*diff;
 
-  std::cout << par[0] << "\t" << par[1] << "\t" << par[2] << "\t" << chi2[0][0] << "\n";
+  //std::cout << par[0] << "\t" << par[1] << "\t" << par[2] << "\t" << chi2[0][0] << "\n";
 
   return chi2[0][0];
 
@@ -695,8 +783,8 @@ bool TemplateFitter::doFitFine1( double seed[3], double &Uee2, double &Umm2, dou
 {
   // Make a Minuit fitter object
   ROOT::Math::Minimizer* fitter = ROOT::Math::Factory::CreateMinimizer("Minuit2"); 
-  fitter->SetMaxFunctionCalls(20); // maximum number of times to try to find the minimum before failing
-  fitter->SetMaxIterations(20);
+  fitter->SetMaxFunctionCalls(40); // maximum number of times to try to find the minimum before failing
+  fitter->SetMaxIterations(40);
   //fitter->SetTolerance(0.01); // You might have to play with this -- how close to the correct value do you need to be?
 
   // The variables will be normalizations of the templates, we will start the with seed values of 1.0
@@ -808,6 +896,7 @@ double TemplateFitter::bfChi2( double Uee2, double Umm2, double dm2 )
 
   // Add in oscillated neutrinos by taking the nu_mu CC templates and weighting by the oscillation probability
   for( int i = 10; i < nbins_Ev; ++i ) {
+
     if(i<240)                iL = (int)i/10;
     else if(i>=240 && i<400) iL = (int) 24+(i-240)/40;
     else                     iL = 28;
@@ -872,7 +961,10 @@ double TemplateFitter::bfChi2( double Uee2, double Umm2, double dm2 )
 	Pmm  = mm/1001.0;
       }
     }
-
+/*
+    double Pmue, Pemu, Pmm, Pee;
+    getProb(par[0], par[1], par[2], Pmue, Pemu, Pmm, Pee, i);
+*/
     CC_tp_me->Add(CC_nc_m_templates[i], Pmue);
     CC_tp_ee->Add(CC_e_templates[i], Pee);
 

@@ -141,9 +141,9 @@ int main()
 
   double seed[3], par_tgt[3], par_bf[3], par_no[3];
 
-  par_tgt[0] = 0.01;
-  par_tgt[1] = 0.05;
-  par_tgt[2] = 7.0;
+  par_tgt[0] = 0.05;
+  par_tgt[1] = 0.001;
+  par_tgt[2] = 1.5;
 
   for(int ii = 0; ii < 3; ii++) {
     par_no[ii] = 0.;
@@ -153,7 +153,7 @@ int main()
 
   tf.getTarget( par_tgt );
 
-  double bf_dm2, bf_Uee2, bf_Umm2, bf_chi2=1E9;
+  double bf_dm2, bf_Uee2, bf_Umm2, bf_chi2=1E9, chi2_LowerLimit=5E-3;
 
   double seed_set[4][3], chi2[4];
   seed_set[0][0] = 0.;
@@ -173,28 +173,36 @@ int main()
     seed[0] = seed_set[run][0];
     seed[1] = seed_set[run][1];
     seed[2] = seed_set[run][2];
-    std::cout << "\ncoarse\t" << run+1 << "\t" << seed[0] << "\t" << seed[1] << "\t" << seed[2] << "\n";
-    bool isOK = tf.doFitCoarse( seed, bf_Uee2, bf_Umm2 , bf_dm2);
-    chi2[run] = tf.bfChi2( bf_Uee2, bf_Umm2 , bf_dm2 );
-    printf( "COARSE nue Best-fit Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", bf_Uee2, bf_Umm2, bf_dm2, chi2[run]);
-    if(bf_chi2>chi2[run]) {
-      bf_chi2 = chi2[run];
+    std::cout << run+1 << "\t" << seed[0] << "\t" << seed[1] << "\t" << seed[2] << "\n";
+    bool fitCOARSE = tf.doFitCoarse( seed, bf_Uee2, bf_Umm2 , bf_dm2);
+    double c2 = tf.bfChi2( bf_Uee2, bf_Umm2 , bf_dm2 );
+    printf( "COARSE Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", bf_Uee2, bf_Umm2 , bf_dm2, c2);
+    if(bf_chi2 > c2) {
+      bf_chi2 = c2;
       par_bf[0] = bf_Uee2;
       par_bf[1] = bf_Umm2;
       par_bf[2] = bf_dm2;
     }
+    if(bf_chi2<chi2_LowerLimit) break;
   }  
-  printf( "FINAL COARSE nue Best-fit Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", par_bf[0], par_bf[1], par_bf[2], bf_chi2);
-
-
+  printf( "FINAL COARSE Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", par_bf[0], par_bf[1], par_bf[2], bf_chi2);
 
   seed[0] = par_bf[0];
   seed[1] = par_bf[1];
-  seed[2] = par_bf[2];
+  seed[2] = 0.;
 
+  if(bf_chi2>chi2_LowerLimit){
+  bool fitFine = tf.doFitFine1( par_bf, bf_Uee2, bf_Umm2 , bf_dm2);
+  double c2 = tf.bfChi2( bf_Uee2, bf_Umm2 , bf_dm2 );
+  if(bf_chi2 > c2) {
+    bf_chi2 = c2;
+    par_bf[0] = bf_Uee2;
+    par_bf[1] = bf_Umm2;
+    par_bf[2] = bf_dm2;
+  }
 
   do{  
-    seed[2] = seed[2]/2.; 
+    if(bf_chi2<chi2_LowerLimit) break;
     std::cout << "\n FINE \t" << seed[0] << "\t" << seed[1] << "\t" << seed[2] << "\n";
     bool isOK1 = tf.doFitFine1( seed, bf_Uee2, bf_Umm2 , bf_dm2);
     double fine_chi2 = tf.bfChi2( bf_Uee2, bf_Umm2 , bf_dm2 );
@@ -205,14 +213,11 @@ int main()
       par_bf[1] = bf_Umm2;
       par_bf[2] = bf_dm2;
     }
-  } while(seed[2]>1.0);
+    seed[2] = (1.0+seed[2])*2.; 
+  } while(seed[2]<200.0);
   printf( "FINAL FINE1 nue Best-fit Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", par_bf[0], par_bf[1], par_bf[2], bf_chi2);
+  }
 
-/*
-  seed[0] = par_bf[0] = 0.159924;
-  seed[1] = par_bf[1] = 0.010835;
-  seed[2] = par_bf[2] = 10.756705;
-*/
   bool isOK2 = tf.doFitFine2( par_bf, bf_Uee2, bf_Umm2 , bf_dm2 );
   double fine_chi2 = tf.bfChi2( bf_Uee2, bf_Umm2 , bf_dm2 );
   printf( "FINE nue Best-fit Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", bf_Uee2, bf_Umm2, bf_dm2, fine_chi2);

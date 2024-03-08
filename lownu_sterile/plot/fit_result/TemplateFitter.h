@@ -36,6 +36,7 @@ class TemplateFitter {
     double getAvgPee(double energy, double Uee2, double Umm2, double dm2, double ft[7]);
     double getAvgPmm(double energy, double Uee2, double Umm2, double dm2, double ft[7]);
     double getChi2(const double * par);
+    double getProb(double Uee2, double Umm2, double dm2, double Pmue, double Pemu, double Pmm, double Pee, int energy_bin);
 
     // The templates are reconstructed lepton energy, in a slice of true neutrino energy
     TH1D * CC_m_templates[nbins_Ev];
