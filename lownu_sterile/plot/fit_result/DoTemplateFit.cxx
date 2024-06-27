@@ -139,13 +139,13 @@ int main()
   tf.setEnergyBins( energy_bins );
   tf.setCovmtr( fl_bins, sig_bins );
 
-  double seed[3], par_tgt[3], par_bf[3], par_no[3];
+  double seed[4], par_tgt[4], par_bf[4], par_no[4];
+  par_tgt[0] = 0.04;
+  par_tgt[1] = 0.01;
+  par_tgt[2] = 0.1;
+  par_tgt[3] = 6.0;
 
-  par_tgt[0] = 0.05;
-  par_tgt[1] = 0.001;
-  par_tgt[2] = 1.5;
-
-  for(int ii = 0; ii < 3; ii++) {
+  for(int ii = 0; ii < 4; ii++) {
     par_no[ii] = 0.;
   }
 
@@ -153,164 +153,93 @@ int main()
 
   tf.getTarget( par_tgt );
 
-  double bf_dm2, bf_Uee2, bf_Umm2, bf_chi2=1E9, chi2_LowerLimit=5E-3;
-
-  double seed_set[4][3], chi2[4];
+  double bf_dm2, bf_Ue42, bf_Um42, bf_Ut42, bf_chi2=1E9, chi2_LowerLimit=5E-3;
+  double seed_set[4][4], chi2[4];
   seed_set[0][0] = 0.;
   seed_set[0][1] = 0.;
   seed_set[0][2] = 0.;
+  seed_set[0][3] = 0.;
   seed_set[1][0] = 0.16;
   seed_set[1][1] = 0.24;
-  seed_set[1][2] = 0.;
+  seed_set[1][2] = 0.66;
+  seed_set[1][3] = 0.;
   seed_set[2][0] = 0.;
   seed_set[2][1] = 0.;
-  seed_set[2][2] = 100.;
+  seed_set[2][2] = 0.;
+  seed_set[2][3] = 100.;
   seed_set[3][0] = 0.16;
   seed_set[3][1] = 0.24;
-  seed_set[3][2] = 100.;
+  seed_set[3][2] = 0.66;
+  seed_set[3][3] = 100.;
 
   for(int run=0; run<4; run++){
     seed[0] = seed_set[run][0];
     seed[1] = seed_set[run][1];
     seed[2] = seed_set[run][2];
-    std::cout << run+1 << "\t" << seed[0] << "\t" << seed[1] << "\t" << seed[2] << "\n";
-    bool fitCOARSE = tf.doFitCoarse( seed, bf_Uee2, bf_Umm2 , bf_dm2);
-    double c2 = tf.bfChi2( bf_Uee2, bf_Umm2 , bf_dm2 );
-    printf( "COARSE Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", bf_Uee2, bf_Umm2 , bf_dm2, c2);
+    seed[3] = seed_set[run][3];
+    std::cout << run+1 << "\t" << seed[0] << "\t" << seed[1] << "\t" << seed[2] << "\t" << seed[3] << "\n";
+    bool fitCOARSE = tf.doFitCoarse( seed, bf_Ue42, bf_Um42, bf_Ut42, bf_dm2);
+    double c2 = tf.bfChi2( bf_Ue42, bf_Um42, bf_Ut42, bf_dm2 );
+    printf( "COARSE Ue42 = %f, Um42 = %f, Ut42 = %f, dm2 = %f, chi2 = %f\n", bf_Ue42, bf_Um42, bf_Ut42, bf_dm2, c2);
     if(bf_chi2 > c2) {
       bf_chi2 = c2;
-      par_bf[0] = bf_Uee2;
-      par_bf[1] = bf_Umm2;
-      par_bf[2] = bf_dm2;
+      par_bf[0] = bf_Ue42;
+      par_bf[1] = bf_Um42;
+      par_bf[2] = bf_Ut42;
+      par_bf[3] = bf_dm2;
     }
     if(bf_chi2<chi2_LowerLimit) break;
   }  
-  printf( "FINAL COARSE Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", par_bf[0], par_bf[1], par_bf[2], bf_chi2);
+  printf( "FINAL COARSE Ue42 = %f, Um42 = %f, Ut42 = %f, dm2 = %f, chi2 = %f\n", par_bf[0], par_bf[1], par_bf[2], par_bf[3], bf_chi2);
 
   seed[0] = par_bf[0];
   seed[1] = par_bf[1];
-  seed[2] = 0.;
+  seed[2] = par_bf[2];
+  seed[3] = 0.;
 
   if(bf_chi2>chi2_LowerLimit){
-  bool fitFine = tf.doFitFine1( par_bf, bf_Uee2, bf_Umm2 , bf_dm2);
-  double c2 = tf.bfChi2( bf_Uee2, bf_Umm2 , bf_dm2 );
+  bool fitFine = tf.doFitFine1( par_bf, bf_Ue42, bf_Um42, bf_Ut42, bf_dm2);
+  double c2 = tf.bfChi2( bf_Ue42, bf_Um42, bf_Ut42, bf_dm2 );
   if(bf_chi2 > c2) {
     bf_chi2 = c2;
-    par_bf[0] = bf_Uee2;
-    par_bf[1] = bf_Umm2;
-    par_bf[2] = bf_dm2;
+      par_bf[0] = bf_Ue42;
+      par_bf[1] = bf_Um42;
+      par_bf[2] = bf_Ut42;
+      par_bf[3] = bf_dm2;
   }
 
   do{  
     if(bf_chi2<chi2_LowerLimit) break;
-    std::cout << "\n FINE \t" << seed[0] << "\t" << seed[1] << "\t" << seed[2] << "\n";
-    bool isOK1 = tf.doFitFine1( seed, bf_Uee2, bf_Umm2 , bf_dm2);
-    double fine_chi2 = tf.bfChi2( bf_Uee2, bf_Umm2 , bf_dm2 );
-    printf( "FINE nue Best-fit Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", bf_Uee2, bf_Umm2, bf_dm2, fine_chi2);
+    std::cout << "\n FINE \t" << seed[0] << "\t" << seed[1] << "\t" << seed[2] << "\t" << seed[3] << "\n";
+    bool isOK1 = tf.doFitFine1( seed, bf_Ue42, bf_Um42, bf_Ut42, bf_dm2);
+    double fine_chi2 = tf.bfChi2( bf_Ue42, bf_Um42, bf_Ut42, bf_dm2 );
+    printf( "FINE nue Best-fit Ue42 = %f, Um42 = %f, Ut42 = %f, dm2 = %f, chi2 = %f\n", bf_Ue42, bf_Um42, bf_Ut42, bf_dm2, fine_chi2);
     if(bf_chi2 > fine_chi2) {
       bf_chi2 = fine_chi2;
-      par_bf[0] = bf_Uee2;
-      par_bf[1] = bf_Umm2;
-      par_bf[2] = bf_dm2;
+      par_bf[0] = bf_Ue42;
+      par_bf[1] = bf_Um42;
+      par_bf[2] = bf_Ut42;
+      par_bf[3] = bf_dm2;
     }
-    seed[2] = (1.0+seed[2])*2.; 
-  } while(seed[2]<200.0);
-  printf( "FINAL FINE1 nue Best-fit Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", par_bf[0], par_bf[1], par_bf[2], bf_chi2);
+    seed[3] = (1.0+seed[3])*2.; 
+  } while(seed[3]<100.0);
+  printf( "FINAL FINE1 nue Best-fit Ue42 = %f, Um42 = %f, Ut42 = %f, dm2 = %f, chi2 = %f\n", par_bf[0], par_bf[1], par_bf[2], par_bf[3], bf_chi2);
   }
 
-  bool isOK2 = tf.doFitFine2( par_bf, bf_Uee2, bf_Umm2 , bf_dm2 );
-  double fine_chi2 = tf.bfChi2( bf_Uee2, bf_Umm2 , bf_dm2 );
-  printf( "FINE nue Best-fit Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", bf_Uee2, bf_Umm2, bf_dm2, fine_chi2);
+  bool isOK2 = tf.doFitFine2( par_bf, bf_Ue42, bf_Um42, bf_Ut42, bf_dm2 );
+  double fine_chi2 = tf.bfChi2( bf_Ue42, bf_Um42, bf_Ut42, bf_dm2 );
+  printf( "FINE nue Best-fit Ue42 = %f, Um42 = %f, Ut42 = %f, dm2 = %f, chi2 = %f\n", bf_Ue42, bf_Um42, bf_Ut42, bf_dm2, fine_chi2);
   if(bf_chi2 > fine_chi2) {
     bf_chi2 = fine_chi2;
-    par_bf[0] = bf_Uee2;
-    par_bf[1] = bf_Umm2;
-    par_bf[2] = bf_dm2;
+      par_bf[0] = bf_Ue42;
+      par_bf[1] = bf_Um42;
+      par_bf[2] = bf_Ut42;
+      par_bf[3] = bf_dm2;
    }
-  printf( "FINAL FINE2 nue Best-fit Uee2 = %f, Umm2 = %f, dm2 = %f, chi2 = %f\n", par_bf[0], par_bf[1], par_bf[2], bf_chi2);
+  printf( "FINAL FINE2 nue Best-fit Ue42 = %f, Um42 = %f, Ut42 = %f, dm2 = %f, chi2 = %f\n", par_bf[0], par_bf[1], par_bf[2], par_bf[3], bf_chi2);
 
+  tf.bfDraw(par_bf[0], par_bf[1], par_bf[2], par_bf[3]);
 
-/*
-  double oscpar[3], oscpar_max[3], oscpar_min[3], stepsize[3], seed[3];
-  int N = 20;
-
-  oscpar_max[0] = 1E-4; oscpar_min[0] = 1E-4;	//Uee2 range
-  oscpar_max[1] = 1E-2; oscpar_min[1] = 1E-4;	//Umm2 range
-  oscpar_max[2] = 10.0; oscpar_min[2] = 1.0;	//dm2 range
-
-  TH2D *h0 = new TH2D("h0","",N,oscpar_min[1],oscpar_max[1],N,oscpar_min[2],oscpar_max[2]);
-
-  {
-  for(int j = 1; j <= N; j++) {
-    oscpar[1] = h0->GetXaxis()->GetBinCenter(j);
-    for(int k = 1; k <= N; k++) {
-      oscpar[2] = h0->GetYaxis()->GetBinCenter(k);
-
-      oscpar[0] = oscpar_min[0];
-
-      printf("%f percent...\n", ((j-1)*N+k)*100./(N*N) );
-    
-      for(int ii = 0; ii < 3; ii++) {
-        seed[ii] = oscpar[ii]; 
-      }
-
-      tf.setPara( var, oscpar, nuCut, EvCut, seed, fitPara_m, fitPara_e );
-
-      tf.getTarget( oscpar );
-
-      double bf_dm2, bf_Uee2, bf_Umm2;
-      double par[3];
-      bool isOK = tf.doFit( bf_Uee2, bf_Umm2 , bf_dm2);
-      par[0] = bf_Uee2;
-      par[1] = bf_Umm2;
-      par[2] = bf_dm2;
-      double chi2 = tf.bfChi2( par );
-      double nochi2 = tf.noChi2( par );
-      double sen = sqrt(std::abs(nochi2 - chi2));
-      printf( "nue Best-fit Uee2 = %.2f, Umm2 = %.2f, dm2 = %.2f, chi2 = %f, noChi2 = %f, sen = %f\n", bf_Uee2, bf_Umm2, bf_dm2, chi2, nochi2, sen );
-
-      //double s2mue2 = (par[0]*par[0]) * (par[1]*par[1]);
-
-      //h1->Fill(s2mue2,oscpar[2],chi2);
-      h0->Fill(oscpar[1],oscpar[2],sen);
-    }
-    }
-
-
-    gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
-    gStyle->SetNumberContours(999);
-
-    TCanvas *c0 = new TCanvas("c0","",600,600);
-    c0->SetLogx();
-    c0->SetLogz();
-    h0->SetStats(0);
-    h0->SetMaximum(8);
-    h0->SetMinimum(0.1);
-    h0->Draw("colz");
-    h0->SetTitle(Form("Sensitivity Contour (Uee2=%f)",oscpar[0]));
-    h0->GetXaxis()->SetTitle("Umm2");
-    h0->GetYaxis()->SetTitle("dm2");
-    c0->SaveAs(Form("contour_Logx.png"));
-
-    TCanvas *c1 = new TCanvas("c1","",600,600);
-    //c0->SetLogz();
-    h0->SetStats(0);
-    h0->SetMaximum(8);
-    h0->SetMinimum(0.1);
-    h0->Draw("colz");
-    h0->SetTitle(Form("Sensitivity Contour (Uee2=%f)",oscpar[0]));
-    h0->GetXaxis()->SetTitle("Umm2");
-    h0->GetYaxis()->SetTitle("dm2");
-    c1->SaveAs(Form("contour.png"));
-
-    gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
-    gStyle->SetNumberContours(999);
-
-    TFile* out = new TFile("contour.root","RECREATE");
-    h0->Write();
-    out->Close();
-  }
-*/
 }
 
 

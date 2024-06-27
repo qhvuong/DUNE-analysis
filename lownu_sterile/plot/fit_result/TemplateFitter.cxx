@@ -75,35 +75,38 @@ void TemplateFitter::setPara( char var[20], int nuCut, double fitPara_m[29][7], 
   }
 }
 
-
-double TemplateFitter::getPmue( double energy, double Uee2, double Umm2, double dm2, double L )
+/*
+double TemplateFitter::getPme( double energy, double Ue42, double Um42, double dm2, double L )
 {
   double del = 1.27*L*dm2/energy;
-  double s2mue2 = 4 * Uee2 * Umm2;
-  double prob = s2mue2  * pow(sin(del),2);
+  double s2me2 = 4 * Ue42 * Um42;
+  double prob = s2me2  * pow(sin(del),2);
   return prob;
 }
-double TemplateFitter::getPee( double energy, double Uee2, double Umm2, double dm2, double L )
+double TemplateFitter::getPee( double energy, double Ue42, double Um42, double dm2, double L )
 {
   double del = 1.27*L*dm2/energy;
-  double s2ee2 = 4 * Uee2 * (1 - Uee2);
+  double s2ee2 = 4 * Ue42 * (1 - Ue42);
   double prob = 1.0 - s2ee2  * pow(sin(del),2);
   return prob;
 }
-double TemplateFitter::getPmm( double energy, double Uee2, double Umm2, double dm2, double L )
+double TemplateFitter::getPmm( double energy, double Ue42, double Um42, double dm2, double L )
 {
   double del = 1.27*L*dm2/energy;
-  double s2mm2 = 4 * Umm2 * (1 - Umm2);
+  double s2mm2 = 4 * Um42 * (1 - Um42);
   double prob = 1.0 - s2mm2  * pow(sin(del),2);
   return prob;
 }
+*/
 
-double TemplateFitter::getAvgPmue( double energy, double Uee2, double Umm2, double dm2, double ft[7] )
+double TemplateFitter::getAvgPme( double energy, double Ue42, double Um42, double Ut42, double dm2, double ft[7] )
 {
+  if(dm2==0.) return 0.;
+  else{
   double k = 1.27*dm2/energy;
   double L0=0.34, L1=0.35, L2=0.55, L3=0.6, L;
   double a=ft[0], b=ft[1], c=ft[2], d=ft[3], avg1=ft[4], avg2=ft[5], norm=ft[6];
-  double A = 4 * Uee2 * Umm2;
+  double A = 4 * Ue42 * Um42;
 
   L=L1;
   double prob_u = - avg1 * A * ( sin(2*k*L) - 2*k*L ) / (4*k);
@@ -137,15 +140,17 @@ double TemplateFitter::getAvgPmue( double energy, double Uee2, double Umm2, doub
 
   double prob = norm*(prob1 + prob2 + prob3);
 
-  return prob;
+  return prob;}
 }
 
-double TemplateFitter::getAvgPee( double energy, double Uee2, double Umm2, double dm2, double ft[7] )
+double TemplateFitter::getAvgPee( double energy, double Ue42, double Um42, double Ut42, double dm2, double ft[7] )
 {
+  if(dm2==0.) return 1.;
+  else{
   double k = 1.27*dm2/energy;
   double L0=0.34, L1=0.35, L2=0.55, L3=0.6, L;
   double a=ft[0], b=ft[1], c=ft[2], d=ft[3], avg1=ft[4], avg2=ft[5], norm=ft[6];
-  double A = 4 * Uee2 * (1.-Uee2);
+  double A = 4 * Ue42 * (1.-Ue42);
 
   L=L1;
   double prob_u = avg1 * ( A*sin(2*k*L) - 2*(A-2)*k*L ) / (4*k);
@@ -179,15 +184,17 @@ double TemplateFitter::getAvgPee( double energy, double Uee2, double Umm2, doubl
 
   double prob = norm*(prob1 + prob2 + prob3);
 
-  return prob;
+  return prob;}
 }
 
-double TemplateFitter::getAvgPmm( double energy, double Uee2, double Umm2, double dm2, double ft[7] )
+double TemplateFitter::getAvgPmm( double energy, double Ue42, double Um42, double Ut42, double dm2, double ft[7] )
 {
+  if(dm2==0.) return 1.;
+  else{
   double k = 1.27*dm2/energy;
   double L0=0.34, L1=0.35, L2=0.55, L3=0.6, L;
   double a=ft[0], b=ft[1], c=ft[2], d=ft[3], avg1=ft[4], avg2=ft[5], norm=ft[6];
-  double A = 4 * Umm2 * (1.-Umm2);
+  double A = 4 * Um42 * (1.-Um42);
 
   L=L1;
   double prob_u = avg1 * ( A*sin(2*k*L) - 2*(A-2)*k*L ) / (4*k);
@@ -221,7 +228,51 @@ double TemplateFitter::getAvgPmm( double energy, double Uee2, double Umm2, doubl
 
   double prob = norm*(prob1 + prob2 + prob3);
 
-  return prob;
+  return prob;}
+}
+
+double TemplateFitter::getAvgPmt( double energy, double Ue42, double Um42, double Ut42, double dm2, double ft[7] )
+{
+  if(dm2==0.) return 0.;
+  else{
+  double k = 1.27*dm2/energy;
+  double L0=0.34, L1=0.35, L2=0.55, L3=0.6, L;
+  double a=ft[0], b=ft[1], c=ft[2], d=ft[3], avg1=ft[4], avg2=ft[5], norm=ft[6];
+  double A = 4 * Ut42 * Um42;
+
+  L=L1;
+  double prob_u = - avg1 * A * ( sin(2*k*L) - 2*k*L ) / (4*k);
+  L=L0;
+  double prob_l = - avg1 * A * ( sin(2*k*L) - 2*k*L ) / (4*k);
+
+  double prob1 = prob_u - prob_l;
+
+
+  L=L2;
+  double term1_u = 2*pow(k,4) * L * ( 12*a + 6*b*L + 4*c*L*L + 3*d*L*L*L );
+  double term2_u = 6*k*sin(2*k*L) * ( 2*a*k*k + 2*b*k*k*L + 2*c*k*k*L*L - c + 2*d*k*k*L*L*L - 3*d*L );
+  double term3_u = 3*cos(2*k*L) * ( 2*k*k*(b+2*c*L) + d*(6*k*k*L*L-3) );
+  L=L1;
+  double term1_l = 2*pow(k,4) * L * ( 12*a + 6*b*L + 4*c*L*L + 3*d*L*L*L );
+  double term2_l = 6*k*sin(2*k*L) * ( 2*a*k*k + 2*b*k*k*L + 2*c*k*k*L*L - c + 2*d*k*k*L*L*L - 3*d*L );
+  double term3_l = 3*cos(2*k*L) * ( 2*k*k*(b+2*c*L) + d*(6*k*k*L*L-3) );
+
+  prob_u = A/(48*pow(k,4)) * (term1_u - term2_u - term3_u);
+  prob_l = A/(48*pow(k,4)) * (term1_l - term2_l - term3_l);
+
+  double prob2 = prob_u - prob_l;
+
+  
+  L=L3;
+  prob_u = - avg2 * A * ( sin(2*k*L) - 2*k*L ) / (4*k);
+  L=L2;
+  prob_l = - avg2 * A * ( sin(2*k*L) - 2*k*L ) / (4*k);
+
+  double prob3 = prob_u - prob_l;
+
+  double prob = norm*(prob1 + prob2 + prob3);
+
+  return prob;}
 }
 
 
@@ -243,87 +294,13 @@ void TemplateFitter::setCovmtr( double flmx_bct[nbins+1][nbins+1], double sigmx_
 }
 
 
-double TemplateFitter::getProb(double Uee2, double Umm2, double dm2, double Pmue, double Pemu, double Pmm, double Pee, int i)
-{
-  //int i = energy_bin;
-  int iL;
-  double par[3];
-  par[0] = Uee2;
-  par[1] = Umm2;
-  par[2] = dm2;
-
-  if(i<240)                iL = (int)i/10;
-  else if(i>=240 && i<400) iL = (int) 24+(i-240)/40;
-  else                     iL = 28;
-  
-  for(int k=0; k<7; k++) {
-    ft_m[k] = fitP_m[iL][k];
-    ft_e[k] = fitP_e[iL][k];
-  }
-  
-  if(par[2]==0.){
-    Pemu = Pmue = 0.;
-    Pmm = Pee = 1.;
-  }
-  else{
-    if(par[0]==0. && par[1]==0.){
-      Pemu = Pmue = 0.;
-      Pmm = Pee = 1.;
-    }
-  
-    if(par[0]==0. || par[1]==0.){
-      Pmue = Pemu = 0.;
-  
-      if(par[0]==0.){
-        Pee = 1.;
-        double mm = 0;
-        for(int j = 0; j<1001; j++){
-          double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
-          mm  = mm  + getAvgPmm(e, par[0], par[1], par[2], ft_m);
-        }
-        Pmm  = mm/1001.0;
-      }
-  
-    if(par[1]==0.){
-      Pmm = 1.;
-      double ee = 0;
-      for(int j = 0; j<1001; j++){
-        double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
-        ee  = ee  + getAvgPee(e, par[0], par[1], par[2], ft_e);
-      }
-      Pee  = ee/1001.0;
-    }
-  }
-  
-  else{
-    double mue = 0;
-    double emu = 0;
-    double ee = 0;
-    double mm = 0;
-    
-    for(int j = 0; j<1001; j++){
-      double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
-      mue = mue + getAvgPmue(e, par[0], par[1], par[2], ft_m);
-      emu = emu + getAvgPmue(e, par[0], par[1], par[2], ft_e);
-      ee  = ee  + getAvgPee(e, par[0], par[1], par[2], ft_e);
-      mm  = mm  + getAvgPmm(e, par[0], par[1], par[2], ft_m);
-    }
-    
-    Pmue = mue/1001.0;
-    Pemu = emu/1001.0;
-    Pee  = ee/1001.0;
-    Pmm  = mm/1001.0;
-    }
-  }
-  return(0.);
-}
-
-
 void TemplateFitter::getTarget( double *par )
 {
   CCe_tgt->Reset();
   CCm_tgt->Reset();
   nue_tgt->Reset();
+
+  std::cout << par[0] << "\t" << par[1] << "\t" << par[2] << "\t" << par[3] << "\n";
 
   // Create a histogram "temp" from the templates
   TH1D * CC_tp_e = (TH1D*) CC_m_templates[0]->Clone();
@@ -357,76 +334,50 @@ void TemplateFitter::getTarget( double *par )
     ft_e[k] = fitP_e[iL][k];
     }
 
-    double Pmue, Pemu, Pmm, Pee;
-    if(par[2]==0.){
-    Pemu = Pmue = 0.;
-    Pmm = Pee = 1.;
+    double Pme, Pem, Pmm, Pee, Pmt;
+    double me = 0;
+    double em = 0;
+    double ee = 0;
+    double mm = 0;
+    double mt = 0;
+    
+    for(int j = 0; j<1001; j++){
+      double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
+      me = me + getAvgPme(e, par[0], par[1], par[2], par[3], ft_m);
+      mt = mt + getAvgPmt(e, par[0], par[1], par[2], par[3], ft_m);
+      em = em + getAvgPme(e, par[0], par[1], par[2], par[3], ft_e);
+      ee = ee + getAvgPee(e, par[0], par[1], par[2], par[3], ft_e);
+      mm = mm + getAvgPmm(e, par[0], par[1], par[2], par[3], ft_m);
     }
-    else{
-      if(par[0]==0. && par[1]==0.){
-	Pemu = Pmue = 0.;
-	Pmm = Pee = 1.;
-      }
+    
+    Pme = me/1001.0;
+    Pem = em/1001.0;
+    Pee  = ee/1001.0;
+    Pmm  = mm/1001.0;
+    Pmt  = mt/1001.0;
 
-      if(par[0]==0. || par[1]==0.){
-        Pmue = Pemu = 0.;
+    std::cout << Pmm << "\t" << Pmt << "\n";
 
-        if(par[0]==0.){
-        Pee = 1.;
-	double mm = 0;
-	for(int j = 0; j<1001; j++){
-	  double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
-	  mm  = mm  + getAvgPmm(e, par[0], par[1], par[2], ft_m);
-	}
-	Pmm  = mm/1001.0;
-        }
-        
-        if(par[1]==0.){
-        Pmm = 1.;
-	double ee = 0;
-	for(int j = 0; j<1001; j++){
-	  double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
-	  ee  = ee  + getAvgPee(e, par[0], par[1], par[2], ft_e);
-	}
-	Pee  = ee/1001.0;
-        }
-      }
-
-      else{
-	double mue = 0;
-	double emu = 0;
-	double ee = 0;
-	double mm = 0;
-	
-	for(int j = 0; j<1001; j++){
-	  double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
-	  mue = mue + getAvgPmue(e, par[0], par[1], par[2], ft_m);
-	  emu = emu + getAvgPmue(e, par[0], par[1], par[2], ft_e);
-	  ee  = ee  + getAvgPee(e, par[0], par[1], par[2], ft_e);
-	  mm  = mm  + getAvgPmm(e, par[0], par[1], par[2], ft_m);
-	}
-	
-	Pmue = mue/1001.0;
-	Pemu = emu/1001.0;
-	Pee  = ee/1001.0;
-	Pmm  = mm/1001.0;
-      }
-    }
-
-/*
-    double Pmue, Pemu, Pmm, Pee;
-    getProb(par[0], par[1], par[2], Pmue, Pemu, Pmm, Pee, i);
-*/
-    CC_tp_me->Add(CC_nc_m_templates[i], Pmue);
+    CC_tp_me->Add(CC_nc_m_templates[i], Pme);
     CC_tp_ee->Add(CC_e_templates[i], Pee);
 
-    CC_tp_em->Add(CC_e_templates[i], Pemu);
+    CC_tp_em->Add(CC_e_templates[i], Pem);
     CC_tp_mm->Add(CC_m_templates[i], Pmm);
 
-    nue_tp_me->Add(nue_w_m_templates[i], Pmue);
-    nue_tp_mm->Add(nue_m_templates[i], Pmm);
-    nue_tp_em->Add(nue_w_e_templates[i], Pemu);
+    nue_tp_me->Add(nue_w_m_templates[i], Pme);
+    nue_tp_mm->Add(nue_m_templates[i], (Pmm+Pmt));
+    //nue_tp_mt->Add(nue_m_templates[i], Pmt);
+    nue_tp_em->Add(nue_w_e_templates[i], Pem);
     nue_tp_ee->Add(nue_e_templates[i], Pee);
+
+
+  }
+  
+  for(int i=0; i<nbins_CC; i++){
+    if(i>=44) {
+      CC_tp_mm->SetBinContent(i+1, 0.);
+      CC_tp_em->SetBinContent(i+1, 0.);
+    }
   }
 
   // Now we have nue temp = mu-->e (no reco cut) + e-->e (no reco cut)
@@ -436,6 +387,7 @@ void TemplateFitter::getTarget( double *par )
   nue_tp_os->Add(nue_tp_me);    nue_tp_os->Add(nue_tp_em);
   nue_tp_unos->Add(nue_tp_ee);  nue_tp_unos->Add(nue_tp_mm);
   nue_tp->Add(nue_tp_os);       nue_tp->Add(nue_tp_unos);
+    
 
   CCe_tgt->Add(CC_tp_e);
   CCm_tgt->Add(CC_tp_m);
@@ -535,7 +487,7 @@ void TemplateFitter::getTarget( double *par )
   legend_nue->Draw();
   cnue->SaveAs(Form("nue_tgt%d.png",cutNu));
 */
-/*
+
   TH1D *hOsc = new TH1D("hOsc","",nbins,0,nbins);
   TH1D *hnOsc = new TH1D("hnOsc","",nbins,0,nbins);
   for(int i=0; i<nbins; i++){
@@ -585,7 +537,7 @@ void TemplateFitter::getTarget( double *par )
   lg->AddEntry(hnOsc,"unoscillated");
   lg->Draw();
   c->SaveAs("tgt.png");
-*/ 
+ 
 
 }
 
@@ -627,77 +579,47 @@ double TemplateFitter::getChi2( const double * par )
     ft_e[k] = fitP_e[iL][k];
     }
 
-    double Pmue, Pemu, Pmm, Pee;
-    if(par[2]==0.){
-    Pemu = Pmue = 0.;
-    Pmm = Pee = 1.;
+    double Pme, Pem, Pmm, Pee, Pmt;
+    double me = 0;
+    double em = 0;
+    double ee = 0;
+    double mm = 0;
+    double mt = 0;
+    
+    for(int j = 0; j<1001; j++){
+      double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
+      me = me + getAvgPme(e, par[0], par[1], par[2], par[3], ft_m);
+      mt = mt + getAvgPmt(e, par[0], par[1], par[2], par[3], ft_m);
+      em = em + getAvgPme(e, par[0], par[1], par[2], par[3], ft_e);
+      ee = ee + getAvgPee(e, par[0], par[1], par[2], par[3], ft_e);
+      mm = mm + getAvgPmm(e, par[0], par[1], par[2], par[3], ft_m);
     }
-    else{
-      if(par[0]==0. && par[1]==0.){
-	Pemu = Pmue = 0.;
-	Pmm = Pee = 1.;
-      }
+    
+    Pme = me/1001.0;
+    Pem = em/1001.0;
+    Pee  = ee/1001.0;
+    Pmm  = mm/1001.0;
+    Pmt  = mt/1001.0;
 
-      if(par[0]==0. || par[1]==0.){
-        Pmue = Pemu = 0.;
-
-        if(par[0]==0.){
-        Pee = 1.;
-	double mm = 0;
-	for(int j = 0; j<1001; j++){
-	  double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
-	  mm  = mm  + getAvgPmm(e, par[0], par[1], par[2], ft_m);
-	}
-	Pmm  = mm/1001.0;
-        }
-        
-        if(par[1]==0.){
-        Pmm = 1.;
-	double ee = 0;
-	for(int j = 0; j<1001; j++){
-	  double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
-	  ee  = ee  + getAvgPee(e, par[0], par[1], par[2], ft_e);
-	}
-	Pee  = ee/1001.0;
-        }
-      }
-
-      else{
-	double mue = 0;
-	double emu = 0;
-	double ee = 0;
-	double mm = 0;
-	
-	for(int j = 0; j<1001; j++){
-	  double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
-	  mue = mue + getAvgPmue(e, par[0], par[1], par[2], ft_m);
-	  emu = emu + getAvgPmue(e, par[0], par[1], par[2], ft_e);
-	  ee  = ee  + getAvgPee(e, par[0], par[1], par[2], ft_e);
-	  mm  = mm  + getAvgPmm(e, par[0], par[1], par[2], ft_m);
-	}
-	
-	Pmue = mue/1001.0;
-	Pemu = emu/1001.0;
-	Pee  = ee/1001.0;
-	Pmm  = mm/1001.0;
-      }
-    }
-/*
-    double Pmue, Pemu, Pmm, Pee;
-    getProb(par[0], par[1], par[2], Pmue, Pemu, Pmm, Pee, i);
-*/
-    CC_tp_me->Add(CC_nc_m_templates[i], Pmue);
+    CC_tp_me->Add(CC_nc_m_templates[i], Pme);
     CC_tp_ee->Add(CC_e_templates[i], Pee);
 
-    CC_tp_em->Add(CC_e_templates[i], Pemu);
+    CC_tp_em->Add(CC_e_templates[i], Pem);
     CC_tp_mm->Add(CC_m_templates[i], Pmm);
 
-    nue_tp_me->Add(nue_w_m_templates[i], Pmue);
-    nue_tp_mm->Add(nue_m_templates[i], Pmm);
-    nue_tp_em->Add(nue_w_e_templates[i], Pemu);
+    nue_tp_me->Add(nue_w_m_templates[i], Pme);
+    nue_tp_mm->Add(nue_m_templates[i], Pmm + Pmt);
+    //nue_tp_mt->Add(nue_m_templates[i], Pmt);
+    nue_tp_em->Add(nue_w_e_templates[i], Pem);
     nue_tp_ee->Add(nue_e_templates[i], Pee);
   }
 
+  for(int i=0; i<nbins_CC; i++){
+    if(i>=44) {
+      CC_tp_mm->SetBinContent(i+1, 0.);
+      CC_tp_em->SetBinContent(i+1, 0.);
+    }
+  }
 
   // Now we have nue temp = mu-->e (no reco cut) + e-->e (no reco cut)
   CC_tp_e->Add(CC_tp_me); CC_tp_e->Add(CC_tp_ee);
@@ -737,26 +659,28 @@ double TemplateFitter::getChi2( const double * par )
 
 
 
-bool TemplateFitter::doFitCoarse( double seed[3], double &Uee2, double &Umm2, double &dm2 )
+bool TemplateFitter::doFitCoarse( double seed[4], double &Ue42, double &Um42, double &Ut42, double &dm2 )
 {
   // Make a Minuit fitter object
   ROOT::Math::Minimizer* fitter = ROOT::Math::Factory::CreateMinimizer("Minuit2"); 
-  fitter->SetMaxFunctionCalls(20); // maximum number of times to try to find the minimum before failing
-  fitter->SetMaxIterations(20);
+  fitter->SetMaxFunctionCalls(100); // maximum number of times to try to find the minimum before failing
+  fitter->SetMaxIterations(100);
   //fitter->SetTolerance(1.0); // You might have to play with this -- how close to the correct value do you need to be?
 
   // The variables will be normalizations of the templates, we will start the with seed values of 1.0
   // fourth argument is step size, i.e. how much to change the normalization by at each step
-  fitter->SetVariable( 0, "Uee2", seed[0], 0.1 );
-  fitter->SetVariable( 1, "Umm2", seed[1], 0.1 );
-  fitter->SetVariable( 2, "dm2",  seed[2], 10.0 );
+  fitter->SetVariable( 0, "Ue42", seed[0], 0.01 );
+  fitter->SetVariable( 1, "Um42", seed[1], 0.01 );
+  fitter->SetVariable( 2, "Ut42", seed[2], 0.01 );
+  fitter->SetVariable( 3, "dm2",  seed[3], 1.0 );
   fitter->SetVariableLimits(0, 0., 0.16);
   fitter->SetVariableLimits(1, 0., 0.24);
-  fitter->SetVariableLowerLimit(2, 0.0);
+  fitter->SetVariableLimits(2, 0., 0.66);
+  fitter->SetVariableLowerLimit(3, 1E-3);
 
   // 3 free parameters = theta, dm2
-  ROOT::Math::Functor lf( this, &TemplateFitter::getChi2, 3 );
-  ROOT::Math::Functor functor( lf, 3 );
+  ROOT::Math::Functor lf( this, &TemplateFitter::getChi2, 4 );
+  ROOT::Math::Functor functor( lf, 4 );
   fitter->SetFunction( functor );
 
   // Go!
@@ -770,35 +694,38 @@ bool TemplateFitter::doFitCoarse( double seed[3], double &Uee2, double &Umm2, do
 */
 
   const double *bestfit = fitter->X();
-  Uee2 = bestfit[0];
-  Umm2 = bestfit[1];
-  dm2 = bestfit[2];
+  Ue42 = bestfit[0];
+  Um42 = bestfit[1];
+  Ut42 = bestfit[2];
+  dm2 = bestfit[3];
   
   double chi2 = fitter->MinValue();
   return true;
 
 }
 
-bool TemplateFitter::doFitFine1( double seed[3], double &Uee2, double &Umm2, double &dm2 )
+bool TemplateFitter::doFitFine1( double seed[4], double &Ue42, double &Um42, double &Ut42, double &dm2 )
 {
   // Make a Minuit fitter object
   ROOT::Math::Minimizer* fitter = ROOT::Math::Factory::CreateMinimizer("Minuit2"); 
-  fitter->SetMaxFunctionCalls(40); // maximum number of times to try to find the minimum before failing
-  fitter->SetMaxIterations(40);
+  fitter->SetMaxFunctionCalls(1000); // maximum number of times to try to find the minimum before failing
+  fitter->SetMaxIterations(1000);
   //fitter->SetTolerance(0.01); // You might have to play with this -- how close to the correct value do you need to be?
 
   // The variables will be normalizations of the templates, we will start the with seed values of 1.0
   // fourth argument is step size, i.e. how much to change the normalization by at each step
-  fitter->SetVariable( 0, "Uee2", seed[0], 0.01 );
-  fitter->SetVariable( 1, "Umm2", seed[1], 0.01 );
-  fitter->SetVariable( 2, "dm2",  seed[2], 1.0 );
+  fitter->SetVariable( 0, "Ue42", seed[0], 0.001 );
+  fitter->SetVariable( 1, "Um42", seed[1], 0.001 );
+  fitter->SetVariable( 2, "Ut42", seed[2], 0.001 );
+  fitter->SetVariable( 3, "dm2",  seed[3], 0.1 );
   fitter->SetVariableLimits(0, 0., 0.16);
   fitter->SetVariableLimits(1, 0., 0.24);
-  fitter->SetVariableLowerLimit(2, 0.0);
+  fitter->SetVariableLimits(2, 0., 0.66);
+  fitter->SetVariableLowerLimit(3, 1E-3);
 
   // 3 free parameters = theta, dm2
-  ROOT::Math::Functor lf( this, &TemplateFitter::getChi2, 3 );
-  ROOT::Math::Functor functor( lf, 3 );
+  ROOT::Math::Functor lf( this, &TemplateFitter::getChi2, 4 );
+  ROOT::Math::Functor functor( lf, 4 );
   fitter->SetFunction( functor );
 
   // Go!
@@ -812,35 +739,38 @@ bool TemplateFitter::doFitFine1( double seed[3], double &Uee2, double &Umm2, dou
 */
 
   const double *bestfit = fitter->X();
-  Uee2 = bestfit[0];
-  Umm2 = bestfit[1];
-  dm2 = bestfit[2];
+  Ue42 = bestfit[0];
+  Um42 = bestfit[1];
+  Ut42 = bestfit[2];
+  dm2 = bestfit[3];
   
   double chi2 = fitter->MinValue();
   return true;
 
 }
 
-bool TemplateFitter::doFitFine2( double seed[3], double &Uee2, double &Umm2, double &dm2 )
+bool TemplateFitter::doFitFine2( double seed[4], double &Ue42, double &Um42, double &Ut42, double &dm2 )
 {
   // Make a Minuit fitter object
   ROOT::Math::Minimizer* fitter = ROOT::Math::Factory::CreateMinimizer("Minuit2"); 
-  fitter->SetMaxFunctionCalls(10000); // maximum number of times to try to find the minimum before failing
-  fitter->SetMaxIterations(10000);
-  fitter->SetTolerance(0.01); // You might have to play with this -- how close to the correct value do you need to be?
+  fitter->SetMaxFunctionCalls(1000000); // maximum number of times to try to find the minimum before failing
+  fitter->SetMaxIterations(1000000);
+  //fitter->SetTolerance(0.01); // You might have to play with this -- how close to the correct value do you need to be?
 
   // The variables will be normalizations of the templates, we will start the with seed values of 1.0
   // fourth argument is step size, i.e. how much to change the normalization by at each step
-  fitter->SetVariable( 0, "Uee2", seed[0], 0.01 );
-  fitter->SetVariable( 1, "Umm2", seed[1], 0.01 );
-  fitter->SetVariable( 2, "dm2",  seed[2], 0.1 );
+  fitter->SetVariable( 0, "Ue42", seed[0], 0.0001 );
+  fitter->SetVariable( 1, "Um42", seed[1], 0.0001 );
+  fitter->SetVariable( 2, "Ut42", seed[2], 0.0001 );
+  fitter->SetVariable( 3, "dm2",  seed[3], 0.001 );
   fitter->SetVariableLimits(0, 0., 0.16);
   fitter->SetVariableLimits(1, 0., 0.24);
-  fitter->SetVariableLowerLimit(2, 0.0);
+  fitter->SetVariableLimits(2, 0., 0.66);
+  fitter->SetVariableLowerLimit(3, 1E-3);
 
   // 3 free parameters = theta, dm2
-  ROOT::Math::Functor lf( this, &TemplateFitter::getChi2, 3 );
-  ROOT::Math::Functor functor( lf, 3 );
+  ROOT::Math::Functor lf( this, &TemplateFitter::getChi2, 4 );
+  ROOT::Math::Functor functor( lf, 4 );
   fitter->SetFunction( functor );
 
   // Go!
@@ -854,9 +784,10 @@ bool TemplateFitter::doFitFine2( double seed[3], double &Uee2, double &Umm2, dou
 */
 
   const double *bestfit = fitter->X();
-  Uee2 = bestfit[0];
-  Umm2 = bestfit[1];
-  dm2 = bestfit[2];
+  Ue42 = bestfit[0];
+  Um42 = bestfit[1];
+  Ut42 = bestfit[2];
+  dm2 = bestfit[3];
   
   double chi2 = fitter->MinValue();
   return true;
@@ -866,12 +797,13 @@ bool TemplateFitter::doFitFine2( double seed[3], double &Uee2, double &Umm2, dou
 
 
 
-double TemplateFitter::bfChi2( double Uee2, double Umm2, double dm2 )
+double TemplateFitter::bfChi2( double Ue42, double Um42, double Ut42, double dm2 )
 {
-  double par[3];
-  par[0] = Uee2;
-  par[1] = Umm2;
-  par[2] = dm2;
+  double par[4];
+  par[0] = Ue42;
+  par[1] = Um42;
+  par[2] = Ut42;
+  par[3] = dm2;
 
   // Create a histogram "temp" from the templates
   // Start with the intrinsic nu_e CC template, which doesn't change with oscillations
@@ -906,75 +838,46 @@ double TemplateFitter::bfChi2( double Uee2, double Umm2, double dm2 )
     ft_e[k] = fitP_e[iL][k];
     }
 
-    double Pmue, Pemu, Pmm, Pee;
-    if(par[2]==0.){
-    Pemu = Pmue = 0.;
-    Pmm = Pee = 1.;
+    double Pme, Pem, Pmm, Pee, Pmt;
+    double me = 0;
+    double em = 0;
+    double ee = 0;
+    double mm = 0;
+    double mt = 0;
+    
+    for(int j = 0; j<1001; j++){
+      double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
+      me = me + getAvgPme(e, par[0], par[1], par[2], par[3], ft_m);
+      mt = mt + getAvgPmt(e, par[0], par[1], par[2], par[3], ft_m);
+      em = em + getAvgPme(e, par[0], par[1], par[2], par[3], ft_e);
+      ee = ee + getAvgPee(e, par[0], par[1], par[2], par[3], ft_e);
+      mm = mm + getAvgPmm(e, par[0], par[1], par[2], par[3], ft_m);
     }
-    else{
-      if(par[0]==0. && par[1]==0.){
-	Pemu = Pmue = 0.;
-	Pmm = Pee = 1.;
-      }
+    
+    Pme = me/1001.0;
+    Pem = em/1001.0;
+    Pee  = ee/1001.0;
+    Pmm  = mm/1001.0;
+    Pmt  = mt/1001.0;
 
-      if(par[0]==0. || par[1]==0.){
-        Pmue = Pemu = 0.;
-
-        if(par[0]==0.){
-        Pee = 1.;
-	double mm = 0;
-	for(int j = 0; j<1001; j++){
-	  double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
-	  mm  = mm  + getAvgPmm(e, par[0], par[1], par[2], ft_m);
-	}
-	Pmm  = mm/1001.0;
-        }
-        
-        if(par[1]==0.){
-        Pmm = 1.;
-	double ee = 0;
-	for(int j = 0; j<1001; j++){
-	  double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
-	  ee  = ee  + getAvgPee(e, par[0], par[1], par[2], ft_e);
-	}
-	Pee  = ee/1001.0;
-        }
-      }
-
-      else{
-	double mue = 0;
-	double emu = 0;
-	double ee = 0;
-	double mm = 0;
-	
-	for(int j = 0; j<1001; j++){
-	  double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
-	  mue = mue + getAvgPmue(e, par[0], par[1], par[2], ft_m);
-	  emu = emu + getAvgPmue(e, par[0], par[1], par[2], ft_e);
-	  ee  = ee  + getAvgPee(e, par[0], par[1], par[2], ft_e);
-	  mm  = mm  + getAvgPmm(e, par[0], par[1], par[2], ft_m);
-	}
-	
-	Pmue = mue/1001.0;
-	Pemu = emu/1001.0;
-	Pee  = ee/1001.0;
-	Pmm  = mm/1001.0;
-      }
-    }
-/*
-    double Pmue, Pemu, Pmm, Pee;
-    getProb(par[0], par[1], par[2], Pmue, Pemu, Pmm, Pee, i);
-*/
-    CC_tp_me->Add(CC_nc_m_templates[i], Pmue);
+    CC_tp_me->Add(CC_nc_m_templates[i], Pme);
     CC_tp_ee->Add(CC_e_templates[i], Pee);
 
-    CC_tp_em->Add(CC_e_templates[i], Pemu);
+    CC_tp_em->Add(CC_e_templates[i], Pem);
     CC_tp_mm->Add(CC_m_templates[i], Pmm);
 
-    nue_tp_me->Add(nue_w_m_templates[i], Pmue);
-    nue_tp_mm->Add(nue_m_templates[i], Pmm);
-    nue_tp_em->Add(nue_w_e_templates[i], Pemu);
+    nue_tp_me->Add(nue_w_m_templates[i], Pme);
+    nue_tp_mm->Add(nue_m_templates[i], Pmm + Pmt);
+    //nue_tp_mt->Add(nue_m_templates[i], Pmt);
+    nue_tp_em->Add(nue_w_e_templates[i], Pem);
     nue_tp_ee->Add(nue_e_templates[i], Pee);
+  }
+  
+  for(int i=0; i<nbins_CC; i++){
+    if(i>=44) {
+      CC_tp_mm->SetBinContent(i+1, 0.);
+      CC_tp_em->SetBinContent(i+1, 0.);
+    }
   }
 
   // Now we have nue temp = mu-->e (no reco cut) + e-->e (no reco cut)
@@ -1039,7 +942,8 @@ double TemplateFitter::bfChi2( double Uee2, double Umm2, double dm2 )
   legend_nue->AddEntry(nue_tp_unos,"unoscillated #nu_{e}#rightarrow#nu_{e} & #nu_{#mu}->#nu_{#mu}");
   legend_nue->Draw();
   cnue->SaveAs(Form("fit_nue%d.png",cutNu));
-
+*/
+/*
   TH1D *hOsc = new TH1D("hOsc","",nbins,0,nbins);
   TH1D *hnOsc = new TH1D("hnOsc","",nbins,0,nbins);
   for(int i=0; i<nbins; i++){
@@ -1114,3 +1018,201 @@ double TemplateFitter::bfChi2( double Uee2, double Umm2, double dm2 )
   return chi2[0][0];
 }
 
+void TemplateFitter::bfDraw( double Ue42, double Um42, double Ut42, double dm2 )
+{
+  double par[4];
+  par[0] = Ue42;
+  par[1] = Um42;
+  par[2] = Ut42;
+  par[3] = dm2;
+
+  // Create a histogram "temp" from the templates
+  // Start with the intrinsic nu_e CC template, which doesn't change with oscillations
+  TH1D * CC_tp_e = (TH1D*) CC_m_templates[0]->Clone();
+  CC_tp_e->Reset();
+  TH1D * CC_tp_me = (TH1D*) CC_tp_e->Clone();
+  TH1D * CC_tp_ee = (TH1D*) CC_tp_e->Clone();
+  TH1D * CC_tp_m  = (TH1D*) CC_tp_e->Clone();
+  TH1D * CC_tp_em = (TH1D*) CC_tp_e->Clone();
+  TH1D * CC_tp_mm = (TH1D*) CC_tp_e->Clone();
+
+  TH1D * nue_tp = (TH1D*) nue_m_templates[0]->Clone();
+  nue_tp->Reset();
+  TH1D * nue_tp_em = (TH1D*) nue_tp->Clone();
+  TH1D * nue_tp_ee = (TH1D*) nue_tp->Clone();
+  TH1D * nue_tp_me = (TH1D*) nue_tp->Clone();
+  TH1D * nue_tp_mm = (TH1D*) nue_tp->Clone();
+  TH1D * nue_tp_os = (TH1D*) nue_tp->Clone();
+  TH1D * nue_tp_unos = (TH1D*) nue_tp->Clone(); 
+
+  int iL;
+
+  // Add in oscillated neutrinos by taking the nu_mu CC templates and weighting by the oscillation probability
+  for( int i = 10; i < nbins_Ev; ++i ) {
+
+    if(i<240)                iL = (int)i/10;
+    else if(i>=240 && i<400) iL = (int) 24+(i-240)/40;
+    else                     iL = 28;
+    
+    for(int k=0; k<7; k++) {
+    ft_m[k] = fitP_m[iL][k];
+    ft_e[k] = fitP_e[iL][k];
+    }
+
+    double Pme, Pem, Pmm, Pee, Pmt;
+    double me = 0;
+    double em = 0;
+    double ee = 0;
+    double mm = 0;
+    double mt = 0;
+    
+    for(int j = 0; j<1001; j++){
+      double e = m_energy_bins[i] + j*(m_energy_bins[i+1] - m_energy_bins[i])/1000.;
+      me = me + getAvgPme(e, par[0], par[1], par[2], par[3], ft_m);
+      mt = mt + getAvgPmt(e, par[0], par[1], par[2], par[3], ft_m);
+      em = em + getAvgPme(e, par[0], par[1], par[2], par[3], ft_e);
+      ee = ee + getAvgPee(e, par[0], par[1], par[2], par[3], ft_e);
+      mm = mm + getAvgPmm(e, par[0], par[1], par[2], par[3], ft_m);
+    }
+    
+    Pme = me/1001.0;
+    Pem = em/1001.0;
+    Pee  = ee/1001.0;
+    Pmm  = mm/1001.0;
+    Pmt  = mt/1001.0;
+
+    CC_tp_me->Add(CC_nc_m_templates[i], Pme);
+    CC_tp_ee->Add(CC_e_templates[i], Pee);
+
+    CC_tp_em->Add(CC_e_templates[i], Pem);
+    CC_tp_mm->Add(CC_m_templates[i], Pmm);
+
+    nue_tp_me->Add(nue_w_m_templates[i], Pme);
+    nue_tp_mm->Add(nue_m_templates[i], Pmm + Pmt);
+    //nue_tp_mt->Add(nue_m_templates[i], Pmt);
+    nue_tp_em->Add(nue_w_e_templates[i], Pem);
+    nue_tp_ee->Add(nue_e_templates[i], Pee);
+  }
+  
+  for(int i=0; i<nbins_CC; i++){
+    if(i>=44) {
+      CC_tp_mm->SetBinContent(i+1, 0.);
+      CC_tp_em->SetBinContent(i+1, 0.);
+    }
+  }
+
+  // Now we have nue temp = mu-->e (no reco cut) + e-->e (no reco cut)
+  CC_tp_e->Add(CC_tp_me); CC_tp_e->Add(CC_tp_ee);
+  CC_tp_m->Add(CC_tp_em);    CC_tp_m->Add(CC_tp_mm);
+
+  nue_tp_os->Add(nue_tp_me);    nue_tp_os->Add(nue_tp_em);
+  nue_tp_unos->Add(nue_tp_ee);  nue_tp_unos->Add(nue_tp_mm);
+  nue_tp->Add(nue_tp_os);       nue_tp->Add(nue_tp_unos);
+/*
+  THStack *he = new THStack("he","");
+  CCe_tgt->SetMarkerStyle(kStar);
+  CCe_tgt->SetMarkerSize(1);
+  CCe_tgt->SetMarkerColor(8);
+  CC_tp_me->SetFillColor(kRed);
+  CC_tp_ee->SetFillColor(kBlue);
+  he->Add(CC_tp_me);
+  he->Add(CC_tp_ee);
+  TCanvas *ce = new TCanvas("ce","",800,600);
+  he->Draw("hist");
+  CCe_tgt->Draw("same");
+  TLegend *legend_e = new TLegend(0.55,0.70,0.9,0.9);
+  legend_e->AddEntry(CCe_tgt,"CCe data");
+  legend_e->AddEntry(CC_tp_me,"oscillated #nu_{#mu}#rightarrow#nu_{e}");
+  legend_e->AddEntry(CC_tp_ee,"unoscillated #nu_{e}#rightarrow#nu_{e}");
+  legend_e->Draw();
+  ce->SaveAs(Form("fit_CCe%d.png",cutNu));
+
+  THStack *hm = new THStack("hm","");
+  CCm_tgt->SetMarkerStyle(kStar);
+  CCm_tgt->SetMarkerSize(1);
+  CCm_tgt->SetMarkerColor(8);
+  CC_tp_em->SetFillColor(kRed);
+  CC_tp_mm->SetFillColor(kBlue);
+  hm->Add(CC_tp_em);
+  hm->Add(CC_tp_mm);
+  TCanvas *cm = new TCanvas("cm","",800,600);
+  hm->Draw("hist");
+  CCm_tgt->Draw("same");
+  TLegend *legend_m = new TLegend(0.55,0.70,0.9,0.9);
+  legend_m->AddEntry(CCm_tgt,"CCm data");
+  legend_m->AddEntry(CC_tp_me,"oscillated #nu_{e}#rightarrow#nu_{#mu}");
+  legend_m->AddEntry(CC_tp_mm,"unoscillated #nu_{#mu}->#nu_{#mu}");
+  legend_m->Draw();
+  cm->SaveAs(Form("fit_CCm%d.png",cutNu));
+
+  THStack *hnue = new THStack("hnue","");
+  nue_tgt->SetMarkerStyle(kStar);
+  nue_tgt->SetMarkerSize(1);
+  nue_tgt->SetMarkerColor(8);
+  nue_tp_os->SetFillColor(kRed);
+  nue_tp_unos->SetFillColor(kBlue);
+  hnue->Add(nue_tp_os);
+  hnue->Add(nue_tp_unos);
+  TCanvas *cnue = new TCanvas("cnue","",800,600);
+  gPad->SetLogy();
+  hnue->Draw("hist");
+  nue_tgt->Draw("same");
+  TLegend *legend_nue = new TLegend(0.55,0.70,0.9,0.9);
+  legend_nue->AddEntry(nue_tgt,"#nu+e data");
+  legend_nue->AddEntry(nue_tp_os,"oscillated #nu_{#mu}#rightarrow#nu_{e} & #nu_{e}#rightarrow#nu_{#mu}");
+  legend_nue->AddEntry(nue_tp_unos,"unoscillated #nu_{e}#rightarrow#nu_{e} & #nu_{#mu}->#nu_{#mu}");
+  legend_nue->Draw();
+  cnue->SaveAs(Form("fit_nue%d.png",cutNu));
+*/
+
+  TH1D *hOsc = new TH1D("hOsc","",nbins,0,nbins);
+  TH1D *hnOsc = new TH1D("hnOsc","",nbins,0,nbins);
+  for(int i=0; i<nbins; i++){
+    if(i<nbins_CC)                  hOsc->SetBinContent(i+1, CC_tp_em->GetBinContent(i+1));
+    if(i>=nbins_CC && i<2*nbins_CC) hOsc->SetBinContent(i+1, CC_tp_me->GetBinContent(i-nbins_CC+1));
+    if(i>=2*nbins_CC)               hOsc->SetBinContent(i+1, nue_tp_os->GetBinContent(i-2*nbins_CC+1));
+  }
+  for(int i=0; i<nbins; i++){
+    if(i<nbins_CC)                  hnOsc->SetBinContent(i+1, CC_tp_mm->GetBinContent(i+1));
+    if(i>=nbins_CC && i<2*nbins_CC) hnOsc->SetBinContent(i+1, CC_tp_ee->GetBinContent(i-nbins_CC+1));
+    if(i>=2*nbins_CC)               hnOsc->SetBinContent(i+1, nue_tp_unos->GetBinContent(i-2*nbins_CC+1));
+  }
+  hOsc->SetFillColor(kRed);
+  hnOsc->SetFillColor(kBlue);
+
+  THStack *h = new THStack("h","");
+  h->Add(hOsc);
+  h->Add(hnOsc);
+
+  double x1 = hOsc->GetXaxis()->GetBinUpEdge(nbins_CC);
+  double x2 = hOsc->GetXaxis()->GetBinUpEdge(2*nbins_CC);
+
+  TCanvas *c = new TCanvas("c","",900,600);
+  c->SetLogy();
+  h->Draw("hist");
+  c->Update();
+  TLatex latex;
+  latex.SetNDC(false);
+  latex.SetTextSize(0.03); 	// Set text size
+  latex.SetTextAlign(22);	// Center alignment
+  double yPosition = pow(10, (gPad->GetUymin() + gPad->GetUymax())/2.); 	// Align to the middle of the pad
+  latex.DrawLatex(nbins_CC/2, yPosition, "CCm"); 	// Position for CCm
+  latex.DrawLatex(nbins_CC + nbins_CC/2, yPosition, "CCe"); 	// Position for CCe
+  latex.DrawLatex(2*nbins_CC + nbins_nue/2, yPosition, "nue");	// Position for nue
+  h->GetXaxis()->SetTitle("bin number");
+  h->GetYaxis()->SetTitle("entries (/yr.POT)");
+  TLine *line1 = new TLine(x1, 0, x1, pow(10, gPad->GetUymax()));
+  TLine *line2 = new TLine(x2, 0, x2, pow(10, gPad->GetUymax()));
+  line1->SetLineColor(kBlack);
+  line2->SetLineColor(kBlack);
+  line1->SetLineWidth(2.0);
+  line2->SetLineWidth(2.0);
+  line1->Draw("same");
+  line2->Draw("same");
+  TLegend *lg = new TLegend(0.70,0.75,0.9,0.9);
+  lg->AddEntry(hOsc,"oscillated");
+  lg->AddEntry(hnOsc,"unoscillated");
+  lg->Draw();
+  c->SaveAs("fit.png");
+
+}
