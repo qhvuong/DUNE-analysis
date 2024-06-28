@@ -143,6 +143,50 @@ double TemplateFitter::getAvgPme( double energy, double Ue42, double Um42, doubl
   return prob;}
 }
 
+double TemplateFitter::getAvgPmt( double energy, double Ue42, double Um42, double Ut42, double dm2, double ft[7] )
+{
+  if(dm2==0.) return 0.;
+  else{
+  double k = 1.27*dm2/energy;
+  double L0=0.34, L1=0.35, L2=0.55, L3=0.6, L;
+  double a=ft[0], b=ft[1], c=ft[2], d=ft[3], avg1=ft[4], avg2=ft[5], norm=ft[6];
+  double A = 4 * Ut42 * Um42;
+
+  L=L1;
+  double prob_u = - avg1 * A * ( sin(2*k*L) - 2*k*L ) / (4*k);
+  L=L0;
+  double prob_l = - avg1 * A * ( sin(2*k*L) - 2*k*L ) / (4*k);
+
+  double prob1 = prob_u - prob_l;
+
+
+  L=L2;
+  double term1_u = 2*pow(k,4) * L * ( 12*a + 6*b*L + 4*c*L*L + 3*d*L*L*L );
+  double term2_u = 6*k*sin(2*k*L) * ( 2*a*k*k + 2*b*k*k*L + 2*c*k*k*L*L - c + 2*d*k*k*L*L*L - 3*d*L );
+  double term3_u = 3*cos(2*k*L) * ( 2*k*k*(b+2*c*L) + d*(6*k*k*L*L-3) );
+  L=L1;
+  double term1_l = 2*pow(k,4) * L * ( 12*a + 6*b*L + 4*c*L*L + 3*d*L*L*L );
+  double term2_l = 6*k*sin(2*k*L) * ( 2*a*k*k + 2*b*k*k*L + 2*c*k*k*L*L - c + 2*d*k*k*L*L*L - 3*d*L );
+  double term3_l = 3*cos(2*k*L) * ( 2*k*k*(b+2*c*L) + d*(6*k*k*L*L-3) );
+
+  prob_u = A/(48*pow(k,4)) * (term1_u - term2_u - term3_u);
+  prob_l = A/(48*pow(k,4)) * (term1_l - term2_l - term3_l);
+
+  double prob2 = prob_u - prob_l;
+
+  
+  L=L3;
+  prob_u = - avg2 * A * ( sin(2*k*L) - 2*k*L ) / (4*k);
+  L=L2;
+  prob_l = - avg2 * A * ( sin(2*k*L) - 2*k*L ) / (4*k);
+
+  double prob3 = prob_u - prob_l;
+
+  double prob = norm*(prob1 + prob2 + prob3);
+
+  return prob;}
+}
+
 double TemplateFitter::getAvgPee( double energy, double Ue42, double Um42, double Ut42, double dm2, double ft[7] )
 {
   if(dm2==0.) return 1.;
@@ -231,49 +275,6 @@ double TemplateFitter::getAvgPmm( double energy, double Ue42, double Um42, doubl
   return prob;}
 }
 
-double TemplateFitter::getAvgPmt( double energy, double Ue42, double Um42, double Ut42, double dm2, double ft[7] )
-{
-  if(dm2==0.) return 0.;
-  else{
-  double k = 1.27*dm2/energy;
-  double L0=0.34, L1=0.35, L2=0.55, L3=0.6, L;
-  double a=ft[0], b=ft[1], c=ft[2], d=ft[3], avg1=ft[4], avg2=ft[5], norm=ft[6];
-  double A = 4 * Ut42 * Um42;
-
-  L=L1;
-  double prob_u = - avg1 * A * ( sin(2*k*L) - 2*k*L ) / (4*k);
-  L=L0;
-  double prob_l = - avg1 * A * ( sin(2*k*L) - 2*k*L ) / (4*k);
-
-  double prob1 = prob_u - prob_l;
-
-
-  L=L2;
-  double term1_u = 2*pow(k,4) * L * ( 12*a + 6*b*L + 4*c*L*L + 3*d*L*L*L );
-  double term2_u = 6*k*sin(2*k*L) * ( 2*a*k*k + 2*b*k*k*L + 2*c*k*k*L*L - c + 2*d*k*k*L*L*L - 3*d*L );
-  double term3_u = 3*cos(2*k*L) * ( 2*k*k*(b+2*c*L) + d*(6*k*k*L*L-3) );
-  L=L1;
-  double term1_l = 2*pow(k,4) * L * ( 12*a + 6*b*L + 4*c*L*L + 3*d*L*L*L );
-  double term2_l = 6*k*sin(2*k*L) * ( 2*a*k*k + 2*b*k*k*L + 2*c*k*k*L*L - c + 2*d*k*k*L*L*L - 3*d*L );
-  double term3_l = 3*cos(2*k*L) * ( 2*k*k*(b+2*c*L) + d*(6*k*k*L*L-3) );
-
-  prob_u = A/(48*pow(k,4)) * (term1_u - term2_u - term3_u);
-  prob_l = A/(48*pow(k,4)) * (term1_l - term2_l - term3_l);
-
-  double prob2 = prob_u - prob_l;
-
-  
-  L=L3;
-  prob_u = - avg2 * A * ( sin(2*k*L) - 2*k*L ) / (4*k);
-  L=L2;
-  prob_l = - avg2 * A * ( sin(2*k*L) - 2*k*L ) / (4*k);
-
-  double prob3 = prob_u - prob_l;
-
-  double prob = norm*(prob1 + prob2 + prob3);
-
-  return prob;}
-}
 
 
 
@@ -536,7 +537,7 @@ void TemplateFitter::getTarget( double *par )
   lg->AddEntry(hOsc,"oscillated");
   lg->AddEntry(hnOsc,"unoscillated");
   lg->Draw();
-  c->SaveAs("tgt.png");
+  c->SaveAs("tgt4.png");
  
 
 }

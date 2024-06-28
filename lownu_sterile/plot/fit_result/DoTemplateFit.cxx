@@ -142,7 +142,7 @@ int main()
   double seed[4], par_tgt[4], par_bf[4], par_no[4];
   par_tgt[0] = 0.04;
   par_tgt[1] = 0.01;
-  par_tgt[2] = 0.1;
+  par_tgt[2] = 0.4;
   par_tgt[3] = 6.0;
 
   for(int ii = 0; ii < 4; ii++) {
@@ -152,7 +152,7 @@ int main()
   tf.setPara( var, nuCut, fitPara_m, fitPara_e );
 
   tf.getTarget( par_tgt );
-
+/*
   double bf_dm2, bf_Ue42, bf_Um42, bf_Ut42, bf_chi2=1E9, chi2_LowerLimit=5E-3;
   double seed_set[4][4], chi2[4];
   seed_set[0][0] = 0.;
@@ -239,7 +239,7 @@ int main()
   printf( "FINAL FINE2 nue Best-fit Ue42 = %f, Um42 = %f, Ut42 = %f, dm2 = %f, chi2 = %f\n", par_bf[0], par_bf[1], par_bf[2], par_bf[3], bf_chi2);
 
   tf.bfDraw(par_bf[0], par_bf[1], par_bf[2], par_bf[3]);
-
+*/
 }
 
 
