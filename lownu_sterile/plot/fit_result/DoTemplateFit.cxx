@@ -142,7 +142,7 @@ int main()
   double seed[4], par_tgt[4], par_bf[4], par_no[4];
   par_tgt[0] = 0.04;
   par_tgt[1] = 0.01;
-  par_tgt[2] = 0.4;
+  par_tgt[2] = 0.5;
   par_tgt[3] = 6.0;
 
   for(int ii = 0; ii < 4; ii++) {

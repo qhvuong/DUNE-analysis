@@ -357,8 +357,6 @@ void TemplateFitter::getTarget( double *par )
     Pmm  = mm/1001.0;
     Pmt  = mt/1001.0;
 
-    std::cout << Pmm << "\t" << Pmt << "\n";
-
     CC_tp_me->Add(CC_nc_m_templates[i], Pme);
     CC_tp_ee->Add(CC_e_templates[i], Pee);
 
@@ -367,11 +365,8 @@ void TemplateFitter::getTarget( double *par )
 
     nue_tp_me->Add(nue_w_m_templates[i], Pme);
     nue_tp_mm->Add(nue_m_templates[i], (Pmm+Pmt));
-    //nue_tp_mt->Add(nue_m_templates[i], Pmt);
     nue_tp_em->Add(nue_w_e_templates[i], Pem);
     nue_tp_ee->Add(nue_e_templates[i], Pee);
-
-
   }
   
   for(int i=0; i<nbins_CC; i++){
@@ -404,6 +399,9 @@ void TemplateFitter::getTarget( double *par )
         if(bx>=2*nbins_CC)                statmx[bx][bx] = nue_tgt->GetBinContent(bx-2*nbins_CC+1);
       }
     }
+  }
+  for(int i=0; i<nbins; i++){
+    if(i>=2*nbins_CC)               std::cout << i << "\t" << nue_tp_os->GetBinContent(i-2*nbins_CC+1) << "\t" << nue_tp_unos->GetBinContent(i-2*nbins_CC+1) << "\n";
   }
 
   covmx = statmx + flmx + sigmx;
@@ -488,18 +486,18 @@ void TemplateFitter::getTarget( double *par )
   legend_nue->Draw();
   cnue->SaveAs(Form("nue_tgt%d.png",cutNu));
 */
-
+/*
   TH1D *hOsc = new TH1D("hOsc","",nbins,0,nbins);
   TH1D *hnOsc = new TH1D("hnOsc","",nbins,0,nbins);
   for(int i=0; i<nbins; i++){
     if(i<nbins_CC)                  hOsc->SetBinContent(i+1, CC_tp_em->GetBinContent(i+1));
     if(i>=nbins_CC && i<2*nbins_CC) hOsc->SetBinContent(i+1, CC_tp_me->GetBinContent(i-nbins_CC+1));
-    if(i>=2*nbins_CC)               hOsc->SetBinContent(i+1, nue_tp_os->GetBinContent(i-2*nbins_CC+1));
+    if(i>=2*nbins_CC)               hOsc->SetBinContent(i+1, 1E2*nue_tp_os->GetBinContent(i-2*nbins_CC+1));
   }
   for(int i=0; i<nbins; i++){
     if(i<nbins_CC)                  hnOsc->SetBinContent(i+1, CC_tp_mm->GetBinContent(i+1));
     if(i>=nbins_CC && i<2*nbins_CC) hnOsc->SetBinContent(i+1, CC_tp_ee->GetBinContent(i-nbins_CC+1));
-    if(i>=2*nbins_CC)               hnOsc->SetBinContent(i+1, nue_tp_unos->GetBinContent(i-2*nbins_CC+1));
+    if(i>=2*nbins_CC)               hnOsc->SetBinContent(i+1, 1E2*nue_tp_unos->GetBinContent(i-2*nbins_CC+1));
   }
   hOsc->SetFillColor(kRed);
   hnOsc->SetFillColor(kBlue);
@@ -522,7 +520,7 @@ void TemplateFitter::getTarget( double *par )
   double yPosition = pow(10, (gPad->GetUymin() + gPad->GetUymax())/2.); 	// Align to the middle of the pad
   latex.DrawLatex(nbins_CC/2, yPosition, "CCm"); 	// Position for CCm
   latex.DrawLatex(nbins_CC + nbins_CC/2, yPosition, "CCe"); 	// Position for CCe
-  latex.DrawLatex(2*nbins_CC + nbins_nue/2, yPosition, "nue");	// Position for nue
+  latex.DrawLatex(2*nbins_CC + nbins_nue/2, yPosition, "nue*100.");	// Position for nue
   h->GetXaxis()->SetTitle("bin number");
   h->GetYaxis()->SetTitle("entries (/yr.POT)");
   TLine *line1 = new TLine(x1, 0, x1, pow(10, gPad->GetUymax()));
@@ -537,8 +535,8 @@ void TemplateFitter::getTarget( double *par )
   lg->AddEntry(hOsc,"oscillated");
   lg->AddEntry(hnOsc,"unoscillated");
   lg->Draw();
-  c->SaveAs("tgt4.png");
- 
+  c->SaveAs("tgt1.png");
+*/
 
 }
 

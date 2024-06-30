@@ -19,9 +19,9 @@ class TemplateFitter {
     void setEnergyBins(double bins[nbins_Ev+1]);
     void setCovmtr(double flmx_bct[nbins+1][nbins+1], double sigmx_bct[nbins+1][nbins+1]);
     void setPara(char var[20], int nuCut, double fitPara_m[29][7], double fitPara_e[29][7]);
-    bool doFitFine1(double seed[3], double &Ue42, double &Um42, double &Ut42, double &dm2);
-    bool doFitFine2(double seed[3], double &Ue42, double &Um42, double &Ut42, double &dm2);
-    bool doFitCoarse(double seed[3], double &Ue42, double &Um42, double &Ut42, double &dm2);
+    bool doFitFine1(double seed[4], double &Ue42, double &Um42, double &Ut42, double &dm2);
+    bool doFitFine2(double seed[4], double &Ue42, double &Um42, double &Ut42, double &dm2);
+    bool doFitCoarse(double seed[4], double &Ue42, double &Um42, double &Ut42, double &dm2);
     void getTarget(double *par_tgt);
     double bfChi2(double Ue42, double Um42, double Ut42, double dm2);
     void bfDraw(double Ue42, double Um42, double Ut42, double dm2);
