@@ -22,8 +22,7 @@ int main()
   TChain * tree = new TChain( "tree", "tree" );
   TChain * meta = new TChain( "meta", "meta" );
 
-  for(int i=48; i<60; i++){
-  //if(i==39) continue;
+  for(int i=0; i<1; i++){
   tree->Add( Form("root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/marshalc/nue_study/FHC/nueFHC_%03d.root",i) );
   meta->Add( Form("root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/users/marshalc/nue_study/FHC/nueFHC_%03d.root",i) );
   std::cout << "Nue File number:" << i << "\n";
@@ -52,7 +51,6 @@ int main()
   const Int_t nbinsY = 8;
 
   Double_t xEdges[nbinsX+1];
-  //yEdges[nbinsY+1];
   xEdges[0]=0.;
   for(int i=0; i<nbinsX+1; i++)
   {
@@ -62,27 +60,11 @@ int main()
     else if(i>=400 && i<420) xEdges[i+1] = xEdges[i] + 1.0;
     else                     xEdges[i+1] = xEdges[i] + 4.0;
   }
-/*
-  for(int i=0; i<nbinsY+1; i++)
-  {
-    if(i<3)               yEdges[i+1] = yEdges[i] + 0.3;
-    else if(i>=3 && i<4) yEdges[i+1] = yEdges[i] + 0.4;
-    else if(i>=4 && i<5) yEdges[i+1] = yEdges[i] + 0.5;
-    else if(i>=5 && i<6) yEdges[i+1] = yEdges[i] + 0.7;
-    else if(i>=6 && i<7) yEdges[i+1] = yEdges[i] + 1.5;
-    else                   yEdges[i+1] = yEdges[i] + 12.0;
-  }
-*/
 
   const double yEdges[9] = {0., 0.3, 0.6, 0.92, 1.3, 1.75, 2.45, 3.9, 16.0};
  
   TH2D *m_hElepRecoVsEv0   = new TH2D("m_hElepRecoVsEv0","",nbinsX,xEdges,nbinsY,yEdges);
-  TH2D *m_hElepRecoVsEv0_w = new TH2D("m_hElepRecoVsEv0_w","",nbinsX,xEdges,nbinsY,yEdges);
   TH2D *e_hElepRecoVsEv0   = new TH2D("e_hElepRecoVsEv0","",nbinsX,xEdges,nbinsY,yEdges);
-  TH2D *e_hElepRecoVsEv0_w = new TH2D("e_hElepRecoVsEv0_w","",nbinsX,xEdges,nbinsY,yEdges);
-
-  TH2D *m_hElepRecoVsEv0_cov = new TH2D("m_hElepRecoVsEv0_cov","",19,mubins,nbinsY,yEdges);
-  TH2D *e_hElepRecoVsEv0_cov = new TH2D("e_hElepRecoVsEv0_cov","",7,ebins,nbinsY,yEdges);
 
   TH1D *m_hElep0 = new TH1D("m_hElep0","",nbinsY,yEdges);
   TH1D *e_hElep0 = new TH1D("e_hElep0","",nbinsY,yEdges);
@@ -116,21 +98,11 @@ int main()
   TF1 *tsmearRatio = new TF1( "tsmearRatio", "0.039 + 0.551*pow(x,-1.) - 0.268*pow(x,-0.5)", 0., 999.9 );
   TF1 *doubleGaus = new TF1( "dg", "[0]*TMath::Exp(-0.5*pow(x/[1],2)) + [2]*TMath::Exp(-0.5*pow(x/[3],2))", -1000., 1000. );
 
-  TRandom3 *rando = new TRandom3(8888);
-
-  double s2tW = 0.23;
-  double m_C_LL = -1./2. + s2tW; 
-  double m_C_LR = s2tW;
-  double e_C_LL = 1./2. + s2tW;
-  double e_C_LR = s2tW;
-  double y, sigma_m, sigma_e;
-
-  double me = 510;  //keV
+  TRandom3 *rando = new TRandom3(12345);
   double Ev_reco;
 
   const int N = tree->GetEntries();
-  //const int N = 10000;
-
+  double me = 510;  //keV
   double E_max;
 
   for( int ii = 0; ii < N; ++ii )
@@ -160,74 +132,29 @@ int main()
     Btheta_sm = atan(sqrt(tan(BthetaX_sm/1E3)*tan(BthetaX_sm/1E3) + tan(BthetaY_sm/1E3)*tan(BthetaY_sm/1E3)))*1E3;    
       
     Ev_reco = E[0]/(1-E[0]*Btheta_sm*Btheta_sm/(2*me));
-
-    for(int i=0; i<2; i++){
-      p[i]=sqrt(px[i]*px[i] + py[i]*py[i] + pz[i]*pz[i]);
-    }
-    y = E[0]/Enu;
-    sigma_m = (m_C_LL*m_C_LL + m_C_LR*m_C_LR*(1.-y)*(1.-y));
-    sigma_e = (e_C_LL*e_C_LL + e_C_LR*e_C_LR*(1.-y)*(1.-y));
-
   
     if(E[0]*Btheta_sm*Btheta_sm/1E3<3.){
       if(pdg[1] == 14){
         m_hElep0->Fill(E[0]); 
-
-        //muon template weighted     
-        m_hElepRecoVsEv0_w->Fill(Enu,E[0],sigma_e/sigma_m);
-
-        //muon template     
-        m_hElepRecoVsEv0->Fill(Enu,E[0]);
-        m_hElepRecoVsEv0_cov->Fill(Enu,E[0]);
-
       }
 
       if(pdg[1] == 12){
         e_hElep0->Fill(E[0]); 
-      
-        //electron template weighted
-        e_hElepRecoVsEv0_w->Fill(Enu,E[0],sigma_m/sigma_e);
-
-        //electron template
-        e_hElepRecoVsEv0->Fill(Enu,E[0]);
-        e_hElepRecoVsEv0_cov->Fill(Enu,E[0]);
 
       }
     }
   }
   }
-
-
-  m_hElepRecoVsEv0_w->Scale(scalePOT); 
-  e_hElepRecoVsEv0_w->Scale(scalePOT);
-  m_hElepRecoVsEv0->Scale(scalePOT);   
-  e_hElepRecoVsEv0->Scale(scalePOT);
-
-  m_hElepRecoVsEv0_cov->Scale(scalePOT);   
-  e_hElepRecoVsEv0_cov->Scale(scalePOT);
 
   m_hElep0->Scale(scalePOT); 
   e_hElep0->Scale(scalePOT);
 
   hElep0->Add(m_hElep0); 
   hElep0->Add(e_hElep0);
-/*
-  TCanvas *c = new TCanvas("c","",800,600);
-  hElep0->Draw();
-  c->SaveAs("hElep.png");
-*/
+
   TFile *out = new TFile("/exp/dune/app/users/qvuong/data/lownu/input_dfiles/nue_output_4.root","RECREATE");
-  m_hElepRecoVsEv0->Write();
-  m_hElepRecoVsEv0_w->Write();
-  e_hElepRecoVsEv0->Write();
-  e_hElepRecoVsEv0_w->Write();
-
-  m_hElepRecoVsEv0_cov->Write();
-  e_hElepRecoVsEv0_cov->Write();
-
   m_hElep0->Write();
   e_hElep0->Write();
-  
   hElep0->Write();
 
   TParameter<double> totalPOT("total_pot", total_pot);
