@@ -11,8 +11,29 @@
 
 using namespace std;
 
-int main()
+int main(int argc, char const *argv[])
 {
+
+  float Ue42, Um42, Ut42, dm2;
+  int point;
+  int i = 0;
+  while( i < argc ) {
+    if( argv[i] == std::string("--ue42") ) {
+      Ue42 = atof(argv[i+1]);
+      i += 2;
+    } else if( argv[i] == std::string("--um42") ) {
+      Um42 = atof(argv[i+1]);
+      i += 2;
+    } else if( argv[i] == std::string("--ut42") ) {
+      Ut42 = atof(argv[i+1]);
+      i += 2;
+    } else if( argv[i] == std::string("--dm2") ) {
+      dm2 = atof(argv[i+1]);
+      i += 2;
+    }
+      else i += 1;
+  }
+
   TFile *ftP_m = new TFile(Form("fitPara_m.root"),"READ");
   TFile *ftP_e = new TFile(Form("fitPara_e.root"),"READ");
 
@@ -132,78 +153,35 @@ int main()
   tf.setCovmtr( fl_bins, sig_bins );
 
   double oscpar[4];
-  oscpar[0] = 0.04;
-  oscpar[1] = 0.01;
-  oscpar[2] = 0.5;
-  oscpar[3] = 10.0;
+  oscpar[0] = Ue42;
+  oscpar[1] = Um42;
+  oscpar[2] = Ut42;
+  oscpar[3] = dm2;
 
   tf.setPara( var, nuCut, fitPara_m, fitPara_e );
-
+  tf.getTarget( oscpar );
+  
   double nopar[4];
   nopar[0] = nopar[1] = nopar[2] = nopar[3] = 0.;
+  double nochi2 = tf.bfChi2( nopar[0], nopar[1], nopar[2], nopar[3] );
 
   double seed[4];
-  seed[2] = oscpar[2];
-  seed[3] = oscpar[3];
   double bf_dm2, bf_Ue42, bf_Um42, bf_Ut42;
+  for(int i=0; i<4; i++){
+    seed[i] = oscpar[i];}
 
-  double U_max = 0.7;
-  double U_min = 0.0001;
-
-  int N = 20;
-  double log_min = log(U_min);
-  double log_max = log(U_max);
-  double binWidth = (log_max - log_min) / N;
-
-  double bin_edges[N+1], bin_center[N];
-  for(int i=0; i<N; i++){
-    bin_edges[i] = pow(10, (log_min + i * binWidth));
-    bin_edges[i+1] = pow(10, (log_min + (i+1) * binWidth));
-
-    bin_center[i] = (bin_edges[i] + bin_edges[i+1]) / 2.0;
-  }
-
-  TH2D *h = new TH2D("h","",N,bin_edges,N,bin_edges);
-  h->SetStats(0);
-  h->SetTitle("Sensitivity Contour");
-
-
-  for(int i=0; i<N; i++){
-    seed[0] = bin_center[i];
-
-    for(int j=0; j<N; j++){
-      seed[1] = bin_center[j];
-      //bool isOK2 = tf.doFitFine2( seed, bf_Ue42, bf_Um42, bf_Ut42, bf_dm2 );
-      tf.getTarget( seed );
   
-      double nochi2 = tf.bfChi2( nopar[0], nopar[1], nopar[2], nopar[3] );
-      double bf_chi2 = tf.bfChi2( seed[0], seed[1], seed[2], seed[3] );
-      double dchi2 = sqrt(nochi2 - bf_chi2);
-      h->Fill(seed[1], seed[0], dchi2); 
-      if(i%10==0 && j%20==0) std::cout << i << "\t" << j << "\t" << seed[0] << "\t" << seed[1] << "\t" << seed[2] << "\t" << seed[3] << "\t" << bf_chi2 << "\t" << nochi2 << "\t" << dchi2 << "\n";
-    }
-  }
+  bool isOK2 = tf.doFitFine2( seed, bf_Ue42, bf_Um42, bf_Ut42, bf_dm2 );
+  double bf_chi2 = tf.bfChi2( bf_Ue42, bf_Um42, bf_Ut42, bf_dm2 );
+  
+  printf( "FINAL FINE2 nue Best-fit Ue42 = %f, Um42 = %f, Ut42 = %f, dm2 = %f, bfchi2 = %f, nochi2 = %f\n", bf_Ue42, bf_Um42, bf_Ut42, bf_dm2, bf_chi2, nochi2);
+  //double dchi2 = nochi2 - bf_chi2;
 
-  gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
-  gStyle->SetNumberContours(999);
-
-  TCanvas *c = new TCanvas("c","",800,600);
-  c->SetGrid();
-  c->SetLogx();
-  c->SetLogy();
-  c->SetLogz();
-  h->Draw("colz");
-  c->SaveAs("contour_dm10.png");
-
-  TFile *out = new TFile("contour_dm10.root", "RECREATE");
-  h->Write();
-  out->Close();
-/*
   ofstream myfile;
   myfile.open("output.txt");
   myfile << Ue42 << "\t" << Um42 << "\t" << Ut42 << "\t" << dm2 << "\t" << bf_Ue42 << "\t" << bf_Um42 << "\t" << bf_Ut42 << "\t" << bf_dm2 << "\t" << bf_chi2 << "\t" << nochi2 << "\n";
   myfile.close();
-*/
+
 
 
 
