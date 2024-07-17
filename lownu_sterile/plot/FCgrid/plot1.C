@@ -1,11 +1,11 @@
-void test()
+void plot()
 {
   char seed_alg[]="seeding_algorithm";
   char seed_true[]="seeding_true";
   
   double Uee2[8], Umm2[8], dm2[8], chi2[8], nochi2[8], dchi2[8];
   double Uee2_t[8], Umm2_t[8], dm2_t[8], chi2_t[8], nochi2_t[8], dchi2_t[8];
-  int N=100;
+  int N=100000;
 
 
   double xMin = 1e-3;
@@ -33,7 +33,7 @@ void test()
                                     "stats+flux+BeRPA_A", "stats+flux+BeRPA_B", "stats+flux+BeRPA_D", "stats+flux+MnGaus"};
 
 
-  for (int i = 0; i < 2; ++i) {
+  for (int i = 0; i < 8; ++i) {
     h[i]    = new TH1D(Form("h%d", i), "", 100, 0, 500);
     h_t[i]  = new TH1D(Form("h_t%d", i), "", 100, 0, 500);
     hd[i]   = new TH1D(Form("hd%d", i), "", 100, 0, 40);
@@ -43,13 +43,15 @@ void test()
   const char data_path[] = "/pnfs/dune/scratch/users/qvuong/output";
   const char out_path[] = "/exp/dune/app/users/qvuong/data/lownu/Feldman_Cousins";
 
+  int j=0;
+
   for(int i=0; i<N; i++) {
     if(i%100==0) std::cout << i*100./N << " percent\n";
 
-    ifstream fstat_true(Form("%s/FCstat_1E5/%s/output_%d.txt",data_path,seed_true,i));
-    ifstream fstat_alg(Form("%s/FCstat_1E5/%s/output_%d.txt",data_path,seed_alg,i));
-    ifstream fflux_true(Form("%s/FCflux_1E5/%s/output_%d.txt",data_path,seed_true,i));
-    ifstream fflux_alg(Form("%s/FCflux_1E5/%s/output_%d.txt",data_path,seed_alg,i));
+    ifstream fstat_true(Form("%s/FCstat_new/%s/output_%d.txt",data_path,seed_true,i));
+    ifstream fstat_alg(Form("%s/FCstat_new/%s/output_%d.txt",data_path,seed_alg,i));
+    ifstream fflux_true(Form("%s/FCflux/%s/output_%d.txt",data_path,seed_true,i));
+    ifstream fflux_alg(Form("%s/FCflux/%s/output_%d.txt",data_path,seed_alg,i));
 /*
     ifstream fgrid_true(Form("%s/FCgrid_new/%s/output_%d.txt",data_path,seed_true,i));
     ifstream fgrid_alg(Form("%s/FCgrid_new/%s/output_%d.txt",data_path,seed_alg,i));
@@ -66,6 +68,7 @@ void test()
 */
     if(!fstat_true || !fstat_alg) continue;
     if(!fflux_true || !fflux_alg) continue;
+    j++;
 /*
     if(!fgrid_true || !fgrid_alg) continue;
     if(!fgrid_MaCCQE_true || !fgrid_MaCCQE_alg) continue;
@@ -100,7 +103,7 @@ void test()
     fgrid_MnGaus_true >> Uee2_t[7] >> Umm2_t[7] >> dm2_t[7] >> chi2_t[7] >> nochi2_t[7];
     fgrid_MnGaus_alg >> Uee2[7] >> Umm2[7] >> dm2[7] >> chi2[7] >> nochi2[7];
 */    
-    for(int ii=0; ii<2; ii++){
+    for(int ii=0; ii<1; ii++){
       dchi2[ii] = nochi2[ii] - chi2[ii];
       dchi2_t[ii] = nochi2_t[ii] - chi2_t[ii];
 
@@ -134,7 +137,7 @@ void test()
   }
 
   
-  for (int i = 0; i < 2; ++i) {
+  for (int i = 0; i < 1; ++i) {
     h[i]->SetLineColor(colors[i]);
     h_t[i]->SetLineColor(colors[i]);
     hd[i]->SetLineColor(colors[i]);
@@ -186,14 +189,10 @@ void test()
   c->SetLogy();
   TLegend *lg = new TLegend(0.55,0.60,0.9,0.9);
   h[0]->Draw();
-  h[1]->Draw();
-  lg->AddEntry(h[0],names[0].c_str(), "f");
-  lg->AddEntry(h[1],names[1].c_str(), "f");
-/*
+  lg->AddEntry(h[7],names[7].c_str(), "f");
   for (int i = 6; i >= 0; i--) {
   h[i]->Draw("same");
   lg->AddEntry(h[i],names[i].c_str(), "f");}
-*/
   lg->Draw();
   c->SaveAs(Form("%s/chi2.png",out_path));
   
@@ -202,14 +201,10 @@ void test()
   c_t->SetLogy();
   TLegend *lg_t = new TLegend(0.55,0.60,0.9,0.9);
   h_t[0]->Draw();
-  h_t[1]->Draw();
-  lg_t->AddEntry(h_t[0],names[0].c_str(), "f");
-  lg_t->AddEntry(h_t[1],names[1].c_str(), "f");
-/*
+  lg_t->AddEntry(h_t[7],names[7].c_str(), "f");
   for (int i = 6; i >= 0; i--) {
   h_t[i]->Draw("same");
   lg_t->AddEntry(h_t[i],names[i].c_str(), "f");}
-*/
   lg_t->Draw();
   c_t->SaveAs(Form("%s/chi2_t.png",out_path));
   
@@ -218,14 +213,10 @@ void test()
   cd->SetLogy();
   TLegend *lgd = new TLegend(0.55,0.60,0.9,0.9);
   hd[0]->Draw();
-  hd[1]->Draw();
-  lgd->AddEntry(hd[0],names[0].c_str(), "f");
-  lgd->AddEntry(hd[1],names[1].c_str(), "f");
-/*
+  lgd->AddEntry(hd[7],names[7].c_str(), "f");
   for (int i = 6; i >= 0; i--) {
   hd[i]->Draw("same");
   lgd->AddEntry(hd[i],names[i].c_str(), "f");}
-*/
   lgd->Draw();
   cd->SaveAs(Form("%s/dchi2.png",out_path));
   
@@ -234,21 +225,17 @@ void test()
   cd_t->SetLogy();
   TLegend *lgd_t = new TLegend(0.55,0.60,0.9,0.9);
   hd_t[0]->Draw();
-  hd_t[1]->Draw();
-  lgd_t->AddEntry(hd_t[0],names[0].c_str(), "f");
-  lgd_t->AddEntry(hd_t[1],names[1].c_str(), "f");
-/*
+  lgd_t->AddEntry(hd_t[7],names[7].c_str(), "f");
   for (int i = 6; i >= 0; i--) {
   hd_t[i]->Draw("same");
   lgd_t->AddEntry(hd_t[i],names[i].c_str(), "f");}
-*/
   lgd_t->Draw();
   cd_t->SaveAs(Form("%s/dchi2_t.png",out_path));
 
 
   gStyle->SetNumberContours(999);
   gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
-  for (int i = 0; i < 2; ++i) {
+  for (int i = 0; i < 8; ++i) {
     TString canvasName = Form("canvas_%d", i);
     TCanvas *canvas = new TCanvas(canvasName, canvasName, 800, 800);
     canvas->SetGrid();
