@@ -2,9 +2,9 @@ void dk2nu()
 {
   TRandom3 *rando = new TRandom3(12345); // 12345 is the most random of all seeds
 
-  TH2D *h = new TH2D("h","",200,0,5,200,300,600);
+  //TH2D *h = new TH2D("h","",200,0,5,200,300,600);
 
-  TFile * fout = new TFile( "out_1112.root", "RECREATE" );
+  TFile * fout = new TFile( "out_1007.root", "RECREATE" );
   TTree * nudir = new TTree( "nudir", "neutrinodirection" );
   double nu_px, nu_py, nu_pz, nuE; // the neutrino momentum 4-vector
   double vtx_x, vtx_y, vtx_z, creation_z; // the neutrino *interaction* vertex and creation point in NuMI-z
@@ -37,22 +37,28 @@ void dk2nu()
   TChain *tree = new TChain("dk2nuTree", "dk2nuTree");
 
   for(int i=1; i<251; i++) {
-  if(i<10) {
-    meta->Add(Form("/pnfs/dune/persistent/stash/Flux/g4lbne/v3r5p4/QGSP_BERT/OptimizedEngineeredNov2017/neutrino/flux/g4lbne_v3r5p4_QGSP_BERT_OptimizedEngineeredNov2017_neutrino_0000%d.dk2nu.root",i));
-    tree->Add(Form("/pnfs/dune/persistent/stash/Flux/g4lbne/v3r5p4/QGSP_BERT/OptimizedEngineeredNov2017/neutrino/flux/g4lbne_v3r5p4_QGSP_BERT_OptimizedEngineeredNov2017_neutrino_0000%d.dk2nu.root",i));
-  }
-  else if(i<100) {
-    meta->Add(Form("/pnfs/dune/persistent/stash/Flux/g4lbne/v3r5p4/QGSP_BERT/OptimizedEngineeredNov2017/neutrino/flux/g4lbne_v3r5p4_QGSP_BERT_OptimizedEngineeredNov2017_neutrino_000%d.dk2nu.root",i));
-    tree->Add(Form("/pnfs/dune/persistent/stash/Flux/g4lbne/v3r5p4/QGSP_BERT/OptimizedEngineeredNov2017/neutrino/flux/g4lbne_v3r5p4_QGSP_BERT_OptimizedEngineeredNov2017_neutrino_000%d.dk2nu.root",i));
-  }
-  else {
-    meta->Add(Form("/pnfs/dune/persistent/stash/Flux/g4lbne/v3r5p4/QGSP_BERT/OptimizedEngineeredNov2017/neutrino/flux/g4lbne_v3r5p4_QGSP_BERT_OptimizedEngineeredNov2017_neutrino_00%d.dk2nu.root",i));
-    tree->Add(Form("/pnfs/dune/persistent/stash/Flux/g4lbne/v3r5p4/QGSP_BERT/OptimizedEngineeredNov2017/neutrino/flux/g4lbne_v3r5p4_QGSP_BERT_OptimizedEngineeredNov2017_neutrino_00%d.dk2nu.root",i));
-  }
+    const char* filename = Form("/pnfs/dune/persistent/stash/Flux/g4lbne/v3r5p4/QGSP_BERT/OptimizedEngineeredNov2017/neutrino/flux/g4lbne_v3r5p4_QGSP_BERT_OptimizedEngineeredNov2017_neutrino_00%03d.dk2nu.root",i);
+    std::ifstream infile(filename); 
+
+    //TFile *f = new TFile(Form("/pnfs/dune/persistent/stash/Flux/g4lbne/v3r5p4/QGSP_BERT/OptimizedEngineeredNov2017/neutrino/flux/g4lbne_v3r5p4_QGSP_BERT_OptimizedEngineeredNov2017_neutrino_00%03d.dk2nu.root",i),"READ");
+    if(!infile.good()){// checking if the file exists
+      std::cout << "File Not Existed: " << i << "\n"; 
+      continue;
+    } 
+
+    
+      //if(i==185) continue;
+      meta->Add(filename);
+      tree->Add(filename);
+      //meta->Add(Form("root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/stash/Flux/g4lbne/v3r5p4/QGSP_BERT/OptimizedEngineeredNov2017/neutrino/flux/g4lbne_v3r5p4_QGSP_BERT_OptimizedEngineeredNov2017_neutrino_00%03d.dk2nu.root",i));
+      //tree->Add(Form("root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/persistent/stash/Flux/g4lbne/v3r5p4/QGSP_BERT/OptimizedEngineeredNov2017/neutrino/flux/g4lbne_v3r5p4_QGSP_BERT_OptimizedEngineeredNov2017_neutrino_00%03d.dk2nu.root",i));
+    
   }
 
   double total_POT = 0.;
   int NFiles = meta->GetEntries();
+  std::cout << "Total number of files = " << NFiles << "\n";
+
   for( int i = 0; i < NFiles; ++i ) {
     meta->GetEntry(i);
     double pot = meta->GetLeaf("pots")->GetValue();
@@ -61,11 +67,14 @@ void dk2nu()
 
   printf( "The total POT is %3.3g\n", total_POT );
 
+
   const int N = tree->GetEntries();
+  std::cout << "Total entries = " << N << "\n";
 
   for(int ii=0; ii<N; ii++)
   {	
     tree->GetEntry(ii);
+
     if( ii % 10000 == 0 ) printf( "Event %d of %d...\n", ii, N );
 
     int nuPDG = tree->GetLeaf("decay.ntype")->GetValue(); // neutrino PDG
@@ -110,7 +119,7 @@ void dk2nu()
 
     if(nu_vtxZ > 20000) {
       count ++;
-      std::cout << vtx_z << "\t" << nu_vtxZ << "\t" << dz << "\n";
+      //std::cout << vtx_z << "\t" << nu_vtxZ << "\t" << dz << "\n";
     }
 
     disp = sqrt(dx*dx + dy*dy + dz*dz);
@@ -138,10 +147,10 @@ void dk2nu()
 
     nuE = nu_E * E_ratio;
     p_vec *= (nuE / disp);
-    double p_nu[3]; //* This unrotated vector will come in handy for muon decay in flight weighting.
-    p_nu[0] = p_vec[0]; //*
-    p_nu[1] = p_vec[1]; //*
-    p_nu[2] = p_vec[2]; //*
+    double p_nu[3]; // This unrotated vector will come in handy for muon decay in flight weighting.
+    p_nu[0] = p_vec[0]; //
+    p_nu[1] = p_vec[1]; //
+    p_nu[2] = p_vec[2]; //
     p_vec.RotateUz(beam_dir);
     nu_px = p_vec[0];
     nu_py = p_vec[1];
@@ -206,14 +215,17 @@ void dk2nu()
       wght *= wt_ratio;
     }
 
-    if(nuPDG==14 && nuE<5) h->Fill(nuE, (57400-nu_vtxZ)/100., wght);
+    //if(nuPDG==14 && nuE<5) h->Fill(nuE, (57400-nu_vtxZ)/100., wght);
 
     nudir->Fill();
+
   }
+
 
   POT = total_POT;
   nudir->Branch( "POT", &POT, "POT/I" )->Fill();
 
+/*
   gStyle->SetPalette(kColorPrintableOnGrey);
   TColor::InvertPalette();
   gStyle->SetNumberContours(999);
@@ -223,7 +235,7 @@ void dk2nu()
   TCanvas *c = new TCanvas("c","",800,600);
   h->Draw("colz");
   c->SaveAs("LEdep.png");
-
+*/
 
   std::cout << count << "\n";
   nudir->Write();
