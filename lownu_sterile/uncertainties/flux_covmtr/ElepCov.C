@@ -327,7 +327,7 @@ void ElepCov()
   TH1D *tp_e_nue[n_e];
 
 
-  TFile *f     = new TFile(Form("%s/input_dfiles/CC_output.root",data_path), "READ");
+  TFile *f     = new TFile(Form("%s/input_dfiles/CCtest_output.root",data_path), "READ");
   TFile *f_nue = new TFile(Form("%s/input_dfiles/nue_output.root",data_path), "READ");
 
   TH2D *CC_m  = (TH2D*)f->Get(Form("mElepRecoVsEv4_cov"));
@@ -337,7 +337,7 @@ void ElepCov()
   TH2D *nue_e = (TH2D*)f_nue->Get(Form("eElepRecoVsEv_cov"));
 
   const int N_nucut = 5;
-  double nucut[N_nucut] = {10., 3., 1., 0.5, 0.3};
+  double nucut[N_nucut] = {50., 5., 1., 0.5, 0.3};
 
   TH2D *hcv[N_nucut];
   TH2D *hfrcv[N_nucut];
@@ -590,7 +590,7 @@ void ElepCov()
   //c->Close();
 
 
-  TFile *out = new TFile(Form("%s/uncertainties/flux_covmtr/flux_covmtr.root", data_path),"RECREATE");
+  TFile *out = new TFile(Form("%s/uncertainties/flux_covmtr/flux_covmtr_TEST.root", data_path),"RECREATE");
   for(int inu=0; inu<N_nucut; inu++){
     hcv[inu]->Write();
     hfrcv[inu]->Write();

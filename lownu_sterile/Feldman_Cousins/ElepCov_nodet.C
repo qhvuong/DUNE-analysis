@@ -3,7 +3,7 @@
 #include <TMatrixDEigen.h>
 #include <TAxis.h>
 
-static const int N = 100000; 
+static const int N = 1000000; 
 static const int nbins_CC = 56;
 static const int nbins_nue = 8;
 static const int nbins = 2*nbins_CC + nbins_nue;
@@ -20,29 +20,29 @@ TMatrixD scaleCovars( nbins, nbins ); // pairwise covariance of columns of rando
 TMatrixD scales( N, nbins );
   
 
-void ElepCov()
+void ElepCov_nodet()
 {
 
-  int cutNu = 4;
+  int cutNu = 3;
   const char name[20] = "wgt_MaCCQE";
   const char name_sys[] = "wgt_Mnv2p2hGaussEnhancement";
 
   // Get data files
-  TFile *f     = new TFile(Form("%s/input_dfiles/CCtest_output.root", data_path), "READ");
+  TFile *f     = new TFile(Form("%s/input_dfiles/CC_output_1101.root", data_path), "READ");
   TFile *f_nue = new TFile(Form("%s/input_dfiles/nue_output_FV.root", data_path), "READ");
 
   // Get systematic uncertainties
-  TFile *f_sig = new TFile(Form("%s/uncertainties/xS_covmtr/xS_unc.root",data_path), "READ");
+  TFile *f_sig = new TFile(Form("%s/uncertainties/xS_covmtr/xS_unc_5.root",data_path), "READ");
   //TFile *f_sys = new TFile(Form("%s/xS_covmtr/%s_covmtr%d_%d.root",data_path,name_sys,cutNu,nbins), "READ");
-  TFile *f_fl  = new TFile(Form("%s/uncertainties/flux_covmtr/flux_covmtr_TEST.root",data_path),"READ");
+  TFile *f_fl  = new TFile(Form("%s/uncertainties/flux_covmtr/flux_covmtr_1104.root",data_path),"READ");
   TFile *f_det = new TFile(Form("%s/uncertainties/det_covmtr/det_covmtr.root",data_path),"READ");
 
-  TH2D *hsig = (TH2D*)f_sig->Get("hcv");
-  TH2D *hfl  = (TH2D*)f_fl->Get("hcv4");
+  TH2D *hsig = (TH2D*)f_sig->Get("hcv_tot");
+  TH2D *hfl  = (TH2D*)f_fl->Get("hcv");
   TH2D *hdet = (TH2D*)f_det->Get("hcov4");
 
-  TH1D *CCm_nom = (TH1D*)f->Get(Form("%s_mElep%d_o",name,cutNu));
-  TH1D *CCe_nom = (TH1D*)f->Get(Form("%s_eElep%d_o",name,cutNu));
+  TH1D *CCm_nom = (TH1D*)f->Get(Form("%s_m_hElep%d_sigma3",name,cutNu));
+  TH1D *CCe_nom = (TH1D*)f->Get(Form("%s_e_hElep%d_sigma3",name,cutNu));
   TH1D *nue_nom  = (TH1D*)f_nue->Get("hElep");
   
   TH1D *hstat = new TH1D("hstat","",nbins,0,nbins);
@@ -51,7 +51,7 @@ void ElepCov()
   for( int x = 0; x < nbins; ++x ) {
     for( int y = 0; y < nbins; ++y ) {
       //sysmx[x][y]  = hfl->GetBinContent(x+1, y+1) + hsig->GetBinContent(x+1, y+1) + hdet->GetBinContent(x+1, y+1);		//total sys = flux unc + cross section unc
-      sysmx[x][y]  = hfl->GetBinContent(x+1, y+1);
+      sysmx[x][y]  = hfl->GetBinContent(x+1, y+1) + hsig->GetBinContent(x+1, y+1);
       //sysmx[x][y]  = 0.;
       if(x==y){
         if(x<nbins_CC)                  statmx[x][y] = CCm_nom->GetBinContent( x+1 );
@@ -63,7 +63,8 @@ void ElepCov()
   }
  
   covmx = statmx + sysmx; 
-  
+  //covmx = sysmx; 
+
 /*
   gStyle->SetNumberContours(999);
   gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
@@ -209,7 +210,7 @@ void ElepCov()
 
   //TFile *out = new TFile(Form("%s/Feldman_Cousins/FC_%s_%d_%d_%d.root",data_path,name_sys,cutNu,nbins,N),"RECREATE");
   //TFile *out = new TFile(Form("%s/Feldman_Cousins/FC_stat_%d.root",data_path,N),"RECREATE");
-  TFile *out = new TFile(Form("FCflux.root"),"RECREATE");
+  TFile *out = new TFile(Form("FC_nodet.root"),"RECREATE");
   scales.Write("hscales");
   out->Close();
 

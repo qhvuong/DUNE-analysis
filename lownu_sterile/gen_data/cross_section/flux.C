@@ -127,7 +127,7 @@ void flux()
   he->Draw();
   c->SaveAs("nue_flux.png");
 
-  TFile *out = new TFile("flux_50bins.root","RECREATE");
+  TFile *out = new TFile("CorrectedFlux.root","RECREATE");
   h->Write();
   he->Write();
 

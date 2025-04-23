@@ -13,7 +13,7 @@ TLegend * MakeLegend(float left=0.7, float bottom=0.5, float right=0.9, float to
 
 
 
-void plot1()
+void plot2()
 {
   
   double ue42, um42, ut42, dm2, chi2, nochi2, dchi2, ratio;
@@ -28,14 +28,14 @@ void plot1()
   
   TH1D *h[4];
 
-  for(int run=0; run<1; run++){
-    TFile *out = new TFile(Form("FCtot_FINAL_%s_1E5.root",names[run]),"RECREATE");
+  for(int run=2; run<3; run++){
+    TFile *out = new TFile(Form("FCtot_FINAL_%s.root",names[run]),"RECREATE");
 
     h[run] = new TH1D(Form("h"), "", 150, 0, 80);
     h[run]->GetXaxis()->SetTitle("FC #Delta#chi^{2}");
     h[run]->GetYaxis()->SetTitle("arbitrary unit");
 
-    if(run==0) N = 100000;
+    if(run==0) N = 1000000;
     else N = 100000;
 
     for(int i=0; i<N; i++) {

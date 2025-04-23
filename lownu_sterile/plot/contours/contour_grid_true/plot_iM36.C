@@ -12,7 +12,7 @@ void CalculateBinEdges(double val_max, double val_min, double binEdges[Nbins])
   }    
 }
 
-void plot()
+void plot_iM36()
 {
   const int N_samples = 6;
   double ue42, um42, ut42, dm2, bf_ue42, bf_um42, bf_ut42, bf_dm2, chi2, nochi2, dchi2;
@@ -31,7 +31,7 @@ void plot()
   CalculateBinEdges(U_max, U_min, U_binEdges);
   CalculateBinEdges(M_max, M_min, M_binEdges);
 
-  
+  /*
   for(int i=0; i<Nbins; i++){
     for(int j=0; j<6; j++){
       if( ((M_binEdges[i]+M_binEdges[i+1])/2) == M_vals[j] ) M_bins[j] = i;
@@ -47,42 +47,51 @@ void plot()
     std::cout << i << "\t" << (M_binEdges[i]+M_binEdges[i+1])/2 << "\n";
     std::cout << i << "\t" << (U_binEdges[i]+U_binEdges[i+1])/2 << "\n";
   }
+  for(int i=0; i<10; i++){
+    std::cout << int( i % Nbins ) << "\n";
+    std::cout << int( (i % (Nbins * Nbins)) / Nbins ) << "\n";
+    std::cout << int( i / (Nbins * Nbins) ) << "\n";
+  }
+  */
 
-  
-/*
   TH2D *h_me[N_samples];
   TH2D *h_Me[N_samples], *h_Mm[N_samples];
 
   
-  TFile *out = new TFile(Form("contours_dm2.root"));
-  for(int iM=0; iM<3; iM++){
+  TFile *out = new TFile(Form("contours_dm2.root"), "UPDATE");
+  for(int iM=3; iM<6; iM++){
+    std::cout << "iM\t" << M_vals[iM] << "\n";
     int z = M_bins[iM];
     h_me[iM] = new TH2D(Form("h_me_%d",iM), Form("#Deltam^{2} = %.1f", M_vals[iM]), Nbins, U_binEdges, Nbins, U_binEdges);
     h_me[iM]->SetStats(0);
 
     for(int x=0; x<Nbins; x++){
-    for(int y=0; y<Nbins; y++){
-      int ifile = x + Nbins * y + Nbins * Nbins * z;
-      TString filepath = Form("%s/output_%d.txt",out_path,ifile);
-      ifstream f(filepath.Data());
-      //if(i%100==0) std::cout << M_vals[iM] << ": \t" << i*100./(Nbins*Nbins) << " percent...\n";
-      if(!f) {
-        std::cout << "failed: " << x << "\t" << y << "\t" << z << "\t" << ifile << "\n";
-        continue;
+      if(x%10==0) std::cout << x*1. << " percent...\n";
+
+      for(int y=0; y<Nbins; y++){
+        int ifile = x + Nbins * y + Nbins * Nbins * z;
+        TString filepath = Form("%s/output_%d.txt",out_path,ifile);
+        ifstream f(filepath.Data());
+        //if(i%100==0) std::cout << M_vals[iM] << ": \t" << i*100./(Nbins*Nbins) << " percent...\n";
+        if(!f) {
+          std::cout << "failed: " << x << "\t" << y << "\t" << z << "\t" << ifile << "\n";
+          continue;
+        }
+        else {
+          f >> ue42 >> um42 >> ut42 >> dm2 >> nochi2;
+          if(dm2 == M_vals[iM]){
+            //std::cout << "good: " << x << "\t" << y << "\t" << z << "\t" << ifile << "\n";
+            //std::cout << "good: " << ue42 << "\t" << um42 << "\t" << dm2 << "\n";
+            dchi2 = sqrt(nochi2 - chi2);
+            h_me[iM]->Fill(um42, ue42, dchi2);
+          }
+          f.close();
+        }
       }
-      else{
-        std::cout << "good: " << x << "\t" << y << "\t" << z << "\t" << ifile << "\n";
-        std::cout << "good: " << ue42 << "\t" << um42 << "\t" << dm2 << "\n";
-        f >> ue42 >> um42 >> ut42 >> dm2 >> nochi2;
-        dchi2 = sqrt(nochi2 - chi2);
-        h_me[iM]->Fill(um42, ue42, dchi2);
-        f.close();
-      }
-    }
     }
     h_me[iM]->Write();
   }
   out->Close(); 
-*/
+
 }
 

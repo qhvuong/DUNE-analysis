@@ -25,7 +25,7 @@ void plotMtr(TH2D* cov, const char *name, TCanvas *c, TLine *l1, TLine *l2, TLin
 
 void plot()
 {
-  TFile *f = new TFile(Form("%s/flux_covmtr.root",data_path), "READ");
+  TFile *f = new TFile(Form("%s/flux_covmtr_TEST.root",data_path), "READ");
 
   const int N_nucut = 5;
   double nucut[N_nucut] = {10., 3., 1., 0.5, 0.3};
@@ -34,7 +34,8 @@ void plot()
   TH2D *hfrcv[N_nucut];
   TH2D *hcr[N_nucut]; TH2D *hcr_log[N_nucut];
 
-  gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
+  //gStyle->SetPalette(kColorPrintableOnGrey); 
+  TColor::InvertPalette();
   TCanvas *c = new TCanvas("c","",800,600);
 
   for(int j=0; j<N_nucut; j++){
@@ -90,13 +91,13 @@ void plot()
 
 
   // PLOT   
-  /*
+  
   gPad->SetLogz(0);
   gPad->Update();
   for(int j=0; j<N_nucut; j++){
     plotMtr(hcr[j], Form("%s/flux_cor%d",data_path,j), c, l1, l2, l3, l4);
   }
-  */
+  
 
   gPad->SetLogz();
   gPad->Update();

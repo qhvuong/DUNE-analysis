@@ -13,114 +13,104 @@ TLegend * MakeLegend(float left=0.7, float bottom=0.5, float right=0.9, float to
 
 
 
-void plot1()
-{
-  
-  double ue42, um42, ut42, dm2, chi2, nochi2, dchi2, ratio;
-  int N;
-  const char data_path[] = "/pnfs/dune/scratch/users/qvuong/output/FCgrid_FINAL";
-  const char out_path[] = "/exp/dune/app/users/qvuong/data/lownu/Feldman_Cousins";
 
-  
-
-  const char* names[4] = {"all", "stat", "flux", "zeroSeeding"};
-  
-  
-  TH1D *h[4];
-
-  for(int run=0; run<1; run++){
-    TFile *out = new TFile(Form("FCtot_FINAL_%s_1E5.root",names[run]),"RECREATE");
-
-    h[run] = new TH1D(Form("h"), "", 150, 0, 80);
-    h[run]->GetXaxis()->SetTitle("FC #Delta#chi^{2}");
-    h[run]->GetYaxis()->SetTitle("arbitrary unit");
-
-    if(run==0) N = 100000;
-    else N = 100000;
-
-    for(int i=0; i<N; i++) {
-      if(i%200==0) std::cout << names[run] << ": \t" << i*100./N << " percent...\n";
-      TString filepath = Form("%s/%s/output_%d.txt", data_path, names[run], i);
-      ifstream f(filepath.Data());
-      if(f) {
-        //std::cout << filepath << "\n";
-        f >> ue42 >> um42 >> ut42 >> dm2 >> chi2 >> nochi2 >> ratio;
-        dchi2 = nochi2 - chi2;
-        h[run]->Fill(dchi2);
-      }
+double GetCriticalChi2(TH1D* h, double confidenceLevel) {
+    if (!h) {
+        std::cerr << "Histogram is null!" << std::endl;
+        return -1;
     }
 
-    h[run]->Write();
-    out->Close();
+    // Total number of entries in the histogram
+    double totalEntries = h->GetEntries();
+
+    // Desired cumulative number of entries corresponding to the confidence level
+    double targetEntries = confidenceLevel * totalEntries;
+
+    // Initialize the cumulative sum
+    double cumulativeEntries = 0.0;
+
+    // Loop over the bins to find the bin where the cumulative sum exceeds targetEntries
+    for (int bin = 1; bin <= h->GetNbinsX(); ++bin) {
+        cumulativeEntries += h->GetBinContent(bin);
+        
+        if (cumulativeEntries >= targetEntries) {
+            // Found the critical bin
+            double criticalChi2 = h->GetBinLowEdge(bin) + h->GetBinWidth(bin) / 2;
+            return criticalChi2;
+        }
+    }
+
+    // If we didn't find it, return the highest bin center as a fallback
+    return h->GetBinLowEdge(h->GetNbinsX()) + h->GetBinWidth(h->GetNbinsX()) / 2;
+}
+
+
+
+
+
+void plot_nodet()
+{
+  
+  double ue42[4], um42[4], ut42[4], dm2[4], chi2[4], nochi2[4], dchi2[4], ratio[4];
+  int N = 100000;
+  int count = 0;
+
+  const char data_path[] = "/pnfs/dune/scratch/users/qvuong/output";
+  const char out_path[] = "/exp/dune/app/users/qvuong/data/lownu/Feldman_Cousins";
+
+
+  double xMin = 1e-5;
+  double xMax = 0.5;
+  double mMin = 1E-3;
+  double mMax = 1E3;
+
+  int nbins = 100;
+  double logXMin = TMath::Log10(xMin);
+  double logXMax = TMath::Log10(xMax);
+  double binWidth = (logXMax - logXMin) / nbins;
+  double logMMin = TMath::Log10(mMin);
+  double logMMax = TMath::Log10(mMax);
+  double binWidthM = (logMMax - logMMin) / nbins;
+
+  double binEdges[nbins + 1], binEdgesM[nbins+1];
+  for (int i = 0; i <= nbins; ++i) {
+    binEdges[i] = TMath::Power(10, logXMin + i * binWidth);
+    binEdgesM[i] = TMath::Power(10, logMMin + i * binWidthM);
   }
-  
 
+  TH1D *h = new TH1D("h","",150,0,80);
+  h->SetTitle("FC #Delta#chi^{2}");
+  h->GetXaxis()->SetTitle("#Delta#chi^{2}");
+  h->GetYaxis()->SetTitle("arbitrary unit");
 
-  //h[0]->Draw();
-  
+  for(int i=0; i<N; i++) {
+    if(i%100==0) std::cout << i*100./N << " percent...\n";
+    ifstream f(Form("%s/FCgrid/0130_nodet/output_%d.txt",data_path,i));
+    if(f) {
+      f >> ue42[3] >> um42[3] >> ut42[3] >> dm2[3] >> chi2[3] >> nochi2[3] >> ratio[3];
+      dchi2[3] = nochi2[3] - chi2[3];
+      h->Fill(dchi2[3]);
+    }
+  }
 
-  //std::cout << GetCriticalChi2(h[0], 68.2/100.);
+  TFile *out = new TFile("FCtot_nodet.root","RECREATE");
+  h->Write();
+  out->Close();
 
-  /*
-  auto color1 = dunestyle::colors::NextColor(dunestyle::colors::Cycle::OkabeIto, 1);
-  auto color2 = dunestyle::colors::NextColor(dunestyle::colors::Cycle::OkabeIto, 2);
-  auto color3 = dunestyle::colors::NextColor(dunestyle::colors::Cycle::OkabeIto, 3);
-
-
-
+/*
   h->Scale(1.0 / h->Integral()); 
-  h->SetMaximum(h->GetMaximum()*10.);
-
-
-  // Compute Confidence Levels (percentiles of a Gaussian)
-  double mean = h->GetMean();
-  double sigma = h->GetStdDev();
-  
-  double level1 = mean + 1 * sigma; // 68.2% (1σ)
-  double level2 = mean + 2 * sigma; // 95.4% (2σ)
-  double level3 = mean + 3 * sigma; // 99.7% (3σ)
-
-  // Draw Confidence Level Lines
-  TLine *line1 = new TLine(level1, 0, level1, h->GetMaximum());
-  TLine *line2 = new TLine(level2, 0, level2, h->GetMaximum());
-  TLine *line3 = new TLine(level3, 0, level3, h->GetMaximum());
-
-  line1->SetLineColor(color1);
-  line2->SetLineColor(color2);
-  line3->SetLineColor(color3);
-
-  line1->SetLineStyle(kSolid);
-  line2->SetLineStyle(kSolid);
-  line3->SetLineStyle(kSolid);
-
-  line1->SetLineWidth(2);
-  line2->SetLineWidth(2);
-  line3->SetLineWidth(2);
-
+  h->SetMaximum(h->GetMaximum()*2.);
 
   TCanvas *c = new TCanvas("c","",800,600);
   c->SetGrid();
   c->SetLogy();
-  h->Draw("HIST");
-  line1->Draw("same");
-  line2->Draw("same");
-  line3->Draw("same");
-  TLegend *legend = MakeLegend(0.6, 0.6, 0.85, 0.8);
-  legend->AddEntry(line1, "1#sigma (68.2%)", "l");
-  legend->AddEntry(line2, "2#sigma (95.4%)", "l");
-  legend->AddEntry(line3, "3#sigma (99.7%)", "l");
-  legend->Draw();
+  h->Draw();
   dunestyle::CenterTitles(h);
   dunestyle::WIP();
   //c->SaveAs("FCdchi2.png");
-  c->SaveAs("FCdchi2_tot.png");
+  c->SaveAs("FCdchi2_log.png");
+*/
 
-
-
-  TFile *out = new TFile("FCtot.root","RECREATE");
-  h->Write();
-  out->Close();
-  */
 }
 
 /*

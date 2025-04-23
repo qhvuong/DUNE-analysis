@@ -11,47 +11,116 @@ TLegend * MakeLegend(float left=0.7, float bottom=0.5, float right=0.9, float to
   return leg;
 }
 
+void drawBestfit(TCanvas *c, TH1D*h, double trueVal, const char *outName){
+  c->cd();
+  c->Clear();
+  h->Scale(1.0 / h->Integral()); 
+  //h->SetMaximum(h->GetMaximum()*10.);
+  auto color = dunestyle::colors::NextColor(dunestyle::colors::Cycle::OkabeIto, 2);
+  TLine *line = new TLine(trueVal, 0, trueVal, h->GetMaximum());
+  line->SetLineColor(color);
+  h->Draw("HIST");
+  line->Draw("same");
+  TLegend *legend = MakeLegend(0.6, 0.6, 0.85, 0.8);
+  legend->AddEntry(line, Form("true value = %.4f", trueVal), "l");
+  legend->Draw();
+  dunestyle::CenterTitles(h);
+  dunestyle::WIP();
+  //c->SaveAs("FCdchi2.png");
+  c->SaveAs(Form("%s.png",outName));
+}
 
+void drawDchi2(TCanvas *c, TH1D*h, double trueVal[4], const char *outName){
+  c->cd();
+  c->Clear();
+  h->Scale(1.0 / h->Integral()); 
+  //h->SetMaximum(h->GetMaximum()*10.);
+  h->SetTitle(Form("U_{e4}^{2} = %.5f, U_{#mu4}^{2} = %.5f, U_{#tau4}^{2} = %.5f, #Deltam^{2} = %.1f", trueVal[0], trueVal[1], trueVal[2], trueVal[3]));
+  //auto color = dunestyle::colors::NextColor(dunestyle::colors::Cycle::OkabeIto, 2);
+  // TLine *line = new TLine(trueVal, 0, trueVal, h->GetMaximum());
+  // line->SetLineColor(color);
+  h->Draw("HIST");
+  // line->Draw("same");
+  // TLegend *legend = MakeLegend(0.6, 0.6, 0.85, 0.8);
+  // legend->AddEntry(line, Form("true value = %.3f", trueVal), "l");
+  // legend->Draw();
+  dunestyle::CenterTitles(h);
+  dunestyle::WIP();
+  c->RedrawAxis();
+  //c->SaveAs("FCdchi2.png");
+  c->SaveAs(Form("%s.png",outName));
+}
 
-void plot1()
+void plotClosure()
 {
   
-  double ue42, um42, ut42, dm2, chi2, nochi2, dchi2, ratio;
-  int N;
-  const char data_path[] = "/pnfs/dune/scratch/users/qvuong/output/FCgrid_FINAL";
+  double ue42, um42, ut42, dm2, bfchi2, tgtchi2, nochi2, dchi2, ratio;
+  double ue42Err, um42Err, ut42Err, dm2Err;
+
+  double trueVals[3][4] = {
+    {0.01, 0.02, 0., 5.},
+    {0.2, 0.2, 0., 0.1},
+    {1E-4, 1E-4, 0., 100.}
+  };
+
+
+  int N=100;
+  const char data_path[] = "/pnfs/dune/scratch/users/qvuong/output/FCclosure";
   const char out_path[] = "/exp/dune/app/users/qvuong/data/lownu/Feldman_Cousins";
 
-  
+  TH1D *hUe42[3], *hUm42[3], *hDm2[3];
+  TH1D *h[3];
 
-  const char* names[4] = {"all", "stat", "flux", "zeroSeeding"};
-  
-  
-  TH1D *h[4];
+  TCanvas *c = new TCanvas("c","",800,600);
 
-  for(int run=0; run<1; run++){
-    TFile *out = new TFile(Form("FCtot_FINAL_%s_1E5.root",names[run]),"RECREATE");
-
-    h[run] = new TH1D(Form("h"), "", 150, 0, 80);
+  for(int run=0; run<3; run++){
+    TFile *out = new TFile(Form("FCclosure_%d.root",run),"RECREATE");
+    h[run] = new TH1D(Form("h%d",run), "", 20, 0, 100);
     h[run]->GetXaxis()->SetTitle("FC #Delta#chi^{2}");
     h[run]->GetYaxis()->SetTitle("arbitrary unit");
+    
+    hUe42[run] = new TH1D(Form("hUe42%d",run), "", 20, 0, 2*trueVals[run][0]);
+    hUe42[run]->GetXaxis()->SetTitle("U_{e4}^{2}");
+    hUe42[run]->GetYaxis()->SetTitle("arbitrary unit");
 
-    if(run==0) N = 100000;
-    else N = 100000;
+    hUm42[run] = new TH1D(Form("hUm42%d",run), "", 20, 0, 2*trueVals[run][1]);
+    hUm42[run]->GetXaxis()->SetTitle("U_{#mu4}^{2}");
+    hUm42[run]->GetYaxis()->SetTitle("arbitrary unit");
+
+    hDm2[run] = new TH1D(Form("hDm2%d",run), "", 20, 0, 2*trueVals[run][3]);
+    hDm2[run]->GetXaxis()->SetTitle("#Deltam^{2}");
+    hDm2[run]->GetYaxis()->SetTitle("arbitrary unit");
 
     for(int i=0; i<N; i++) {
-      if(i%200==0) std::cout << names[run] << ": \t" << i*100./N << " percent...\n";
-      TString filepath = Form("%s/%s/output_%d.txt", data_path, names[run], i);
+      if(i%10==0) std::cout << i*100./N << " percent...\n";
+      TString filepath = Form("%s/%02d/output_%d.txt", data_path, run, i);
       ifstream f(filepath.Data());
       if(f) {
         //std::cout << filepath << "\n";
-        f >> ue42 >> um42 >> ut42 >> dm2 >> chi2 >> nochi2 >> ratio;
-        dchi2 = nochi2 - chi2;
+        f >> ue42 >> um42 >> ut42 >> dm2 >> ue42Err >> um42Err >> ut42Err >> dm2Err >> bfchi2 >> tgtchi2 >> nochi2 >> ratio;
+        
+        dchi2 = tgtchi2 - bfchi2;
+        if(dchi2 < 0.) std::cout << i << "\t" << dchi2 << "\t" << tgtchi2 << "\t" << bfchi2 << "\n";
         h[run]->Fill(dchi2);
+        hUe42[run]->Fill(ue42);
+        hUm42[run]->Fill(um42);
+        hDm2[run]->Fill(dm2);
       }
     }
 
+    drawBestfit(c, hUe42[run], trueVals[run][0], Form("ue42_%d",run));
+    drawBestfit(c, hUm42[run], trueVals[run][1], Form("um42_%d",run));
+    drawBestfit(c, hDm2[run],  trueVals[run][3], Form("dm2_%d",run));
+    drawDchi2(c, h[run], trueVals[run], Form("dchi2_%d",run));
+
     h[run]->Write();
+    hUe42[run]->Write();
+    hUm42[run]->Write();
+    hDm2[run]->Write();
+
+
     out->Close();
+
   }
   
 

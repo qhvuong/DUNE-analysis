@@ -1,6 +1,6 @@
-static const int N = 500; 
-static const int nbins_CC = 100;
-static const int nbins_nue = 50;
+static const int N = 125; 
+static const int nbins_CC = 58;
+static const int nbins_nue = 8;
 static const int nbins = 2*nbins_CC + nbins_nue;
 
 
@@ -39,16 +39,14 @@ void ElepCov_stats()
   const char name[20] = "wgt_MaCCQE";
 
   //for(para = 1; para <3; para++) {
-  TFile *f     = new TFile("/dune/app/users/qvuong/data/lownu/CC_output.root", "READ");
-  TFile *f_nue = new TFile("/dune/app/users/qvuong/data/lownu/nue_output.root", "READ");
+  TFile *f     = new TFile("/exp/dune/app/users/qvuong/data/lownu/input_dfiles/CC_output_58.root", "READ");
+  TFile *f_nue = new TFile("/exp/dune/app/users/qvuong/data/lownu/input_dfiles/nue_output_test.root", "READ");
   //TFile *f_sys = new TFile(Form("../xS_covmtr/total_sigmtr%d_3sig.root",cutNu), "READ");
-  TFile *f_sys = new TFile(Form("../xS_covmtr/%s_sigmtr%d.root",name,cutNu), "READ");
-  TFile *f_fl  = new TFile(Form("../flux_covmtr/flux_covmtr%d_10000.root",cutNu),"READ");
+  TFile *f_sys = new TFile(Form("/exp/dune/app/users/qvuong/data/lownu/xS_covmtr/total_sigmtr%d_5sig.root",cutNu), "READ");
+  TFile *f_fl  = new TFile(Form("/exp/dune/app/users/qvuong/data/lownu/flux_covmtr/flux_covmtr%d_124.root",cutNu),"READ");
 
   TH2D *hsys   = (TH2D*)f_sys->Get( "hcv" );
   TH2D *hfl    = (TH2D*)f_fl->Get("hcv");
-  std::cout << hfl->GetNbinsX() << "\t" << hfl->GetNbinsY() << "\n"; 
-  std::cout << hsys->GetNbinsX() << "\t" << hsys->GetNbinsY() << "\n"; 
 
   TH1D *CC_m_nom = (TH1D*)f->Get(Form("%s_m_hElep%d_sigma3",name,cutNu));
   TH1D *CC_e_nom = (TH1D*)f->Get(Form("%s_e_hElep%d_sigma3",name,cutNu));
@@ -58,8 +56,8 @@ void ElepCov_stats()
   // only need the ND FHC part, which is the first 52 bins probably
   for( int x = 0; x < nbins; ++x ) {
     for( int y = 0; y < nbins; ++y ) {
-      //sysmx[x][y]  = hfl->GetBinContent(x+1, y+1) + hsys->GetBinContent(x+1, y+1);
-      sysmx[x][y]  = hfl->GetBinContent(x+1, y+1);
+      sysmx[x][y]  = hfl->GetBinContent(x+1, y+1) + hsys->GetBinContent(x+1, y+1);
+      //sysmx[x][y]  = hfl->GetBinContent(x+1, y+1);
       statmx[x][y] = 0.;
 
       if(x==y){
@@ -370,11 +368,11 @@ void ElepCov_stats()
 
   gStyle->SetPalette(kColorPrintableOnGrey); TColor::InvertPalette();
 
-
+/*
   TFile *out = new TFile(Form("FC_stat_%d_%d.root",cutNu,N),"RECREATE");
   hcv->Write();
   out->Close();
-
+*/
   } 
 }
 
