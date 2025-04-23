@@ -79,16 +79,16 @@ int main()
   para = 2;
   nuCut = 3;
 
-  TFile *CC_f  = new TFile(Form("%s/input_dfiles/CC_output_56bins.root",data_path),"READ");
-  TFile *nue_f = new TFile(Form("%s/input_dfiles/nue_output_8bins.root",data_path),"READ");
+  TFile *CC_f  = new TFile(Form("%s/input_dfiles/CC_output_1101.root",data_path),"READ");
+  TFile *nue_f = new TFile(Form("%s/input_dfiles/nue_output_FV.root",data_path),"READ");
 
   TH2D* CC_hm    = (TH2D*)CC_f->Get(Form("m_h%sVsEv%d",var,nuCut));
   TH2D* CC_hm_nc = (TH2D*)CC_f->Get(Form("nc_m_h%sVsEv%d",var,nuCut));
   TH2D* CC_he    = (TH2D*)CC_f->Get(Form("e_h%sVsEv%d",var,nuCut));
-  TH2D* nue_hm   = (TH2D*)nue_f->Get(Form("m_h%sVsEv0",var));
-  TH2D* nue_hm_w = (TH2D*)nue_f->Get(Form("m_h%sVsEv0_w",var));
-  TH2D* nue_he   = (TH2D*)nue_f->Get(Form("e_h%sVsEv0",var));
-  TH2D* nue_he_w = (TH2D*)nue_f->Get(Form("e_h%sVsEv0_w",var));
+  TH2D* nue_hm   = (TH2D*)nue_f->Get(Form("m_h%sVsEv",var));
+  TH2D* nue_hm_w = (TH2D*)nue_f->Get(Form("m_h%sVsEv_w",var));
+  TH2D* nue_he   = (TH2D*)nue_f->Get(Form("e_h%sVsEv",var));
+  TH2D* nue_he_w = (TH2D*)nue_f->Get(Form("e_h%sVsEv_w",var));
 
   TH1D * CC_templates_m[nbins_Ev];
   TH1D * CC_templates_m_nc[nbins_Ev];
@@ -116,10 +116,13 @@ int main()
     energy_bins[b] = CC_he->GetXaxis()->GetBinLowEdge(b+1);
   } 
 
-  TFile *f_fl = new TFile(Form("%s/flux_covmtr/flux_covmtr%d_120.root",data_path,nuCut),"READ");
+  TFile *f_fl = new TFile(Form("%s/uncertainties/flux_covmtr/flux_covmtr_1104.root",data_path),"READ");
   TH2D *fl_cov = (TH2D*)f_fl->Get("hcv");
-  TFile *f_sig = new TFile(Form("%s/xS_covmtr/total_sigmtr%d_5sig_120.root",data_path,nuCut), "READ");
-  TH2D *sig_cov = (TH2D*)f_sig->Get("hcv");
+  TFile *f_sig = new TFile(Form("%s/uncertainties/xS_covmtr/xS_unc_5.root",data_path), "READ");
+  TH2D *sig_cov = (TH2D*)f_sig->Get("hcv_tot");
+  TFile *f_det = new TFile(Form("%s/uncertainties/det_covmtr/det_unc.root",data_path),"READ");
+  TH2D *det_cov = (TH2D*)f_det->Get("htot_cov");
+
 /*
   TCanvas *c = new TCanvas("c","",800,600);
   fl_cov->Draw("colz");
@@ -128,16 +131,17 @@ int main()
   c->SaveAs("sys.png");
 */
 
-  double sig_bins[nbins+1][nbins+1], fl_bins[nbins+1][nbins+1];
+  double sig_bins[nbins+1][nbins+1], fl_bins[nbins+1][nbins+1], det_bins[nbins+1][nbins+1];
   for(int i=0; i<nbins; i++) {
     for(int j=0; j<nbins; j++) {
       fl_bins[i][j]    = fl_cov->GetBinContent(i+1, j+1);
       sig_bins[i][j]   = sig_cov->GetBinContent(i+1, j+1);
+      det_bins[i][j]   = det_cov->GetBinContent(i+1, j+1);
     }
   }
 
   tf.setEnergyBins( energy_bins );
-  tf.setCovmtr( fl_bins, sig_bins );
+  tf.setCovmtr( fl_bins, sig_bins, det_bins );
 
   double seed[4], par_tgt[4], par_bf[4], par_no[4];
   par_tgt[0] = 0.04;
@@ -152,7 +156,12 @@ int main()
   tf.setPara( var, nuCut, fitPara_m, fitPara_e );
 
   tf.getTarget( par_tgt );
-/*
+  
+  double nochi2 = tf.bfChi2(par_no[0], par_no[1], par_no[2], par_no[3]);
+
+  std::cout << nochi2 << "\n";
+
+
   double bf_dm2, bf_Ue42, bf_Um42, bf_Ut42, bf_chi2=1E9, chi2_LowerLimit=5E-3;
   double seed_set[4][4], chi2[4];
   seed_set[0][0] = 0.;
@@ -236,10 +245,13 @@ int main()
       par_bf[2] = bf_Ut42;
       par_bf[3] = bf_dm2;
    }
-  printf( "FINAL FINE2 nue Best-fit Ue42 = %f, Um42 = %f, Ut42 = %f, dm2 = %f, chi2 = %f\n", par_bf[0], par_bf[1], par_bf[2], par_bf[3], bf_chi2);
+
+
+  printf( "FINAL FINE2 nue Best-fit Ue42 = %f, Um42 = %f, Ut42 = %f, dm2 = %f, bfchi2 = %f, nochi2 = %f\n", par_bf[0], par_bf[1], par_bf[2], par_bf[3], bf_chi2, nochi2);
+
 
   tf.bfDraw(par_bf[0], par_bf[1], par_bf[2], par_bf[3]);
-*/
+
 }
 
 

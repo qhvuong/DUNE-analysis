@@ -10,6 +10,7 @@ static const int nbins_CC = 56;
 static const int nbins_nue = 8;
 static const int nbins = 2*nbins_CC + nbins_nue;
 
+
 class TemplateFitter {
 
   public:
@@ -18,22 +19,17 @@ class TemplateFitter {
     ~TemplateFitter(){};
     void setEnergyBins(double bins[nbins_Ev+1]);
     void setCovmtr(double flmx_bct[nbins+1][nbins+1], double sigmx_bct[nbins+1][nbins+1]);
-    void setPara(char var[20], int nuCut, double fitPara_m[29][7], double fitPara_e[29][7]);
-    bool doFitFine1(double seed[4], double &Ue42, double &Um42, double &Ut42, double &dm2);
-    bool doFitFine2(double seed[4], double &Ue42, double &Um42, double &Ut42, double &dm2);
-    bool doFitCoarse(double seed[4], double &Ue42, double &Um42, double &Ut42, double &dm2);
-    void getTarget(double *par_tgt);
-    double bfChi2(double Ue42, double Um42, double Ut42, double dm2);
+    void setPara(char var[20], double par[4], double fitPara_m[29][7], double fitPara_e[29][7]);
+    void getTarget(double *par);
+    void Draw();
+    double getChi2(double *par);
 
 
   private:
-
     double getAvgPme(double energy, double Ue42, double Um42, double Ut42, double dm2, double ft[7]);
     double getAvgPmt(double energy, double Ue42, double Um42, double Ut42, double dm2, double ft[7]);
     double getAvgPee(double energy, double Ue42, double Um42, double Ut42, double dm2, double ft[7]);
     double getAvgPmm(double energy, double Ue42, double Um42, double Ut42, double dm2, double ft[7]);
-    double getChi2(const double * par);
-
 
     // The templates are reconstructed lepton energy, in a slice of true neutrino energy
     TH1D * CC_m_templates[nbins_Ev];
@@ -49,15 +45,17 @@ class TemplateFitter {
     TH1D * LE_e[29];
     // define the energy bins used in the template
     double m_energy_bins[nbins_Ev+1];
-    double s[3], fitP_m[29][7], fitP_e[29][7], ft_m[7], ft_e[7];
+    double s[4], fitP_m[29][7], fitP_e[29][7], ft_m[7], ft_e[7];
     char *name;
-    int cutNu;
-
+    int cutNu, it, im;
+    double b0,b1,b2,b3;
+    double s0,s1,s2,s3;
 
     // this is the thing you are trying to fit to, i.e. the data distribution
     TH1D * CCe_tgt = new TH1D();
     TH1D * CCm_tgt = new TH1D();
     TH1D * nue_tgt = new TH1D();
+
 };
 
 #endif

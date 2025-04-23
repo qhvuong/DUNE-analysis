@@ -2,17 +2,30 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TH2.h"
-#include "TF1.h"
 #include "TStyle.h"
 #include <TRandom.h>
 #include <list>
+#include <iostream>
+#include <fstream>
 
-int main()
+using namespace std;
+
+int main(int argc, char const *argv[])
 {
-  const char data_path[] = "/exp/dune/app/users/qvuong/data/lownu";
 
-  TFile *ftP_m = new TFile(Form("%s/LEdep/fitPara_m.root", data_path),"READ");
-  TFile *ftP_e = new TFile(Form("%s/LEdep/fitPara_e.root", data_path),"READ");
+  int u;
+  int i = 0;
+  while( i < argc ) {
+    if( argv[i] == std::string("--u") ) {
+      u = atof(argv[i+1]);
+      i += 2;
+    }
+
+    else i += 1;
+  }
+  
+  TFile *ftP_m = new TFile("fitPara_m.root","READ");
+  TFile *ftP_e = new TFile("fitPara_e.root","READ");
 
   TTree *tree_m = (TTree*)ftP_m->Get("pardir");
   TTree *tree_e = (TTree*)ftP_e->Get("pardir");
@@ -60,7 +73,8 @@ int main()
   }
   ftP_e->Close();
 
-  TFile *f = new TFile(Form("%s/LEdep/LE_1112_2.root", data_path),"READ");
+
+  TFile *f = new TFile("LE_1112_2.root","READ");
   TH2D *LvsE_e = (TH2D*)f->Get("h_e");
   TH2D *LvsE_m = (TH2D*)f->Get("h_m");
   TH1D *LEdep_e[29], *LEdep_m[29];
@@ -74,10 +88,12 @@ int main()
 
 
   char var[20] = "ElepReco";
+  
+  int para = 2;
   int nuCut = 3;
 
-  TFile *CC_f  = new TFile(Form("%s/input_dfiles/CC_output_56bins.root",data_path),"READ");
-  TFile *nue_f = new TFile(Form("%s/input_dfiles/nue_output_8bins.root",data_path),"READ");
+  TFile *CC_f  = new TFile("CC_output_56bins.root","READ");
+  TFile *nue_f = new TFile("nue_output_8bins.root","READ");
 
   TH2D* CC_hm    = (TH2D*)CC_f->Get(Form("m_h%sVsEv%d",var,nuCut));
   TH2D* CC_hm_nc = (TH2D*)CC_f->Get(Form("nc_m_h%sVsEv%d",var,nuCut));
@@ -86,6 +102,7 @@ int main()
   TH2D* nue_hm_w = (TH2D*)nue_f->Get(Form("m_h%sVsEv0_w",var));
   TH2D* nue_he   = (TH2D*)nue_f->Get(Form("e_h%sVsEv0",var));
   TH2D* nue_he_w = (TH2D*)nue_f->Get(Form("e_h%sVsEv0_w",var));
+
 
   TH1D * CC_templates_m[nbins_Ev];
   TH1D * CC_templates_m_nc[nbins_Ev];
@@ -112,53 +129,62 @@ int main()
     energy_bins[b] = CC_he->GetXaxis()->GetBinLowEdge(b+1);
   } 
 
-  TFile *f_fl = new TFile(Form("%s/flux_covmtr/flux_covmtr%d_120.root",data_path,nuCut),"READ");
-  TH2D *fl_cov = (TH2D*)f_fl->Get("hcv");
-  TFile *f_sig = new TFile(Form("%s/xS_covmtr/total_sigmtr%d_5sig_120.root",data_path,nuCut), "READ");
-  TH2D *sig_cov = (TH2D*)f_sig->Get("hcv");
-  TFile *f_det = new TFile(Form("../uncertainties/det_covmtr/det_unc.root"), "READ");
-  TH2D *det_cov = (TH2D*)f_det->Get("htot_cov");
 
-  double sig_bins[nbins+1][nbins+1], fl_bins[nbins+1][nbins+1], det_bins[nbins+1][nbins+1];
+  TFile *f_fl = new TFile(Form("flux_covmtr%d_120.root",nuCut),"READ");
+  TH2D *fl_cov = (TH2D*)f_fl->Get("hcvfr");
+  TFile *f_sys = new TFile(Form("total_sigmtr%d_5sig_120.root",nuCut), "READ");
+  TH2D *sys_cov = (TH2D*)f_sys->Get("frhcv");
+  //TFile *scales_f = new TFile(Form("FCstat%d_120_10000.root",nuCut),"READ");
+  TFile *scales_f = new TFile(Form("FCflux%d_120_10000.root",nuCut),"READ");
+  TMatrixD *scales = (TMatrixD*)scales_f->Get("hscales");
+
+  double wgt[nbins+1];
+  double sys_bins[nbins+1][nbins+1], fl_bins[nbins+1][nbins+1];
   for(int i=0; i<nbins; i++) {
+    wgt[i] = (*scales)(u,i);
     for(int j=0; j<nbins; j++) {
       fl_bins[i][j]    = fl_cov->GetBinContent(i+1, j+1);
-      sig_bins[i][j]   = sig_cov->GetBinContent(i+1, j+1);
-      det_bins[i][j]   = det_cov->GetBinContent(i+1, j+1);
+      sys_bins[i][j]   = sys_cov->GetBinContent(i+1, j+1);
     }
   }
+  
 
   tf.setEnergyBins( energy_bins );
-  tf.setCovmtr( fl_bins, sig_bins, det_bins );
+  tf.setCovmtr( fl_bins, sys_bins, wgt );
 
-  double seed[4], par_tgt[4], par_bf[4], par_no[4];
+  tf.setPara( var, nuCut, fitPara_m, fitPara_e, u );
 
-  double Um42[8] = {1E-4, 1E-3, 1E-2, 0.02, 0.05, 0.1, 0.2, 0.5};
-  double Ut42[4] = {1E-4, 0.1, 0.3, 0.5};
+  double par_tgt[3];
+  par_tgt[0] = par_tgt[1] = par_tgt[2] = 0.;
+  tf.getTarget( par_tgt );
 
-  par_tgt[0] = 0.04;
-  //par_tgt[1] = 0.01;
-  //par_tgt[2] = 0.5;
-  par_tgt[3] = 6.0;
+  double bf_dm2, bf_Uee2, bf_Umm2;
 
-  for(int ii = 0; ii < 4; ii++) {
-    par_no[ii] = 0.;
-  }
+  const char data_path[] = "/pnfs/dune/scratch/users/qvuong/output";
+  const char out_path[] = "/exp/dune/app/users/qvuong/data/lownu/Feldman_Cousins";
 
+/*
+  ifstream fstat_true(Form("%s/FCstat_new/seeding_true/output_%d.txt",data_path,u));
+  ifstream fstat_alg(Form("%s/FCstat_new/seeding_algorithm/output_%d.txt",data_path,u));
+  ifstream fflux_true(Form("%s/FCflux/seeding_true/output_%d.txt",data_path,u));
+  ifstream fflux_alg(Form("%s/FCflux/seeding_algorithm/output_%d.txt",data_path,u));
 
-  for(int iUt=3; iUt<4; iUt++){
-    par_tgt[2] = Ut42[iUt];
+  //fstat_true >> bf_Uee2 >> bf_Umm2 >> bf_dm2 >> bfchi2 >> nochi2; 
+  //fstat_alg >> bf_Uee2 >> bf_Umm2 >> bf_dm2 >> bfchi2 >> nochi2; 
+  fflux_alg >> bf_Uee2 >> bf_Umm2 >> bf_dm2 >> bfchi2 >> nochi2; 
+  //fflux_true >> bf_Uee2 >> bf_Umm2 >> bf_dm2 >> bfchi2 >> nochi2; 
+*/
+  bf_Uee2 = 0.;
+  bf_Umm2 = 0.018247;
+  bf_dm2 = 110.613715;
+ 
+  double bfchi2 = tf.bfChi2( bf_Uee2, bf_Umm2 , bf_dm2 );
+  double nochi2 = tf.bfChi2( 0., 0., 0. );
+  printf( "FINE nue Best-fit Uee2 = %f, Umm2 = %f, dm2 = %f, nochi2 = %f, bfchi2 = %f\n", bf_Uee2, bf_Umm2, bf_dm2, nochi2, bfchi2);
 
-    for(int iUm=0; iUm<8; iUm++){
-      par_tgt[1] = Um42[iUm];
-      std::cout << par_tgt[0] << "\t" << par_tgt[1] << "\t" << par_tgt[2] << "\t" << par_tgt[3] << "\n";
-      tf.setPara( var, iUt, iUm, par_tgt, fitPara_m, fitPara_e );
-      tf.getTarget( par_tgt );
-      tf.Draw();
-    }
-  }
 
 
 }
+
 
 

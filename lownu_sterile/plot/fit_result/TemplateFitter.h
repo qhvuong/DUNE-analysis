@@ -17,7 +17,7 @@ class TemplateFitter {
     TemplateFitter(TH1D * CC_templates_m[nbins_Ev], TH1D * CC_templates_m_nc[nbins_Ev], TH1D * CC_templates_e[nbins_Ev], TH1D * nue_templates_m[nbins_Ev], TH1D * nue_templates_m_w[nbins_Ev], TH1D * nue_templates_e[nbins_Ev], TH1D * nue_templates_e_w[nbins_Ev], TH1D * LEdep_m[29], TH1D * LEdep_e[29] );
     ~TemplateFitter(){};
     void setEnergyBins(double bins[nbins_Ev+1]);
-    void setCovmtr(double flmx_bct[nbins+1][nbins+1], double sigmx_bct[nbins+1][nbins+1]);
+    void setCovmtr(double flmx_bct[nbins+1][nbins+1], double sigmx_bct[nbins+1][nbins+1], double detmx_bct[nbins+1][nbins+1]);
     void setPara(char var[20], int nuCut, double fitPara_m[29][7], double fitPara_e[29][7]);
     bool doFitFine1(double seed[4], double &Ue42, double &Um42, double &Ut42, double &dm2);
     bool doFitFine2(double seed[4], double &Ue42, double &Um42, double &Ut42, double &dm2);

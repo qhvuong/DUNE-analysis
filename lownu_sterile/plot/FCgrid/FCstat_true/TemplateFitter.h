@@ -8,7 +8,7 @@
 static const int nbins_Ev = 430;
 static const int nbins_CC = 56;
 static const int nbins_nue = 8;
-static const int nbins = 2*nbins_CC + nbins_nue;
+static const int nbins = nbins_CC*2 + nbins_nue;
 
 class TemplateFitter {
 
@@ -17,13 +17,15 @@ class TemplateFitter {
     TemplateFitter(TH1D * CC_templates_m[nbins_Ev], TH1D * CC_templates_m_nc[nbins_Ev], TH1D * CC_templates_e[nbins_Ev], TH1D * nue_templates_m[nbins_Ev], TH1D * nue_templates_m_w[nbins_Ev], TH1D * nue_templates_e[nbins_Ev], TH1D * nue_templates_e_w[nbins_Ev], TH1D * LEdep_m[29], TH1D * LEdep_e[29] );
     ~TemplateFitter(){};
     void setEnergyBins(double bins[nbins_Ev+1]);
-    void setCovmtr(double flmx_bct[nbins+1][nbins+1], double sigmx_bct[nbins+1][nbins+1]);
-    void setPara(char var[20], int nuCut, double fitPara_m[29][7], double fitPara_e[29][7]);
+    void setCovmtr(double flmx_bct[nbins+1][nbins+1], double sigmx_bct[nbins+1][nbins+1], double wgt[nbins+1]);
+    void setPara(char var[20], int nuCut, double fitPara_m[29][7], double fitPara_e[29][7], int universe);
     bool doFitFine1(double seed[3], double &Uee2, double &Umm2, double &dm2);
     bool doFitFine2(double seed[3], double &Uee2, double &Umm2, double &dm2);
     bool doFitCoarse(double seed[3], double &Uee2, double &Umm2, double &dm2);
     void getTarget(double *par_tgt);
     double bfChi2(double Uee2, double Umm2, double dm2);
+
+
 
 
   private:
@@ -52,13 +54,21 @@ class TemplateFitter {
     double m_energy_bins[nbins_Ev+1];
     double s[3], fitP_m[29][7], fitP_e[29][7], ft_m[7], ft_e[7];
     char *name;
-    int cutNu;
+    int cutNu, uni;
 
 
     // this is the thing you are trying to fit to, i.e. the data distribution
+/*
+    TH1D * CCe_tgt = new TH1D("CCe_tgt","",nbins_CC,0,16);
+    TH1D * CCm_tgt = new TH1D("CCm_tgt","",nbins_CC,0,16);
+    TH1D * nue_tgt = new TH1D("nue_tgt","",nbins_nue,0,16);
+*/
     TH1D * CCe_tgt = new TH1D();
     TH1D * CCm_tgt = new TH1D();
     TH1D * nue_tgt = new TH1D();
+    TH1D * CCe_tgt_thr = new TH1D();
+    TH1D * CCm_tgt_thr = new TH1D();
+    TH1D * nue_tgt_thr = new TH1D();
 };
 
 #endif

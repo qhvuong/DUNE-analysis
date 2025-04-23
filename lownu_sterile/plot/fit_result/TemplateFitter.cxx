@@ -17,6 +17,7 @@
 #include <TLine.h>
 #include <TLatex.h>
 #include <TPaveText.h>
+#include "DUNEStyle.h"
 
 TemplateFitter::TemplateFitter(TH1D * CC_templates_m[nbins_Ev], TH1D * CC_templates_m_nc[nbins_Ev], TH1D * CC_templates_e[nbins_Ev], TH1D * nue_templates_m[nbins_Ev], TH1D * nue_templates_m_w[nbins_Ev], TH1D * nue_templates_e[nbins_Ev], TH1D * nue_templates_e_w[nbins_Ev], TH1D * LEdep_m[29], TH1D * LEdep_e[29] )
 {
@@ -283,13 +284,15 @@ TMatrixD invmx(nbins,nbins);
 TMatrixD flmx(nbins,nbins);
 TMatrixD sigmx(nbins,nbins);
 TMatrixD statmx(nbins,nbins);
+TMatrixD detmx(nbins,nbins);
 
-void TemplateFitter::setCovmtr( double flmx_bct[nbins+1][nbins+1], double sigmx_bct[nbins+1][nbins+1] )
+void TemplateFitter::setCovmtr( double flmx_bct[nbins+1][nbins+1], double sigmx_bct[nbins+1][nbins+1], double detmx_bct[nbins+1][nbins+1] )
 {
   for(int i=0; i<nbins; i++) {
     for(int j=0; j<nbins; j++) {
       flmx[i][j]  = flmx_bct[i][j];
       sigmx[i][j] = sigmx_bct[i][j];
+      detmx[i][j] = detmx_bct[i][j];
     }
   }
 }
@@ -375,6 +378,7 @@ void TemplateFitter::getTarget( double *par )
       CC_tp_em->SetBinContent(i+1, 0.);
     }
   }
+  
 
   // Now we have nue temp = mu-->e (no reco cut) + e-->e (no reco cut)
   CC_tp_e->Add(CC_tp_me);    CC_tp_e->Add(CC_tp_ee);
@@ -400,11 +404,8 @@ void TemplateFitter::getTarget( double *par )
       }
     }
   }
-  for(int i=0; i<nbins; i++){
-    if(i>=2*nbins_CC)               std::cout << i << "\t" << nue_tp_os->GetBinContent(i-2*nbins_CC+1) << "\t" << nue_tp_unos->GetBinContent(i-2*nbins_CC+1) << "\n";
-  }
 
-  covmx = statmx + flmx + sigmx;
+  covmx = statmx + flmx + sigmx + detmx;
 
   TDecompSVD svd(covmx);
 
@@ -430,6 +431,7 @@ void TemplateFitter::getTarget( double *par )
 
   invmx = V*Sinv*Ut;  
 
+//Plot old target
 /*
   THStack *he = new THStack("he","");
   CCe_tgt->SetMarkerStyle(kStar);
@@ -486,28 +488,35 @@ void TemplateFitter::getTarget( double *par )
   legend_nue->Draw();
   cnue->SaveAs(Form("nue_tgt%d.png",cutNu));
 */
-/*
-  TH1D *hOsc = new TH1D("hOsc","",nbins,0,nbins);
-  TH1D *hnOsc = new TH1D("hnOsc","",nbins,0,nbins);
+
+//Plot new target
+
+  TH1D *he = new TH1D("he","",nbins-12,0,nbins-12);
+  TH1D *hm = new TH1D("hm","",nbins-12,0,nbins-12);
+  TH1D *he_nue = new TH1D("he_nue","",nbins-12,0,nbins-12);
+  TH1D *hm_nue = new TH1D("hm_nue","",nbins-12,0,nbins-12);
+
   for(int i=0; i<nbins; i++){
-    if(i<nbins_CC)                  hOsc->SetBinContent(i+1, CC_tp_em->GetBinContent(i+1));
-    if(i>=nbins_CC && i<2*nbins_CC) hOsc->SetBinContent(i+1, CC_tp_me->GetBinContent(i-nbins_CC+1));
-    if(i>=2*nbins_CC)               hOsc->SetBinContent(i+1, 1E2*nue_tp_os->GetBinContent(i-2*nbins_CC+1));
+    if(i<44)                  {he->SetBinContent(i+1, CC_tp_em->GetBinContent(i+1));
+                                     hm->SetBinContent(i+1, CC_tp_mm->GetBinContent(i+1));}
+    if(i>=44 && i<44+nbins_CC) {hm->SetBinContent(i+1, CC_tp_me->GetBinContent(i-44+1));
+                                     he->SetBinContent(i+1, CC_tp_ee->GetBinContent(i-44+1));}
+    if(i>=44+nbins_CC)               {he->SetBinContent(i+1, 1.*nue_tp_em->GetBinContent(i-44-nbins_CC+1));
+                                     hm->SetBinContent(i+1, 1.*nue_tp_me->GetBinContent(i-44-nbins_CC+1));
+                                     he->SetBinContent(i+1, 1.*nue_tp_ee->GetBinContent(i-44-nbins_CC+1));
+                                     hm->SetBinContent(i+1, 1.*nue_tp_mm->GetBinContent(i-44-nbins_CC+1));}
   }
-  for(int i=0; i<nbins; i++){
-    if(i<nbins_CC)                  hnOsc->SetBinContent(i+1, CC_tp_mm->GetBinContent(i+1));
-    if(i>=nbins_CC && i<2*nbins_CC) hnOsc->SetBinContent(i+1, CC_tp_ee->GetBinContent(i-nbins_CC+1));
-    if(i>=2*nbins_CC)               hnOsc->SetBinContent(i+1, 1E2*nue_tp_unos->GetBinContent(i-2*nbins_CC+1));
-  }
-  hOsc->SetFillColor(kRed);
-  hnOsc->SetFillColor(kBlue);
+
+  hm->SetFillColor(kBlue);
+  he->SetFillColor(kRed);
 
   THStack *h = new THStack("h","");
-  h->Add(hOsc);
-  h->Add(hnOsc);
+  h->Add(hm);
+  h->Add(he);
+  //h->SetMinimum(1E-2);
 
-  double x1 = hOsc->GetXaxis()->GetBinUpEdge(nbins_CC);
-  double x2 = hOsc->GetXaxis()->GetBinUpEdge(2*nbins_CC);
+  double x1 = hm->GetXaxis()->GetBinUpEdge(44);
+  double x2 = hm->GetXaxis()->GetBinUpEdge(44+nbins_CC);
 
   TCanvas *c = new TCanvas("c","",900,600);
   c->SetLogy();
@@ -518,9 +527,9 @@ void TemplateFitter::getTarget( double *par )
   latex.SetTextSize(0.03); 	// Set text size
   latex.SetTextAlign(22);	// Center alignment
   double yPosition = pow(10, (gPad->GetUymin() + gPad->GetUymax())/2.); 	// Align to the middle of the pad
-  latex.DrawLatex(nbins_CC/2, yPosition, "CCm"); 	// Position for CCm
-  latex.DrawLatex(nbins_CC + nbins_CC/2, yPosition, "CCe"); 	// Position for CCe
-  latex.DrawLatex(2*nbins_CC + nbins_nue/2, yPosition, "nue*100.");	// Position for nue
+  latex.DrawLatex(44/2, yPosition, "#nu_{#mu}-CC"); 	// Position for CCm
+  latex.DrawLatex(44 + nbins_CC/2, yPosition, "#nu_{e}-CC"); 	// Position for CCe
+  latex.DrawLatex(44+nbins_CC + nbins_nue/2, yPosition, "#nu+e");	// Position for nue
   h->GetXaxis()->SetTitle("bin number");
   h->GetYaxis()->SetTitle("entries (/yr.POT)");
   TLine *line1 = new TLine(x1, 0, x1, pow(10, gPad->GetUymax()));
@@ -531,12 +540,16 @@ void TemplateFitter::getTarget( double *par )
   line2->SetLineWidth(2.0);
   line1->Draw("same");
   line2->Draw("same");
-  TLegend *lg = new TLegend(0.70,0.75,0.9,0.9);
-  lg->AddEntry(hOsc,"oscillated");
-  lg->AddEntry(hnOsc,"unoscillated");
+  TLegend *lg = new TLegend(0.65,0.75,0.9,0.9);
+  lg->AddEntry(hm,"#nu_{#mu} originated");
+  lg->AddEntry(he,"#nu_{e} originated");
   lg->Draw();
-  c->SaveAs("tgt1.png");
-*/
+  c->SaveAs("tgt.png");
+
+  TFile *out = new TFile("tgt.root","RECREATE");
+  he->Write();
+  hm->Write();
+  out->Close();
 
 }
 
@@ -569,6 +582,8 @@ double TemplateFitter::getChi2( const double * par )
   // Add in oscillated neutrinos by taking the nu_mu CC templates and weighting by the oscillation probability
   for( int i = 10; i < nbins_Ev; ++i ) {
 
+    // Determine which energy bin in L-E distribution
+    // This is a unique mapping from i (0 up to nbins_Ev, excluding energy < GeV, or first 10 bins) to iL (0 upto 29, excluding energy < 0.4 GeV, or first 2 bins)
     if(i<240)                iL = (int)i/10;
     else if(i>=240 && i<400) iL = (int) 24+(i-240)/40;
     else                     iL = 28;
@@ -608,7 +623,6 @@ double TemplateFitter::getChi2( const double * par )
 
     nue_tp_me->Add(nue_w_m_templates[i], Pme);
     nue_tp_mm->Add(nue_m_templates[i], Pmm + Pmt);
-    //nue_tp_mt->Add(nue_m_templates[i], Pmt);
     nue_tp_em->Add(nue_w_e_templates[i], Pem);
     nue_tp_ee->Add(nue_e_templates[i], Pee);
   }
@@ -867,7 +881,6 @@ double TemplateFitter::bfChi2( double Ue42, double Um42, double Ut42, double dm2
 
     nue_tp_me->Add(nue_w_m_templates[i], Pme);
     nue_tp_mm->Add(nue_m_templates[i], Pmm + Pmt);
-    //nue_tp_mt->Add(nue_m_templates[i], Pmt);
     nue_tp_em->Add(nue_w_e_templates[i], Pem);
     nue_tp_ee->Add(nue_e_templates[i], Pee);
   }
@@ -1007,6 +1020,8 @@ double TemplateFitter::bfChi2( double Ue42, double Um42, double Ut42, double dm2
     if(bx<nbins_CC)                   target[bx][0] = CCm_tgt->GetBinContent(bx+1);
     if(bx>=nbins_CC && bx<2*nbins_CC) target[bx][0] = CCe_tgt->GetBinContent(bx-nbins_CC+1);
     if(bx>=2*nbins_CC)                target[bx][0] = nue_tgt->GetBinContent(bx-2*nbins_CC+1);
+
+    std::cout << bx << "\t" << target[bx][0] << "\t" << temp[bx][0] << "\n";
 
   }
 
@@ -1163,7 +1178,7 @@ void TemplateFitter::bfDraw( double Ue42, double Um42, double Ut42, double dm2 )
   legend_nue->Draw();
   cnue->SaveAs(Form("fit_nue%d.png",cutNu));
 */
-
+/*
   TH1D *hOsc = new TH1D("hOsc","",nbins,0,nbins);
   TH1D *hnOsc = new TH1D("hnOsc","",nbins,0,nbins);
   for(int i=0; i<nbins; i++){
@@ -1213,5 +1228,68 @@ void TemplateFitter::bfDraw( double Ue42, double Um42, double Ut42, double dm2 )
   lg->AddEntry(hnOsc,"unoscillated");
   lg->Draw();
   c->SaveAs("fit.png");
+*/
+
+  //Plot fitted sample
+
+  TH1D *he = new TH1D("he","",nbins-12,0,nbins-12);
+  TH1D *hm = new TH1D("hm","",nbins-12,0,nbins-12);
+  TH1D *he_nue = new TH1D("he_nue","",nbins-12,0,nbins-12);
+  TH1D *hm_nue = new TH1D("hm_nue","",nbins-12,0,nbins-12);
+
+  for(int i=0; i<nbins; i++){
+    if(i<44)                  {he->SetBinContent(i+1, CC_tp_em->GetBinContent(i+1));
+                                     hm->SetBinContent(i+1, CC_tp_mm->GetBinContent(i+1));}
+    if(i>=44 && i<44+nbins_CC) {hm->SetBinContent(i+1, CC_tp_me->GetBinContent(i-44+1));
+                                     he->SetBinContent(i+1, CC_tp_ee->GetBinContent(i-44+1));}
+    if(i>=44+nbins_CC)               {he->SetBinContent(i+1, 1.*nue_tp_em->GetBinContent(i-44-nbins_CC+1));
+                                     hm->SetBinContent(i+1, 1.*nue_tp_me->GetBinContent(i-44-nbins_CC+1));
+                                     he->SetBinContent(i+1, 1.*nue_tp_ee->GetBinContent(i-44-nbins_CC+1));
+                                     hm->SetBinContent(i+1, 1.*nue_tp_mm->GetBinContent(i-44-nbins_CC+1));}
+  }
+
+  hm->SetFillColor(kBlue);
+  he->SetFillColor(kRed);
+
+  THStack *h = new THStack("h","");
+  h->Add(hm);
+  h->Add(he);
+  //h->SetMinimum(1E-2);
+
+  double x1 = hm->GetXaxis()->GetBinUpEdge(44);
+  double x2 = hm->GetXaxis()->GetBinUpEdge(44+nbins_CC);
+
+  TCanvas *c = new TCanvas("c","",900,600);
+  c->SetLogy();
+  h->Draw("hist");
+  c->Update();
+  TLatex latex;
+  latex.SetNDC(false);
+  latex.SetTextSize(0.03); 	// Set text size
+  latex.SetTextAlign(22);	// Center alignment
+  double yPosition = pow(10, (gPad->GetUymin() + gPad->GetUymax())/2.); 	// Align to the middle of the pad
+  latex.DrawLatex(44/2, yPosition, "#nu_{#mu}-CC"); 	// Position for CCm
+  latex.DrawLatex(44 + nbins_CC/2, yPosition, "#nu_{e}-CC"); 	// Position for CCe
+  latex.DrawLatex(44+nbins_CC + nbins_nue/2, yPosition, "#nu+e");	// Position for nue
+  h->GetXaxis()->SetTitle("bin number");
+  h->GetYaxis()->SetTitle("entries (/yr.POT)");
+  TLine *line1 = new TLine(x1, 0, x1, pow(10, gPad->GetUymax()));
+  TLine *line2 = new TLine(x2, 0, x2, pow(10, gPad->GetUymax()));
+  line1->SetLineColor(kBlack);
+  line2->SetLineColor(kBlack);
+  line1->SetLineWidth(2.0);
+  line2->SetLineWidth(2.0);
+  line1->Draw("same");
+  line2->Draw("same");
+  TLegend *lg = new TLegend(0.65,0.75,0.9,0.9);
+  lg->AddEntry(hm,"#nu_{#mu} originated");
+  lg->AddEntry(he,"#nu_{e} originated");
+  lg->Draw();
+  c->SaveAs("fit.png");
+  
+  TFile *out = new TFile("fit.root","RECREATE");
+  he->Write();
+  hm->Write();
+  out->Close();
 
 }

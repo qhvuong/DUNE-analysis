@@ -74,7 +74,7 @@ int main()
 
 
   char var[20] = "ElepReco";
-  int nuCut=3;
+  int nuCut = 3;
 
   TFile *CC_f  = new TFile(Form("%s/input_dfiles/CC_output_56bins.root",data_path),"READ");
   TFile *nue_f = new TFile(Form("%s/input_dfiles/nue_output_8bins.root",data_path),"READ");
@@ -128,23 +128,26 @@ int main()
   tf.setEnergyBins( energy_bins );
   tf.setCovmtr( fl_bins, sig_bins );
 
-  double seed[3], par_tgt[3], par_bf[3], par_no[3];
+  double seed[4], par_tgt[4], par_bf[4], par_no[4];
 
-  seed[0] = par_tgt[0] = 0.04;
-  seed[1] = par_tgt[1] = 0.01;
-  seed[2] = par_tgt[2] = 6.0;
+  double Um42[8] = {1E-4, 1E-3, 1E-2, 0.02, 0.05, 0.1, 0.2, 0.5};
+  double Ut42[4] = {1E-4, 0.1, 0.3, 0.5};
 
-  for(int ii = 0; ii < 3; ii++) {
+  par_tgt[0] = 0.04;
+  par_tgt[1] = 0.01;
+  par_tgt[2] = 0.2;
+  par_tgt[3] = 6.0;
+
+  for(int ii = 0; ii < 4; ii++) {
     par_no[ii] = 0.;
   }
 
-  tf.setPara( var, nuCut, par_tgt, fitPara_m, fitPara_e );
-
+  tf.setPara( var, par_tgt, fitPara_m, fitPara_e );
   tf.getTarget( par_tgt );
-
   tf.Draw();
 
-}
 
+
+}
 
 

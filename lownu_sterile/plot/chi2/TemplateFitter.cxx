@@ -260,14 +260,16 @@ TMatrixD covmx(nbins,nbins);
 TMatrixD invmx(nbins,nbins);
 TMatrixD flmx(nbins,nbins);
 TMatrixD sigmx(nbins,nbins);
+TMatrixD detmx(nbins,nbins);
 TMatrixD statmx(nbins,nbins);
 
-void TemplateFitter::setCovmtr( double flmx_bct[nbins+1][nbins+1], double sigmx_bct[nbins+1][nbins+1] )
+void TemplateFitter::setCovmtr( double flmx_bct[nbins+1][nbins+1], double sigmx_bct[nbins+1][nbins+1], double detmx_bct[nbins+1][nbins+1] )
 {
   for(int i=0; i<nbins; i++) {
     for(int j=0; j<nbins; j++) {
       flmx[i][j]  = flmx_bct[i][j];
       sigmx[i][j] = sigmx_bct[i][j];
+      detmx[i][j] = detmx_bct[i][j];
     }
   }
 }
