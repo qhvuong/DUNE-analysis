@@ -1,0 +1,11 @@
+universe        bf0     bf1     bf2     bf3     bfchi2  tgtchi2 ratio
+430	54
+54	7
+54	7
+TemplateFitter bounds (noLimit=false)
+  par_min = [0, 0, 0, 0]
+  par_max = [0.394, 0.489, 0.718, 1000]
+[resid] tag=svd  N=102  avg_diag(C)=1.370325e+09
+  R1 = C*inv - I  ||.||_F=4.865298e-08  ||.||_1=1.211372e-07  max|.|=1.609865e-08
+  R2 = inv*C - I  ||.||_F=2.013150e-08  ||.||_1=2.868252e-08  max|.|=9.813333e-09
+46	0.368728	0.418165	0.213122	90.158	448.908	454.676	1.14641

@@ -1,0 +1,42 @@
+noNuE = 0
+Error in <TFile::TFile>: file /exp/dune/app/users/qvuong/scripts/lownu_sterile/grid/contour_FixedTgt/fitPara_m_12bins.root does not exist
+Error in <TFile::TFile>: file /exp/dune/app/users/qvuong/scripts/lownu_sterile/grid/contour_FixedTgt/fitPara_e_12bins.root does not exist
+
+ *** Break *** segmentation violation
+430	54
+54	7
+54	7
+
+
+
+===========================================================
+There was a crash.
+This is the entire stack trace of all threads:
+===========================================================
+#0  0x00007fcf20edb60c in waitpid () from /lib64/libc.so.6
+#1  0x00007fcf20e58f62 in do_system () from /lib64/libc.so.6
+#2  0x00007fcf274e5ecc in TUnixSystem::Exec (shellcmd=<optimized out>, this=0x1706620) at /scratch/workspace/critic-slf/BUILDTYPE/prof/QUAL/e26/label1/swarm/label2/SLF7/build/root/v6_28_12/source/root-6.28.12/core/unix/src/TUnixSystem.cxx:2104
+#3  TUnixSystem::StackTrace (this=0x1706620) at /scratch/workspace/critic-slf/BUILDTYPE/prof/QUAL/e26/label1/swarm/label2/SLF7/build/root/v6_28_12/source/root-6.28.12/core/unix/src/TUnixSystem.cxx:2395
+#4  0x00007fcf274e5894 in TUnixSystem::DispatchSignals (this=0x1706620, sig=kSigSegmentationViolation) at /scratch/workspace/critic-slf/BUILDTYPE/prof/QUAL/e26/label1/swarm/label2/SLF7/build/root/v6_28_12/source/root-6.28.12/core/unix/src/TUnixSystem.cxx:3615
+#5  <signal handler called>
+#6  0x000000000042f386 in int TTree::SetBranchAddress<double>(char const*, double*, TBranch**) ()
+#7  0x0000000000428562 in GetLvsE(double (*) [7], double (*) [7], TH1D**, TH1D**) ()
+#8  0x000000000042ae83 in main ()
+===========================================================
+
+
+The lines below might hint at the cause of the crash. If you see question
+marks as part of the stack trace, try to recompile with debugging information
+enabled and export CLING_DEBUG=1 environment variable before running.
+You may get help by asking at the ROOT forum https://root.cern/forum
+Only if you are really convinced it is a bug in ROOT then please submit a
+report at https://root.cern/bugs Please post the ENTIRE stack trace
+from above as an attachment in addition to anything else
+that might help us fixing this issue.
+===========================================================
+#6  0x000000000042f386 in int TTree::SetBranchAddress<double>(char const*, double*, TBranch**) ()
+#7  0x0000000000428562 in GetLvsE(double (*) [7], double (*) [7], TH1D**, TH1D**) ()
+#8  0x000000000042ae83 in main ()
+===========================================================
+
+

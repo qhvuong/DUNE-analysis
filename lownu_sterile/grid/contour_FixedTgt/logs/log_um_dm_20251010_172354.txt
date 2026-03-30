@@ -1,0 +1,8 @@
+noNuE = 0
+430	54
+54	8
+54	8
+Info in <TCanvas::Print>: png file matrices.png has been created
+[resid] tag=svd  N=103  avg_diag(C)=9.130268e+08
+  R1 = C*inv - I  ||.||_F=1.299635e-08  ||.||_1=3.123815e-08  max|.|=6.277019e-09
+  R2 = inv*C - I  ||.||_F=1.361861e-08  ||.||_1=1.785769e-08  max|.|=5.774060e-09

@@ -1,0 +1,10 @@
+noNuE = 0
+430	54
+54	7
+54	7
+Info in <TCanvas::Print>: png file matrices.png has been created
+Info in <TCanvas::Print>: png file cov_full.png has been created
+Info in <TCanvas::Print>: png file cov_reduced.png has been created
+[resid] tag=svd  N=102  avg_diag(C)=1.624956e+09
+  R1 = C*inv - I  ||.||_F=6.155021e-08  ||.||_1=5.916568e-08  max|.|=4.669762e-08
+  R2 = inv*C - I  ||.||_F=2.256296e-07  ||.||_1=2.280586e-07  max|.|=1.779711e-07
